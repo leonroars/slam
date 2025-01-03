@@ -1,0 +1,3 @@
+spring:
+  application:
+    name: hhp7_concert_reservation
