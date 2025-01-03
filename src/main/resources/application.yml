@@ -1,3 +1,12 @@
 spring:
   application:
     name: hhp7_concert_reservation
+
+server:
+  port: 8080
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs       # 기본값: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html   # Swagger UI 접속 경로 (기본값: /swagger-ui.html)
