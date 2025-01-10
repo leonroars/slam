@@ -1,0 +1,14 @@
+package com.hhp7.concertreservation.infrastructure.persistence.jpa;
+
+import com.hhp7.concertreservation.infrastructure.persistence.jpa.entities.ConcertScheduleJpaEntity;
+import java.time.LocalDateTime;
+import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+public interface ConcertScheduleJpaRepository extends JpaRepository<ConcertScheduleJpaEntity, String> {
+
+    @Query("SELECT cs FROM ConcertScheduleJpaEntity cs WHERE cs.reservationStartAt <= :now AND cs.reservationEndAt >= :now")
+    List<ConcertScheduleJpaEntity> findAllAvailableConcertSchedule(@Param("now") LocalDateTime now);
+}
