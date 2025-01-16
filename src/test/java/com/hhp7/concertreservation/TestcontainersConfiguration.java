@@ -1,18 +1,33 @@
 package com.hhp7.concertreservation;
 
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Bean;
+import jakarta.annotation.PreDestroy;
+import org.springframework.context.annotation.Configuration;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@TestConfiguration(proxyBeanMethods = false)
+@Configuration
 class TestcontainersConfiguration {
 
-    @Bean
-    @ServiceConnection
-    MySQLContainer<?> mysqlContainer() {
-        return new MySQLContainer<>(DockerImageName.parse("mysql:latest"));
+
+    public static final MySQLContainer<?> MYSQL_CONTAINER;
+
+    static {
+        MYSQL_CONTAINER = new MySQLContainer<>(DockerImageName.parse("mysql:latest"))
+                .withDatabaseName("mydatabase")
+                .withUsername("myuser")
+                .withPassword("secret");
+        MYSQL_CONTAINER.start();
+
+        System.setProperty("spring.datasource.url", MYSQL_CONTAINER.getJdbcUrl() + "?characterEncoding=UTF-8&serverTimezone=UTC");
+        System.setProperty("spring.datasource.username", MYSQL_CONTAINER.getUsername());
+        System.setProperty("spring.datasource.password", MYSQL_CONTAINER.getPassword());
+    }
+
+    @PreDestroy
+    public void preDestroy() {
+        if (MYSQL_CONTAINER.isRunning()) {
+            MYSQL_CONTAINER.stop();
+        }
     }
 
 }
