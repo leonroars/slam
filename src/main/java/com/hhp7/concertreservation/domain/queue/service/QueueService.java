@@ -114,5 +114,4 @@ public class QueueService {
     public List<Token> getExpiredTokens(){
         return tokenRepository.findExpiredTokens();
     }
-
 }

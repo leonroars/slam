@@ -1,6 +1,5 @@
 package com.hhp7.concertreservation.infrastructure.persistence.jpa.entities;
 
-
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;

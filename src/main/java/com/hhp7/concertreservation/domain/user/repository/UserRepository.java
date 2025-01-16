@@ -10,5 +10,4 @@ public interface UserRepository {
 
     // 회원 가입
     User saveUser(User user);
-
 }

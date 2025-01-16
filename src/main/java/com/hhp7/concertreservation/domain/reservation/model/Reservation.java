@@ -133,5 +133,4 @@ public class Reservation {
     public static Reservation create(String id, String userId, String seatId, String concertScheduleId){
         return create(id, userId, seatId, concertScheduleId, null, null);
     }
-
 }

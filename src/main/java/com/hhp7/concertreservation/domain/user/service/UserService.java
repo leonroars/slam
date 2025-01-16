@@ -21,5 +21,4 @@ public class UserService {
         return userRepository.findUserByUserId(userId)
                 .orElseThrow(() -> new UnavailableRequestException("해당 사용자가 존재하지 않으므로 조회가 불가합니다."));
     }
-
 }

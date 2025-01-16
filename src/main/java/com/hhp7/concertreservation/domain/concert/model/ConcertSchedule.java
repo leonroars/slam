@@ -123,5 +123,4 @@ public class ConcertSchedule {
             throw new BusinessRuleViolationException("예약 가능 기간 중엔 공연이 종료될 수 없습니다.");
         }
     }
-
 }

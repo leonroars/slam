@@ -1,9 +1,5 @@
 package com.hhp7.concertreservation.domain.concert.repository;
 
-import com.hhp7.concertreservation.domain.concert.model.ConcertSchedule;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 public interface ConcertScheduleRepository {
 
