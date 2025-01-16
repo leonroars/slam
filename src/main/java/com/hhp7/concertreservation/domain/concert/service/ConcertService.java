@@ -7,6 +7,7 @@ import com.hhp7.concertreservation.domain.concert.repository.ConcertRepository;
 import com.hhp7.concertreservation.domain.concert.repository.ConcertScheduleRepository;
 import com.hhp7.concertreservation.domain.concert.repository.SeatRepository;
 import com.hhp7.concertreservation.exceptions.UnavailableRequestException;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,16 @@ public class ConcertService {
         seatRepository.saveAll(initialSeats);
 
         return registeredConcertSchedule;
+    }
+
+    /**
+     * ConcertSchedule ID로 조회
+     * @param concertScheduleId
+     * @return
+     */
+    public ConcertSchedule getConcertSchedule(String concertScheduleId) {
+        return concertScheduleRepository.findById(concertScheduleId)
+                .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정이 존재하지 않습니다."));
     }
 
     /**
@@ -130,5 +141,44 @@ public class ConcertService {
         concertScheduleRepository.save(unassignedConcertSchedule);
 
         return resultSeat;
+    }
+
+    /**
+     * 특정 ConcertSchedule의 모든 좌석 조회
+     * @param concertScheduleId
+     * @return
+     */
+    public List<Seat> getSeatsOfConcertSchedule(String concertScheduleId) {
+        return seatRepository.findAllByConcertScheduleId(concertScheduleId);
+    }
+
+    /**
+     * 특정 좌석 조회.
+     * @param seatId
+     * @return
+     */
+    public Seat getSeat(String seatId) {
+        return seatRepository.findById(seatId)
+                .orElseThrow(() -> new UnavailableRequestException("해당 좌석이 존재하지 않습니다."));
+    }
+
+    /**
+     * 특정 ConcertSchedule의 예약 가능 좌석 조회
+     * @param concertScheduleId
+     * @return
+     */
+    public List<Seat> getAvailableSeatsOfConcertSchedule(String concertScheduleId) {
+        List<Seat> availableSeats =  seatRepository.findAllAvailableSeatsByConcertScheduleId(concertScheduleId);
+        if(availableSeats.isEmpty()){throw new UnavailableRequestException("예약 가능한 좌석이 존재하지 않습니다.");}
+        return availableSeats;
+    }
+
+    /**
+     * 예약 가능 공연 일정 목록 조회.
+     * @param presentDateTime
+     * @return
+     */
+    public List<ConcertSchedule> getAvailableConcertSchedule(LocalDateTime presentDateTime) {
+        return concertScheduleRepository.findAllAvailable(presentDateTime);
     }
 }

@@ -29,6 +29,7 @@ public class SeatJpaEntity extends BaseJpaEntity{
         entity.seatId = seat.getId();
         entity.concertScheduleId = seat.getConcertScheduleId();
         entity.number = seat.getNumber();
+        entity.status = seat.getStatus().name();
 
         return entity;
     }

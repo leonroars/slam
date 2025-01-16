@@ -42,4 +42,12 @@ public class SeatRepositoryImpl implements SeatRepository {
                 .map(SeatJpaEntity::toDomain)
                 .toList();
     }
+
+    @Override
+    public List<Seat> findAllAvailableSeatsByConcertScheduleId(String concertScheduleId) {
+        return seatJpaRepository.findAllAvailableSeatsByConcertScheduleId(concertScheduleId)
+                .stream()
+                .map(SeatJpaEntity::toDomain)
+                .toList();
+    }
 }
