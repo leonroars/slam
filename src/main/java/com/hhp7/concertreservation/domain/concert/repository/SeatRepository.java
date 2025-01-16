@@ -14,8 +14,10 @@ public interface SeatRepository {
     // 좌석 조회
     Optional<Seat> findById(String seatId);
 
-    // 특정 공연 일정의 예약 가능 좌석 목록 조회
+    // 특정 공연 일정의 전체 좌석 목록 조회
     List<Seat> findAllByConcertScheduleId(String concertScheduleId);
 
+    // 특정 공연 일정의 예약 가능 좌석 목록 조회
     List<Seat> findAllAvailableSeatsByConcertScheduleId(String concertScheduleId);
+
 }
