@@ -16,9 +16,13 @@ public class SeatRepositoryImpl implements SeatRepository {
     private final SeatJpaRepository seatJpaRepository;
 
     @Override
-    public Seat save(Seat seat) {
-        return seatJpaRepository.save(SeatJpaEntity.fromDomain(seat))
-                .toDomain();
+    public Seat save(Seat seat){
+        return seatJpaRepository.findById(seat.getId())
+                .map(seatJpaEntity -> {
+                    seatJpaEntity.updateFromDomain(seat);
+                    return seatJpaRepository.save(seatJpaEntity).toDomain();
+                })
+                .orElseGet(() -> seatJpaRepository.save(SeatJpaEntity.fromDomain(seat)).toDomain());
     }
 
     @Override

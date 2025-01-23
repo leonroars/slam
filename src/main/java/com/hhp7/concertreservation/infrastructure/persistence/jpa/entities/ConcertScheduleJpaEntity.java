@@ -23,9 +23,6 @@ public class ConcertScheduleJpaEntity extends BaseJpaEntity{
     private LocalDateTime reservationStartAt;
     private LocalDateTime reservationEndAt;
 
-    @Version
-    private long version; // Row 단위 Optimistic Locking을 위한 Version 필드.
-
     public static ConcertScheduleJpaEntity fromDomain(ConcertSchedule domainModel) {
         ConcertScheduleJpaEntity entity = new ConcertScheduleJpaEntity();
         entity.concertScheduleId = domainModel.getId();
@@ -44,6 +41,17 @@ public class ConcertScheduleJpaEntity extends BaseJpaEntity{
                 this.concertId,
                 this.datetime,
                 this.reservationStartAt,
-                this.reservationEndAt);
+                this.reservationEndAt,
+                this.availableSeatsCount);
+    }
+
+    public ConcertScheduleJpaEntity updateFromDomain(ConcertSchedule concertSchedule) {
+        this.concertId = concertSchedule.getConcertId();
+        this.availableSeatsCount = concertSchedule.getAvailableSeatCount();
+        this.datetime = concertSchedule.getDateTime();
+        this.reservationStartAt = concertSchedule.getReservationStartAt();
+        this.reservationEndAt = concertSchedule.getReservationEndAt();
+
+        return this;
     }
 }

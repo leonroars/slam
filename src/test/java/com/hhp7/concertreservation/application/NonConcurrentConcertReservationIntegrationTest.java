@@ -10,13 +10,17 @@ import com.hhp7.concertreservation.domain.concert.model.SeatStatus;
 import com.hhp7.concertreservation.domain.concert.repository.ConcertRepository;
 import com.hhp7.concertreservation.domain.concert.repository.ConcertScheduleRepository;
 import com.hhp7.concertreservation.domain.concert.repository.SeatRepository;
+import com.hhp7.concertreservation.domain.point.model.PointHistory;
+import com.hhp7.concertreservation.domain.point.model.PointTransactionType;
 import com.hhp7.concertreservation.domain.point.model.UserPointBalance;
 import com.hhp7.concertreservation.domain.point.repository.PointHistoryRepository;
 import com.hhp7.concertreservation.domain.point.repository.UserPointBalanceRepository;
+import com.hhp7.concertreservation.domain.point.service.PointService;
 import com.hhp7.concertreservation.domain.queue.repository.TokenRepository;
 import com.hhp7.concertreservation.domain.reservation.model.Reservation;
 import com.hhp7.concertreservation.domain.reservation.model.ReservationStatus;
 import com.hhp7.concertreservation.domain.reservation.repository.ReservationRepository;
+import com.hhp7.concertreservation.domain.reservation.service.ReservationService;
 import com.hhp7.concertreservation.domain.user.model.User;
 import com.hhp7.concertreservation.domain.user.repository.UserRepository;
 import java.time.LocalDateTime;
@@ -25,13 +29,20 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
 public class NonConcurrentConcertReservationIntegrationTest {
+
+    private static final Logger log = LoggerFactory.getLogger(NonConcurrentConcertReservationIntegrationTest.class);
+
     @Autowired
     private ConcertReservationApplication concertReservationApplication;
 
@@ -71,6 +82,12 @@ public class NonConcurrentConcertReservationIntegrationTest {
     LocalDateTime reservationEndAt = LocalDateTime.of(2025, 11, 30, 23, 59, 59);
     ConcertSchedule concertSchedule = ConcertSchedule.create("1", concertDateTime, reservationStartAt, reservationEndAt);
 
+
+    @Autowired
+    private PointService pointService;
+    @Autowired
+    private ReservationService reservationService;
+
     @Nested
     class UserIntegrationTest {
         @Test
@@ -89,6 +106,65 @@ public class NonConcurrentConcertReservationIntegrationTest {
     }
 
     @Nested
+    class UserPointIntegrationTest {
+        @Test
+        @DisplayName("성공 : 회원 가입 시 해당 회원의 포인트 잔액 0인 UserPointBalance가 생성되어 저장된다. 이때 INIT 타입의 PointHistory도 생성되어 저장된다.")
+        void shouldCreateAndSaveUserPointBalanceWith0AndInitPointHistory_WhenUserSignedUp() {
+            // given
+            String userName = "한성경";
+
+            // when
+            User createdUser = userApplication.registerUser(userName);
+            UserPointBalance actualUserPointBalance = concertReservationApplication.getUserPointBalance(createdUser.getId());
+            List<PointHistory> actualPointHistory = concertReservationApplication.getPointHistories(createdUser.getId());
+
+            // then
+            Assertions.assertEquals(0, actualUserPointBalance.balance().getAmount());
+            Assertions.assertEquals(1, actualPointHistory.size());
+            Assertions.assertEquals(0, actualPointHistory.get(0).transactionAmount());
+            Assertions.assertEquals(PointTransactionType.INIT, actualPointHistory.get(0).transactionType());
+        }
+
+        @Test
+        @DisplayName("성공 : 회원의 포인트 잔액을 증액한다. 이때 PointHistory가 생성되어 저장된다.")
+        void shouldIncreaseUserPointBalanceAndCreatePointHistoryOfCharge_whenUserChargesPoint(){
+            // given
+            User user = userApplication.registerUser(userName);
+
+            // when
+            UserPointBalance actualUserPointBalance = concertReservationApplication.chargeUserPoint(user.getId(), 1000);
+            List<PointHistory> actualPointHistory = concertReservationApplication.getPointHistories(user.getId());
+
+            // then
+            Assertions.assertNotNull(actualUserPointBalance);
+            Assertions.assertEquals(1000, actualUserPointBalance.balance().getAmount());
+
+            Assertions.assertNotNull(actualPointHistory);
+            Assertions.assertEquals(2, actualPointHistory.size());
+        }
+
+        @Test
+        @DisplayName("성공 : 회원의 포인트 잔액을 감소한다. 이때 USE 타입의 PointHistory가 생성되어 저장된다.")
+        void shouldDecreaseUserPointBalanceAndCreatePointHistoryOfUse_whenUserUsesPoint(){
+            // given
+            User user = userApplication.registerUser("정종환");
+            concertReservationApplication.chargeUserPoint(user.getId(), 1000);
+
+            // when
+            UserPointBalance actualUserPointBalance = concertReservationApplication.useUserPoint(user.getId(), 500);
+            PointHistory expectedPointHistory = PointHistory.create(user.getId(), PointTransactionType.USE, 500);
+            List<PointHistory> actualPointHistory = concertReservationApplication.getPointHistories(user.getId());
+
+            // then
+            Assertions.assertNotNull(actualUserPointBalance);
+            Assertions.assertEquals(500, actualUserPointBalance.balance().getAmount());
+
+            Assertions.assertNotNull(actualPointHistory);
+            Assertions.assertEquals(3, actualPointHistory.size());
+        }
+    }
+
+    @Nested
     class ConcertReservationIntegrationTest {
         @Test
         @DisplayName("성공 : 예약 가능한 공연 일정을 조회한다.")
@@ -103,7 +179,6 @@ public class NonConcurrentConcertReservationIntegrationTest {
             Assertions.assertNotNull(actual);
             Assertions.assertEquals(1, actual.size());
             Assertions.assertEquals(expected.getId(), actual.get(0).getId());
-
         }
 
         @Test
@@ -125,19 +200,21 @@ public class NonConcurrentConcertReservationIntegrationTest {
         void shouldSuccessfullyReserveAndPaySeat() {
             // given
             User user = userApplication.registerUser(userName);
+            concertReservationApplication.chargeUserPoint(user.getId(), 2000);
 
-            UserPointBalance userPointBalance = concertReservationApplication.chargeUserPoint(user.getId(), 2000);
             ConcertSchedule concertSchedule = concertReservationApplication.registerConcertSchedule("1", concertDateTime, reservationStartAt, reservationEndAt, 1000);
             Seat seat = concertReservationApplication.getAvailableSeats(concertSchedule.getId()).get(0);
 
             // when
-            Reservation reservation = concertReservationApplication.reserve(concertSchedule.getId(), user.getId(), seat.getId());
-            Seat reservedSeat = concertReservationApplication.getSeat(seat.getId());
+            concertReservationApplication.createTemporaryReservation(concertSchedule.getId(), user.getId(), seat.getId()); // 가예약 생성
+            Reservation reservation = concertReservationApplication.confirmReservation(concertSchedule.getId(), user.getId(), seat.getId()); // 결제 및 예약 확정
+            Seat reservedSeat = concertReservationApplication.getSeat(seat.getId()); // 예약된 좌석
+            UserPointBalance updatedUserPointBalance = concertReservationApplication.getUserPointBalance(user.getId()); // 차감된 사용자 잔액
 
             // then
             Assertions.assertEquals(SeatStatus.UNAVAILABLE, reservedSeat.getStatus());
             Assertions.assertEquals(ReservationStatus.PAID, reservation.getStatus());
-            Assertions.assertEquals(1000, userPointBalance.balance().getAmount());
+            Assertions.assertEquals(1000, updatedUserPointBalance.balance().getAmount());
         }
     }
 }

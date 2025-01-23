@@ -67,6 +67,20 @@ public class ConcertSchedule {
         return concertSchedule;
     }
 
+    public static ConcertSchedule create(String concertScheduleId, String concertId, LocalDateTime dateTime, LocalDateTime reservationStartAt, LocalDateTime reservationEndAt, int availableSeatCount){
+        evaluateConcertSchedule(dateTime, reservationStartAt, reservationEndAt);
+
+        ConcertSchedule concertSchedule = new ConcertSchedule();
+        concertSchedule.id = concertScheduleId;
+        concertSchedule.concertId = concertId;
+        concertSchedule.availableSeatCount = availableSeatCount;
+        concertSchedule.dateTime = dateTime;
+        concertSchedule.reservationStartAt = reservationStartAt;
+        concertSchedule.reservationEndAt = reservationEndAt;
+
+        return concertSchedule;
+    }
+
     /**
      * 해당 공연 일정의 예약 가능 좌석 수를 증가시킨다.
      * <br></br>

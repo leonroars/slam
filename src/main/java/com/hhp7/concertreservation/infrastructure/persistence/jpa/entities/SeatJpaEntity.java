@@ -21,21 +21,29 @@ public class SeatJpaEntity extends BaseJpaEntity{
     private int price;
     private String status;
 
-    @Version
-    private long version; // Row 단위 Optimistic Locking을 위한 Version 필드.
-
     public static SeatJpaEntity fromDomain(Seat seat) {
         SeatJpaEntity entity = new SeatJpaEntity();
         entity.seatId = seat.getId();
         entity.concertScheduleId = seat.getConcertScheduleId();
         entity.number = seat.getNumber();
         entity.status = seat.getStatus().name();
+        entity.price = seat.getPrice();
 
         return entity;
     }
 
     public Seat toDomain() {
         return Seat.create(seatId, concertScheduleId, number, price, SeatStatus.valueOf(status));
+    }
+
+    public SeatJpaEntity updateFromDomain(Seat seat) {
+        this.concertScheduleId = seat.getConcertScheduleId();
+        this.number = seat.getNumber();
+        this.price = seat.getPrice();
+        this.status = seat.getStatus().name();
+        this.price = seat.getPrice();
+
+        return this;
     }
 
     /**
