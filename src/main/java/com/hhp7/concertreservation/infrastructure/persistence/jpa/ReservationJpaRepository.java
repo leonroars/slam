@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ReservationJpaRepository extends JpaRepository<ReservationJpaEntity, String> {
 
@@ -12,6 +13,11 @@ public interface ReservationJpaRepository extends JpaRepository<ReservationJpaEn
 
     // 공연 일정 ID와 좌석 ID로 예약 조회. 단 건 조회인 대신 Service.register() 시 중복 여부 검증을 수행한다.
     Optional<ReservationJpaEntity> findByConcertScheduleIdAndSeatId(String concertScheduleId, String seatId);
+
+    // 공연 일정 ID와 사용자 ID로 예약 조회.
+    @Query("SELECT r FROM ReservationJpaEntity r WHERE r.concertScheduleId = :concertScheduleId AND r.userId = :userId")
+    Optional<ReservationJpaEntity> findByConcertScheduleIdAndUserId(@Param("concertScheduleId") String concertScheduleId, @Param("userId") String userId);
+
 
     // 공연 일정 ID로 예약 조회
     List<ReservationJpaEntity> findByConcertScheduleId(String concertScheduleId);

@@ -36,7 +36,7 @@ public class ReservationService {
                     throw new UnavailableRequestException("해당 좌석에 대한 예약이 이미 존재하므로 예약이 불가합니다.");
                 });
 
-        Reservation reservation = Reservation.create(userId, concertScheduleId, seatId);
+        Reservation reservation = Reservation.create(userId, seatId, concertScheduleId);
         Reservation savedReservation = reservationRepository.save(reservation);
         savedReservation.initiateExpiredAt();
         return reservationRepository.save(savedReservation);
@@ -106,5 +106,15 @@ public class ReservationService {
      */
     public List<Reservation> getReservationsToBeExpired() {
         return reservationRepository.findAllByExpirationCriteria();
+    }
+
+    public Reservation getReservationByConcertScheduleIdAndSeatId(String concertScheduleId, String seatId) {
+        return reservationRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId)
+                .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정과 좌석에 대한 예약이 존재하지 않습니다."));
+    }
+
+    public Reservation getReservationByConcertScheduleIdAndUserId(String concertScheduleId, String userId){
+        return reservationRepository.findByConcertScheduleIdAndUserId(concertScheduleId, userId)
+                .orElseThrow(() -> new UnavailableRequestException("해당 사용자의 예약이 존재하지 않습니다."));
     }
 }

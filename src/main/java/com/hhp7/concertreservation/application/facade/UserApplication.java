@@ -5,6 +5,7 @@ import com.hhp7.concertreservation.domain.user.model.User;
 import com.hhp7.concertreservation.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -16,6 +17,7 @@ public class UserApplication {
      * 회원 가입.
      * @return
      */
+    @Transactional
     public User registerUser(String name) {
         User savedUser = userService.joinUser(User.create(name)); // 회원 생성 및 저장
         pointService.createUserPointBalance(savedUser.getId()); // 신규 회원 잔액 0 생성.

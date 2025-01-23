@@ -73,11 +73,24 @@ public class ConcertReservationController {
 
     /* ========== Reservation ========== */
 
-    @PostMapping("/concertSchedules/{scheduleId}/reserve")
+    /**
+     * 가예약
+     */
+    @PostMapping("/concertSchedules/{scheduleId}/temporalReserve")
     public ResponseEntity<Reservation> reserveSeat(@PathVariable String scheduleId,
                                                    @RequestParam String userId,
                                                    @RequestParam String seatId) {
-        return ResponseEntity.ok(reservationApp.reserve(scheduleId, userId, seatId));
+        return ResponseEntity.ok(reservationApp.createTemporaryReservation(scheduleId, userId, seatId));
+    }
+
+    /**
+     * 예약 확정
+     */
+    @PostMapping("/concertSchedules/{scheduleId}/confirmReservation")
+    public ResponseEntity<Reservation> confirmReservation(@PathVariable String scheduleId,
+                                                          @RequestParam String userId,
+                                                          @RequestParam String seatId) {
+        return ResponseEntity.ok(reservationApp.confirmReservation(scheduleId, userId, seatId));
     }
 
     @PostMapping("/reservations/{reservationId}/cancel")

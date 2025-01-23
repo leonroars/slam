@@ -4,6 +4,7 @@ import com.hhp7.concertreservation.domain.concert.model.Concert;
 import com.hhp7.concertreservation.domain.concert.model.ConcertSchedule;
 import com.hhp7.concertreservation.domain.concert.model.Seat;
 import com.hhp7.concertreservation.domain.concert.service.ConcertService;
+import com.hhp7.concertreservation.domain.point.model.PointHistory;
 import com.hhp7.concertreservation.domain.point.model.UserPointBalance;
 import com.hhp7.concertreservation.domain.point.service.PointService;
 import com.hhp7.concertreservation.domain.queue.model.Token;
@@ -20,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
-@Transactional(isolation = Isolation.REPEATABLE_READ) // 공식 문서 참조 결과 RuntimeException 발생 시 롤백.
 public class ConcertReservationApplication {
 
     private final ConcertService concertService;
@@ -33,6 +33,7 @@ public class ConcertReservationApplication {
      * @param userId
      * @return
      */
+    @Transactional
     public UserPointBalance getUserPointBalance(String userId){
         return pointService.getUserPointBalance(userId);
     }
@@ -43,6 +44,7 @@ public class ConcertReservationApplication {
      * @param amount
      * @return
      */
+    @Transactional
     public UserPointBalance chargeUserPoint(String userId, int amount){
         return pointService.increaseUserPointBalance(userId, amount);
     }
@@ -53,8 +55,18 @@ public class ConcertReservationApplication {
      * @param amount
      * @return
      */
+    @Transactional
     public UserPointBalance useUserPoint(String userId, int amount) {
         return pointService.decreaseUserPointBalance(userId, amount);
+    }
+
+    /**
+     * 사용자 포인트 사용/충전 내역 전체 조회
+     * @param userId
+     * @return
+     */
+    public List<PointHistory> getPointHistories(String userId){
+        return pointService.getUserPointHistories(userId);
     }
 
     // 공연 등록
@@ -67,13 +79,15 @@ public class ConcertReservationApplication {
         return concertService.getConcert(concertId);
     }
 
+
     // 공연 일정 등록
+    @Transactional
     public ConcertSchedule registerConcertSchedule(String concertId
             , LocalDateTime concertDateTime
             , LocalDateTime reservationStartAt
             , LocalDateTime reservationEndAt
             , int price) {
-        return concertService.registerConcertSchedule(ConcertSchedule.create(concertId, concertDateTime, reservationStartAt, reservationEndAt), 1000);
+        return concertService.registerConcertSchedule(ConcertSchedule.create(concertId, concertDateTime, reservationStartAt, reservationEndAt), price);
     }
 
     // 공연 일정 조회
@@ -86,6 +100,7 @@ public class ConcertReservationApplication {
      * 해당 메서드 호출 시점 기준 예약 가능 공연 일정 목록 조회
      * @return
      */
+    @Transactional
     public List<ConcertSchedule> getAvailableConcertSchedules(){
         return concertService.getAvailableConcertSchedule(LocalDateTime.now());
     }
@@ -95,6 +110,7 @@ public class ConcertReservationApplication {
      * @param concertScheduleId
      * @return
      */
+    @Transactional
     public List<Seat> getAvailableSeats(String concertScheduleId){
         return concertService.getAvailableSeatsOfConcertSchedule(concertScheduleId);
     }
@@ -105,35 +121,54 @@ public class ConcertReservationApplication {
      * @param seatId
      * @return
      */
+    @Transactional
     public Seat getSeat(String seatId){
         return concertService.getSeat(seatId);
     }
 
     /**
-     * 특정 공연 일정의 특정 좌석에 대한 예약을 요청합니다.
+     * 특정 공연 일정의 특정 좌석에 대한 가예약을 요청합니다.
      * @param concertScheduleId
      * @param userId
      * @param seatId
      */
-    public Reservation reserve(String concertScheduleId, String userId, String seatId){
-        // 예약 생성 - 가예약 상태(BOOKED)
-        Reservation createdReservation = reservationService.createReservation(concertScheduleId, userId, seatId);
+    @Transactional
+    public Reservation createTemporaryReservation(String concertScheduleId, String userId, String seatId){
 
-        // 해당 좌석 할당 처리(UNAVAILABLE -> AVAILABLE) 및 가격 조회.
-        int seatPrice = concertService.assignSeatOfConcertSchedule(concertScheduleId, seatId).getPrice();
+        // 가예약 생성
+        Reservation createdReservation = reservationService.createReservation(userId, concertScheduleId, seatId);
 
-        // 사용자 포인트 차감
-        pointService.decreaseUserPointBalance(userId, seatPrice);
+        // 해당 좌석 할당 처리(AVAILABLE -> UNAVAILABLE)
+        Seat assignedSeat = concertService.assignSeatOfConcertSchedule(concertScheduleId, seatId);
 
-        // 예약 확정 처리
-        return reservationService.confirmReservation(createdReservation.getId());
+        return createdReservation;
+    }
 
+    /**
+     * 특정 가예약에 대한 예약 확정 절차를 진행합니다. 결제 과정을 포함합니다. (추후 ReservationId만 받도록 리팩터 예정.)
+     * @param concertScheduleId
+     * @param userId
+     * @param seatId
+     * @return
+     */
+    @Transactional
+    public Reservation confirmReservation(String concertScheduleId, String userId, String seatId){
+
+        // 해당 공연 좌석에 대한 해당 사용자 가예약 조회
+        Reservation tempReservation = reservationService.getReservationByConcertScheduleIdAndUserId(concertScheduleId, userId);
+
+        // 결제
+        pointService.decreaseUserPointBalance(userId, concertService.getSeat(seatId).getPrice());
+
+        // 가예약 확정 처리
+        return reservationService.confirmReservation(tempReservation.getId());
     }
 
     /**
      * 예약 취소
      * @param reservationId
      */
+    @Transactional
     public Reservation cancelReservation(String reservationId) {
         // 예약 취소
         Reservation canceledReservation = reservationService.cancelReservation(reservationId);
@@ -173,6 +208,7 @@ public class ConcertReservationApplication {
      * @param tokenId
      * @return
      */
+    @Transactional
     public int getRemaining(String concertScheduleId, String tokenId){
         return queueService.getRemainingTokenCount(concertScheduleId, tokenId);
     }

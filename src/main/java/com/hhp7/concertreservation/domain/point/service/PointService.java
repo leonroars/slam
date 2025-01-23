@@ -29,14 +29,14 @@ public class PointService {
     public UserPointBalance decreaseUserPointBalance(String userId, int decreaseAmount){
         UserPointBalance userPointBalance = userPointBalanceRepository.getBalanceByUserId(userId)
                 .orElseThrow(() -> new UnavailableRequestException("해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));;
-        userPointBalance.decrease(decreaseAmount);
+        UserPointBalance updatedUserPointBalance = userPointBalance.decrease(decreaseAmount);
         PointHistory pointHistory = PointHistory.create(
                 userId,
                 PointTransactionType.USE,
                 decreaseAmount
         );
         pointHistoryRepository.save(pointHistory);
-        return userPointBalanceRepository.save(userPointBalance);
+        return userPointBalanceRepository.save(updatedUserPointBalance);
     }
 
     /**
@@ -51,14 +51,14 @@ public class PointService {
     public UserPointBalance increaseUserPointBalance(String userId, int increaseAmount){
         UserPointBalance userPointBalance = userPointBalanceRepository.getBalanceByUserId(userId)
                 .orElseThrow(() -> new UnavailableRequestException("해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));
-        userPointBalance.increase(increaseAmount);
+        UserPointBalance updatedUserPointBalance = userPointBalance.increase(increaseAmount);
         PointHistory pointHistory = PointHistory.create(
                 userId,
                 PointTransactionType.CHARGE,
                 increaseAmount
         );
         pointHistoryRepository.save(pointHistory);
-        return userPointBalanceRepository.save(userPointBalance);
+        return userPointBalanceRepository.save(updatedUserPointBalance);
 
     }
 

@@ -22,8 +22,23 @@ public class UserPointBalanceRepositoryImpl implements UserPointBalanceRepositor
 
     @Override
     public UserPointBalance save(UserPointBalance userPointBalance) {
-        return userPointBalanceJpaRepository.save(
-                        UserPointBalanceJpaEntity.fromDomain(userPointBalance))
-                .toDomain();
+        // 1) domain.id()가 존재하면, DB에서 엔티티를 조회 후 update
+        if (userPointBalance.id() != null && !userPointBalance.id().isBlank()) {
+            UserPointBalanceJpaEntity existingEntity = userPointBalanceJpaRepository
+                    .findById(userPointBalance.id())
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 PointBalance ID입니다."));
+
+            // 기존 엔티티의 version, id 유지, point 등만 갱신
+            existingEntity = existingEntity.updateFromDomain(userPointBalance);
+
+            UserPointBalanceJpaEntity saved = userPointBalanceJpaRepository.save(existingEntity);
+            return saved.toDomain();
+
+        } else {
+            // 2) domain.id()가 없으면 신규 생성
+            UserPointBalanceJpaEntity newEntity = UserPointBalanceJpaEntity.fromDomain(userPointBalance);
+            UserPointBalanceJpaEntity saved = userPointBalanceJpaRepository.save(newEntity);
+            return saved.toDomain();
+        }
     }
 }

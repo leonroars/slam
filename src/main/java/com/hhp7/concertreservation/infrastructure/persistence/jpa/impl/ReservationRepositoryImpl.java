@@ -14,10 +14,23 @@ import org.springframework.stereotype.Repository;
 public class ReservationRepositoryImpl implements ReservationRepository {
     private final ReservationJpaRepository reservationJpaRepository;
 
-    @Override
-    public Reservation save(Reservation reservation) {
-        return reservationJpaRepository.save(ReservationJpaEntity.fromDomain(reservation))
-                .toDomain();
+    public Reservation save(Reservation reservation){
+        // 기존재 Entity 있는 경우 -> ReservationJpaEntity.updateFromDomain() 호출 이후 변경 내역 저장.
+        if(reservation.getId() != null && !reservation.getId().isBlank()){
+            ReservationJpaEntity existingEntity = reservationJpaRepository.findById(reservation.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 Reservation ID입니다."));
+
+            existingEntity = existingEntity.updateFromDomain(reservation);
+
+            ReservationJpaEntity saved = reservationJpaRepository.save(existingEntity);
+            return saved.toDomain();
+        }
+        // 새로운 Entity인 경우 -> ReservationJpaEntity.fromDomain() 호출 이후 저장.
+        else {
+            ReservationJpaEntity newEntity = ReservationJpaEntity.fromDomain(reservation);
+            ReservationJpaEntity saved = reservationJpaRepository.save(newEntity);
+            return saved.toDomain();
+        }
     }
 
     @Override
@@ -36,6 +49,12 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     @Override
     public Optional<Reservation> findByConcertScheduleIdAndSeatId(String concertScheduleId, String seatId) {
         return reservationJpaRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId)
+                .map(ReservationJpaEntity::toDomain);
+    }
+
+    @Override
+    public Optional<Reservation> findByConcertScheduleIdAndUserId(String concertScheduleId, String userId) {
+        return reservationJpaRepository.findByConcertScheduleIdAndUserId(concertScheduleId, userId)
                 .map(ReservationJpaEntity::toDomain);
     }
 

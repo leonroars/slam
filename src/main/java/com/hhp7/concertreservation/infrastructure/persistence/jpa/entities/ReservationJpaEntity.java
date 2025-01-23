@@ -41,12 +41,23 @@ public class ReservationJpaEntity extends BaseJpaEntity{
 
     public static ReservationJpaEntity fromDomain(Reservation reservation){
         ReservationJpaEntity entity = new ReservationJpaEntity();
-        entity.id = Long.valueOf(reservation.getId());
+        if(entity.getId() != null){
+            entity.id = Long.valueOf(reservation.getId());
+        }
         entity.userId = reservation.getUserId();
         entity.seatId = reservation.getSeatId();
         entity.concertScheduleId = reservation.getConcertScheduleId();
         entity.status = reservation.getStatus().name();
         entity.expiredAt = reservation.getExpiredAt();
         return entity;
+    }
+
+    public ReservationJpaEntity updateFromDomain(Reservation domain) {
+        this.userId = domain.getUserId();
+        this.seatId = domain.getSeatId();
+        this.concertScheduleId = domain.getConcertScheduleId();
+        this.status = domain.getStatus().name();
+        this.expiredAt = domain.getExpiredAt();
+        return this;
     }
 }
