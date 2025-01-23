@@ -135,13 +135,11 @@ public class ConcertReservationApplication {
     @Transactional
     public Reservation createTemporaryReservation(String concertScheduleId, String userId, String seatId){
 
-        // 가예약 생성
-        Reservation createdReservation = reservationService.createReservation(userId, concertScheduleId, seatId);
-
-        // 해당 좌석 할당 처리(AVAILABLE -> UNAVAILABLE)
+        // 해당 좌석 할당 처리(AVAILABLE -> UNAVAILABLE) : 만약 해당 좌석 이미 선점 됐을 경우 여기서 실패.
         Seat assignedSeat = concertService.assignSeatOfConcertSchedule(concertScheduleId, seatId);
 
-        return createdReservation;
+        // 가예약 생성 및 반환.
+        return reservationService.createReservation(userId, concertScheduleId, seatId);
     }
 
     /**
