@@ -11,6 +11,7 @@ import com.hhp7.concertreservation.domain.reservation.model.Reservation;
 import com.hhp7.concertreservation.domain.reservation.model.ReservationStatus;
 import com.hhp7.concertreservation.domain.reservation.repository.ReservationRepository;
 import com.hhp7.concertreservation.domain.user.model.User;
+import com.hhp7.concertreservation.exceptions.BusinessRuleViolationException;
 import com.hhp7.concertreservation.exceptions.UnavailableRequestException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.*;
@@ -90,6 +91,7 @@ public class ConcurrentConcertReservationIntegrationTest {
                                 localUsers.get(idx - 1).getId(),
                                 localSeats.get(idx - 1).getId()
                         );
+
                         // 예약 확정
                         Reservation reservation = concertReservationApplication.confirmReservation(
                                 registeredConcertSchedule.getId(),
@@ -109,15 +111,15 @@ public class ConcurrentConcertReservationIntegrationTest {
             List<Future<Boolean>> futures = executor.invokeAll(tasks);
             executor.shutdown();
 
-            int successCount = 0;
+            AtomicInteger successCount = new AtomicInteger(0);
             for (Future<Boolean> f : futures) {
-                if (f.get()) successCount++;
+                if (f.get()) {successCount.incrementAndGet();}
             }
 
             ConcertSchedule updatedConcertSchedule = concertReservationApplication.getConcertSchedule(registeredConcertSchedule.getId());
 
             // then : 스레드 별 실행 결과를 Future<> 를 통해 확인
-            assertThat(successCount).isEqualTo(50); // 모든 예약이 성공했는지 확인
+            assertThat(successCount.get()).isEqualTo(50); // 모든 예약이 성공했는지 확인
             assertThat(updatedConcertSchedule.getAvailableSeatCount()).isEqualTo(0); // 예약 가능 좌석이 0인지 확인
         }
 
@@ -156,7 +158,7 @@ public class ConcurrentConcertReservationIntegrationTest {
                                 registeredConcertSchedule.getId(), localUsers.get(idx-1).getId(), localSeats.get(0).getId());
                         // 각 스레드 별로 할당된 task(각각 동일 좌석에 대한 예약 수행) 결과가 !null && PAID 인 경우 성공으로 간주 -> true.
                         return reservation != null && (reservation.getStatus() == ReservationStatus.PAID);
-                    } catch(UnavailableRequestException | ObjectOptimisticLockingFailureException e){
+                    } catch(UnavailableRequestException | BusinessRuleViolationException e){
                         return false; // 실패 처리
                     }
                 });
@@ -166,17 +168,17 @@ public class ConcurrentConcertReservationIntegrationTest {
             Collections.shuffle(tasks);
             List<Future<Boolean>> futures = executor.invokeAll(tasks);
 
-            int successCount = 0;
-            int failCount = 0;
+            AtomicInteger successCount = new AtomicInteger(0);
+            AtomicInteger failCount = new AtomicInteger(0);
             for(Future<Boolean> f : futures){
-                if(f.get()) {successCount++;}
-                else{failCount++;}
+                if(f.get()) {successCount.incrementAndGet();}
+                else{failCount.incrementAndGet();}
             }
 
             ConcertSchedule updatedConcertSchedule = concertReservationApplication.getConcertSchedule(registeredConcertSchedule.getId());
 
             // then
-            assertThat(successCount).isEqualTo(1);
+            assertThat(successCount.get()).isEqualTo(1);
             assertThat(updatedConcertSchedule.getAvailableSeatCount()).isEqualTo(49);
         }
     }
