@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -95,6 +96,7 @@ public class ConcertService {
      * @param seatId
      * @return
      */
+    @Transactional
     public Seat assignSeatOfConcertSchedule(String concertScheduleId, String seatId){
 
         // 배정될 좌석 조회
@@ -122,6 +124,7 @@ public class ConcertService {
      * @param seatId
      * @return
      */
+    @Transactional
     public Seat unassignSeatOfConcertSchedule(String concertScheduleId, String seatId){
 
         // 배정될 좌석 조회

@@ -12,11 +12,13 @@ import com.hhp7.concertreservation.domain.queue.service.QueueService;
 import com.hhp7.concertreservation.domain.reservation.model.Reservation;
 import com.hhp7.concertreservation.domain.reservation.service.ReservationService;
 import com.hhp7.concertreservation.domain.user.service.UserService;
+import com.hhp7.concertreservation.infrastructure.redis.redisson.aop.RedissonDistributedLock;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
@@ -132,7 +134,8 @@ public class ConcertReservationApplication {
      * @param userId
      * @param seatId
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @RedissonDistributedLock(key = "seatId")
     public Reservation createTemporaryReservation(String concertScheduleId, String userId, String seatId){
 
         // 해당 좌석 할당 처리(AVAILABLE -> UNAVAILABLE) : 만약 해당 좌석 이미 선점 됐을 경우 여기서 실패.
@@ -149,7 +152,8 @@ public class ConcertReservationApplication {
      * @param seatId
      * @return
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @RedissonDistributedLock(key = "seatId")
     public Reservation confirmReservation(String concertScheduleId, String userId, String seatId){
 
         // 해당 공연 좌석에 대한 해당 사용자 가예약 조회
