@@ -22,6 +22,9 @@ public class UserPointBalanceJpaEntity extends BaseJpaEntity{
     private String userId;
     private int point;
 
+    @Version
+    private Long version; // 낙관적 락 적용을 위한 Version 필드.
+
     // UserPointModel(Domain Model) -> UserPointBalanceJpaEntity(JPA entity model)
     public static UserPointBalanceJpaEntity fromDomain(UserPointBalance domainModel) {
         UserPointBalanceJpaEntity entity = new UserPointBalanceJpaEntity();
