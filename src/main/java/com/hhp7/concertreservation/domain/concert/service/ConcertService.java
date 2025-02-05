@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -91,12 +92,30 @@ public class ConcertService {
     }
 
     /**
+     * 특정 ConcertSchedule의 선점된 좌석 수 조회
+     * @param concertScheduleId
+     * @return
+     */
+    public int getOccupiedSeatsCount(String concertScheduleId){
+        return seatRepository.findOccupiedSeatsCount(concertScheduleId);
+    }
+
+    /**
+     * 특정 ConcertSchedule의 남은 좌석 수 조회
+     * @param concertScheduleId
+     * @return
+     */
+    public int getRemainingSeatsCount(String concertScheduleId){
+        return ConcertSchedule.MAX_AVAILABLE_SEATS - getOccupiedSeatsCount(concertScheduleId);
+    }
+
+    /**
      * 특정 ConcertSchedule의 특정 좌석 배정
      * @param concertScheduleId
      * @param seatId
      * @return
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Seat assignSeatOfConcertSchedule(String concertScheduleId, String seatId){
 
         // 배정될 좌석 조회
@@ -106,16 +125,24 @@ public class ConcertService {
         // 배정될 좌석의 상태 변경
         assignedSeat.makeUnavailable();
 
-        // 해당 공연 일정의 '예약 가능 좌석 수' 감소
-        ConcertSchedule soldConcertSchedule = concertScheduleRepository.findById(concertScheduleId)
+        // 수정된 사항을 명시적으로 저장 및 반환
+        return seatRepository.save(assignedSeat);
+    }
+
+    /**
+     * 특정 ConcertSchedule의 상태를 AVAILABLE로 변경.
+     * <br></br>
+     * 해당 메서드는 이후 파사드에서 좌석 예약 직후 호출되며, 두 메서드는 분리된 트랜잭션으로 처리됩니다.
+     * @param concertScheduleId
+     * @return
+     */
+    public ConcertSchedule makeConcertScheduleAvailable(String concertScheduleId){
+        ConcertSchedule concertSchedule = concertScheduleRepository.findById(concertScheduleId)
                 .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정이 존재하지 않습니다."));
-        soldConcertSchedule.decrementAvailableSeatCount();
 
-        // 수정된 사항을 명시적으로 저장
-        Seat resultSeat = seatRepository.save(assignedSeat);
-        concertScheduleRepository.save(soldConcertSchedule);
+        concertSchedule.makeAvailable();
 
-        return resultSeat;
+        return concertScheduleRepository.save(concertSchedule);
     }
 
     /**
@@ -124,7 +151,7 @@ public class ConcertService {
      * @param seatId
      * @return
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Seat unassignSeatOfConcertSchedule(String concertScheduleId, String seatId){
 
         // 배정될 좌석 조회
@@ -134,16 +161,22 @@ public class ConcertService {
         // 배정될 좌석의 상태 변경
         assignedSeat.makeAvailable();
 
-        // 해당 공연 일정의 '예약 가능 좌석 수' 증가
-        ConcertSchedule unassignedConcertSchedule = concertScheduleRepository.findById(concertScheduleId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정이 존재하지 않습니다."));
-        unassignedConcertSchedule.incrementAvailableSeatCount();
-
         // 수정된 사항을 명시적으로 저장
-        Seat resultSeat = seatRepository.save(assignedSeat);
-        concertScheduleRepository.save(unassignedConcertSchedule);
+        return seatRepository.save(assignedSeat);
+    }
 
-        return resultSeat;
+    /**
+     * 특정 ConcertSchedule의 상태를 SOLDOUT으로 변경.
+     * @param concertScheduleId
+     * @return
+     */
+    public ConcertSchedule makeConcertScheduleSoldOut(String concertScheduleId){
+        ConcertSchedule concertSchedule = concertScheduleRepository.findById(concertScheduleId)
+                .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정이 존재하지 않습니다."));
+
+        concertSchedule.makeSoldOut();
+
+        return concertScheduleRepository.save(concertSchedule);
     }
 
     /**
