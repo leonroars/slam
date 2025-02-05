@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 public class ConcertSchedule {
     private String id;
     private String concertId;
-    private int availableSeatCount;
+    private ConcertScheduleAvailability availability;
     private LocalDateTime dateTime;
     private LocalDateTime reservationStartAt;
     private LocalDateTime reservationEndAt;
@@ -43,7 +43,7 @@ public class ConcertSchedule {
     // ID 미포함 정적 팩토리 메서드.
     public static ConcertSchedule create(String concertId, LocalDateTime dateTime, LocalDateTime reservationStartAt, LocalDateTime reservationEndAt){
 
-        return create(concertId, dateTime, reservationStartAt, reservationEndAt, MAX_AVAILABLE_SEATS);
+        return create(concertId, dateTime, reservationStartAt, reservationEndAt, ConcertScheduleAvailability.AVAILABLE);
     }
 
     // 지나치게 비즈니스 로직을 강하게 강요해서 테스트에 어려움을 겪었습니다.
@@ -52,14 +52,14 @@ public class ConcertSchedule {
             , LocalDateTime dateTime
             , LocalDateTime reservationStartAt
             , LocalDateTime reservationEndAt
-            , int availableSeatCount){
+            , ConcertScheduleAvailability availability){
 
         evaluateConcertSchedule(dateTime, reservationStartAt, reservationEndAt);
 
         ConcertSchedule concertSchedule = new ConcertSchedule();
         concertSchedule.id = UUID.randomUUID().toString();
         concertSchedule.concertId = concertId;
-        concertSchedule.availableSeatCount = availableSeatCount;
+        concertSchedule.availability = availability;
         concertSchedule.dateTime = dateTime;
         concertSchedule.reservationStartAt = reservationStartAt;
         concertSchedule.reservationEndAt = reservationEndAt;
@@ -67,51 +67,19 @@ public class ConcertSchedule {
         return concertSchedule;
     }
 
-    public static ConcertSchedule create(String concertScheduleId, String concertId, LocalDateTime dateTime, LocalDateTime reservationStartAt, LocalDateTime reservationEndAt, int availableSeatCount){
+    public static ConcertSchedule create(String concertScheduleId, String concertId, LocalDateTime dateTime, LocalDateTime reservationStartAt, LocalDateTime reservationEndAt, ConcertScheduleAvailability availability){
         evaluateConcertSchedule(dateTime, reservationStartAt, reservationEndAt);
 
         ConcertSchedule concertSchedule = new ConcertSchedule();
         concertSchedule.id = concertScheduleId;
         concertSchedule.concertId = concertId;
-        concertSchedule.availableSeatCount = availableSeatCount;
+        concertSchedule.availability = availability;
         concertSchedule.dateTime = dateTime;
         concertSchedule.reservationStartAt = reservationStartAt;
         concertSchedule.reservationEndAt = reservationEndAt;
 
         return concertSchedule;
     }
-
-    /**
-     * 해당 공연 일정의 예약 가능 좌석 수를 증가시킨다.
-     * <br></br>
-     * 비즈니스 로직 상 이는 '이미 체결된 예약의 취소' 혹은 '가예약 상태 유지기간 만료' 상황에서 발생한다.
-     * <br></br>
-     * 또한 시나리오 상 각 공연별 할당 최대 좌석 수는 50석이므로, 이를 위반 가능케하는 시도 발생 시 {@code BusinessRuleViolation} 예외를 발생시켜 해당 가능성을 차단한다.
-     */
-    public ConcertSchedule incrementAvailableSeatCount(){
-        if(availableSeatCount == MAX_AVAILABLE_SEATS){
-            throw new BusinessRuleViolationException("콘서트 일정 별로 할당된 좌석은 최대 50석이므로 추가 할당이 불가합니다.");
-        }
-        availableSeatCount++;
-
-        return this;
-    }
-
-    /**
-     * 해당 공연 일정의 예약 가능 좌석 수를 감소시킨다.
-     * <br></br>
-     * 비즈니스 로직 상 이는 해당 공연 일정에 대해 '예약 확정' 혹은 '가예약 체결' 상황에서 발생한다.
-     * <br></br>
-     * 또한 예약 가능 좌석 수가 0석일 경우 매진이므로, 이를 위반 가능케하는 시도 발생 시 {@code BusinessRuleViolation} 예외를 발생시켜 해당 가능성을 차단한다.
-     */
-    public ConcertSchedule decrementAvailableSeatCount(){
-        if(availableSeatCount == MIN_AVAILABLE_SEATS){
-            throw new BusinessRuleViolationException("해당 콘서트 일정의 잔여 좌석이 존재하지 않으므로 예약 가능 좌석 수 차감이 불가합니다.");
-        }
-        availableSeatCount--;
-        return this;
-    }
-
 
     /**
      * 콘서트 타당성 검증을 제공하는 메서드입니다.
@@ -137,4 +105,20 @@ public class ConcertSchedule {
             throw new BusinessRuleViolationException("예약 가능 기간 중엔 공연이 종료될 수 없습니다.");
         }
     }
+
+    /**
+     * 콘서트 일정의 예약 가능 여부를 'AVAILABLE'로 변경합니다.
+     */
+    public void makeAvailable(){
+        this.availability = ConcertScheduleAvailability.AVAILABLE;
+    }
+
+    /**
+     * 콘서트 일정의 예약 가능 여부를 'SOLDOUT'로 변경합니다.
+     */
+    public void makeSoldOut(){
+        this.availability = ConcertScheduleAvailability.SOLDOUT;
+    }
+
+
 }

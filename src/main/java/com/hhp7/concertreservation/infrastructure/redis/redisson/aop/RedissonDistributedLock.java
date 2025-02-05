@@ -26,11 +26,11 @@ public @interface RedissonDistributedLock {
     /**
      * 락 획득을 기다리는 시간 (default - 5s). 즉, 락 획득 실패 시 재시도까지 기다리는 시간을 의미.
      */
-    long waitTime() default 500L;
+    long waitTime() default 10L;
 
     /**
      * 락 임대 시간 (default - 3s)
      * 락을 획득한 이후 leaseTime 이 지나면 락을 해제한다
      */
-    long leaseTime() default 1L;
+    long leaseTime() default 3L;
 }
