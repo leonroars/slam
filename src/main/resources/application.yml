@@ -6,11 +6,19 @@ spring:
     url: jdbc:mysql://localhost:3306/mydatabase
     username: myuser
     password: secret
+    hikari:
+      auto-commit: false
 
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+#    properties:
+#      hibernate:
+#        jdbc:
+#          batch_size: 60
+#        order_inserts: true
+#        rewriteBatchedStatements: true
 
   data:
     redis:
@@ -19,7 +27,12 @@ spring:
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
+    com:
+      hhp7:
+        concertreservation:
+            repository: warn
+            service: warn
+            controller: warn
 
 server:
   port: 8080

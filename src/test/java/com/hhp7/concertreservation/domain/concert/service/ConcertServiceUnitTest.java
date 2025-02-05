@@ -233,7 +233,7 @@ class ConcertServiceUnitTest {
         @DisplayName("성공 : 특정 ConcertSchedule의 특정 좌석을 배정 해제하면 좌석 상태가 변경된다.")
         void shouldUnassignSeatAndIncrementAvailableSeats_WhenValidSeatAndSchedule() {
             // given
-            ConcertSchedule concertSchedule = ConcertSchedule.create("1", third, first, second, 3);
+            ConcertSchedule concertSchedule = ConcertSchedule.create("1", third, first, second);
             Seat seat = Seat.create("1", 1, 1000, SeatStatus.UNAVAILABLE);
 
             when(concertScheduleRepository.findById(concertSchedule.getId()))

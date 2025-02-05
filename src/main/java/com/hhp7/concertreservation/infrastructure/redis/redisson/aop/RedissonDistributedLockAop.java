@@ -49,7 +49,7 @@ public class RedissonDistributedLockAop {
         String lockKey = LOCK_PREFIX + ":" + parameterNames[paramIndex] + "-" + args[paramIndex];
 
         // Redisson의 ReentrantLock 구현체인 RLock 객체 생성
-        RLock rLock = redissonClient.getLock(lockKey);
+        RLock rLock = redissonClient.getFairLock(lockKey);
         log.info("[RedissonLockAspect] 다음 키에 대한 락 획득 시도 중입니다.: {}", lockKey);
 
         boolean currentlyLocked = false; // 현재 락 획득 상태

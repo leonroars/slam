@@ -54,4 +54,9 @@ public class SeatRepositoryImpl implements SeatRepository {
                 .map(SeatJpaEntity::toDomain)
                 .toList();
     }
+
+    @Override
+    public int findOccupiedSeatsCount(String concertScheduleId) {
+        return seatJpaRepository.findOccupiedSeatsCount(concertScheduleId);
+    }
 }
