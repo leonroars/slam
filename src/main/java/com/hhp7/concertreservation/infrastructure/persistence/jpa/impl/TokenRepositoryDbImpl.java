@@ -8,11 +8,13 @@ import com.hhp7.concertreservation.infrastructure.persistence.jpa.entities.Token
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
+@ConditionalOnProperty(name = "app.queue.provider", havingValue = "DB", matchIfMissing = true)
 @Repository
 @RequiredArgsConstructor
-public class TokenRepositoryImpl implements TokenRepository {
+public class TokenRepositoryDbImpl implements TokenRepository {
     private final TokenJpaRepository tokenJpaRepository;
 
     @Override
