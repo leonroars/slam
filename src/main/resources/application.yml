@@ -37,6 +37,11 @@ logging:
 server:
   port: 8080
 
+#### 대기열 구현체 설정 : Default - DB
+app:
+  queue:
+    provider: "redis"
+
 springdoc:
   api-docs:
     path: /v3/api-docs       # 기본값: /v3/api-docs
