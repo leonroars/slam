@@ -23,7 +23,7 @@ public class QueueScheduler {
     @Scheduled(fixedDelay = 10000) // 10초 간격 순회하며 작업.
     public void expireAndActivateToken(String concertScheduleId) {
 
-        // 현재 예약 진행 중인 공연 전체 조회
+        // 현재 예약 진행 중인 공연 전체 조회 : 캐싱 적용하여 해당 데이터 캐시에 존재할 경우, Redis 캐시로부터 가져옵니다!
         List<ConcertSchedule> onGoingConcertSchedules = concertService.getOngoingConcertSchedules(LocalDateTime.now());
 
         for(ConcertSchedule concertSchedule : onGoingConcertSchedules){
