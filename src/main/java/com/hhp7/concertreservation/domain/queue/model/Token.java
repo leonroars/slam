@@ -15,9 +15,6 @@ public class Token {
     private LocalDateTime createdAt;
     private LocalDateTime expiredAt;
 
-    private static final int WAITING_TOKEN_DURATION = 6; // 대기 상태 토큰의 유효시간
-    private static final int ACTIVE_TOKEN_DURATION = 3; // 활성 상태 토큰의 유효시간
-
     private Token(){}
 
     public static Token create(String id, String userId, String concertScheduleId, LocalDateTime createdAt, LocalDateTime expiredAt){
@@ -43,8 +40,8 @@ public class Token {
                 null,
                 userId,
                 concertScheduleId,
-                null,
-                LocalDateTime.now().plusHours(WAITING_TOKEN_DURATION));
+                LocalDateTime.now(),
+                LocalDateTime.now().plusHours(Queue.WAITING_TOKEN_DURATION));
     }
 
     /**
@@ -56,7 +53,7 @@ public class Token {
             throw new BusinessRuleViolationException("이미 활성화된 토큰입니다.");
         }
         this.status = TokenStatus.ACTIVE;
-        this.initiateExpiredAt(LocalDateTime.now().plusMinutes(ACTIVE_TOKEN_DURATION));
+        this.initiateExpiredAt(LocalDateTime.now().plusMinutes(Queue.ACTIVE_TOKEN_DURATION));
         return this;
     }
 
