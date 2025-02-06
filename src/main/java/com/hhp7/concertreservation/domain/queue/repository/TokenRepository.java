@@ -1,7 +1,6 @@
 package com.hhp7.concertreservation.domain.queue.repository;
 
 import com.hhp7.concertreservation.domain.queue.model.Token;
-import com.hhp7.concertreservation.domain.queue.model.TokenStatus;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,7 +12,7 @@ public interface TokenRepository {
     List<Token> saveAll(List<Token> tokens);
 
     // 토큰 ID로 단건 조회. : V
-    Optional<Token> findByTokenId(String tokenId);
+    Optional<Token> findTokenWithIdAndConcertScheduleId(String concertScheduleId, String tokenId);
 
     // 공연 일정 ID로 토큰 전체 조회
     List<Token> findByConcertScheduleId(String concertScheduleId);
@@ -28,7 +27,10 @@ public interface TokenRepository {
     // 공연 일정 ID, 사용자 ID, 상태 목록으로 남은 토큰 수 집계.
     int countRemaining(String concertScheduleId, String tokenId);
 
-    // 만료 대상 토큰 전체 조회
-    List<Token> findTokensToBeExpired();
+    // 활성화된 토큰 중 만료될 토큰 조회.
+    List<Token> findActivatedTokensToBeExpired(String concertScheduleId);
+
+    // 대기 중인 토큰 중 만료될 토큰 조회.
+    List<Token> findWaitingTokensToBeExpired();
 
 }

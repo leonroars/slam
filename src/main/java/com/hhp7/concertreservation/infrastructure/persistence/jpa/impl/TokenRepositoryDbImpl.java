@@ -32,8 +32,8 @@ public class TokenRepositoryDbImpl implements TokenRepository {
     }
 
     @Override
-    public Optional<Token> findByTokenId(String tokenId) {
-        return tokenJpaRepository.findById(Long.valueOf(tokenId))
+    public Optional<Token> findTokenWithIdAndConcertScheduleId(String concertScheduleId, String tokenId) {
+        return tokenJpaRepository.findTokenJpaEntityByConcertScheduleIdAndId(concertScheduleId, tokenId)
                 .map(TokenJpaEntity::toDomain);
     }
 
@@ -43,14 +43,6 @@ public class TokenRepositoryDbImpl implements TokenRepository {
                 .stream()
                 .map(TokenJpaEntity::toDomain)
                 .toList();
-    }
-
-    @Override
-    public Optional<Token> findByConcertScheduleIdAndUserIdAndStatus(
-            String concertScheduleId, String userId, TokenStatus status) {
-        return tokenJpaRepository.findByConcertScheduleIdAndUserIdAndStatus(
-                concertScheduleId, userId, status.name())
-                .map(TokenJpaEntity::toDomain);
     }
 
     @Override
@@ -72,8 +64,16 @@ public class TokenRepositoryDbImpl implements TokenRepository {
     }
 
     @Override
-    public List<Token> findTokensToBeExpired() {
-        return tokenJpaRepository.findExpiredTokens()
+    public List<Token> findActivatedTokensToBeExpired(String concertScheduleId) {
+        return tokenJpaRepository.findActivatedTokensToBeExpired()
+                .stream()
+                .map(TokenJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Token> findWaitingTokensToBeExpired() {
+        return tokenJpaRepository.findWaitingTokensToBeExpired()
                 .stream()
                 .map(TokenJpaEntity::toDomain)
                 .toList();

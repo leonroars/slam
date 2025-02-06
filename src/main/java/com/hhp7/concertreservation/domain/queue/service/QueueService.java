@@ -1,7 +1,6 @@
 package com.hhp7.concertreservation.domain.queue.service;
 
 import com.hhp7.concertreservation.domain.queue.model.Token;
-import com.hhp7.concertreservation.domain.queue.model.TokenStatus;
 import com.hhp7.concertreservation.domain.queue.repository.TokenRepository;
 import com.hhp7.concertreservation.exceptions.UnavailableRequestException;
 import java.util.List;
@@ -13,8 +12,9 @@ import org.springframework.stereotype.Service;
 public class QueueService {
 
     private final TokenRepository tokenRepository;
+
     public static final int MAX_CONCURRENT_USER = 40;
-    public static final double MAX_CONCURRENT_USER_THRESHOLD = 1.2;
+    public static final double MAX_CONCURRENT_USER_THRESHOLD = 1.2; // N 초에 M 명 활성화 시에도 지켜져야하는 최대 동시 사용자 산출 계수.
 
     private int calculateConcurrentUserThreshold(){
         return (int)Math.floor(MAX_CONCURRENT_USER * MAX_CONCURRENT_USER_THRESHOLD);
@@ -41,7 +41,7 @@ public class QueueService {
         // 현재 예약 서비스 이용 중인 사용자 수 확인
         int activeTokenCount = tokenRepository.countCurrentlyActiveTokens(concertScheduleId);
 
-        // 만약 대기가 필요 없을 경우 바로 활성화.
+        // 만약 대기가 필요 없을 경우 바로 활성화 및 만료 시간 설정(5분)
         if(activeTokenCount < calculateConcurrentUserThreshold()){
             token.activate();
         }
@@ -71,16 +71,20 @@ public class QueueService {
         return tokenRepository.saveAll(activated);
     }
 
-    public Token expireToken(String tokenId){
-        Token token = tokenRepository.findByTokenId(tokenId)
+    public Token expireToken(String concertScheduleId, String tokenId){
+        Token token = tokenRepository.findTokenWithIdAndConcertScheduleId(concertScheduleId, tokenId)
                 .orElseThrow(() -> new UnavailableRequestException("해당 토큰이 존재하지 않습니다."));
         token.expire();
 
         return tokenRepository.save(token);
     }
 
-    public List<Token> expireToken(List<Token> tokens){
-        return tokenRepository.saveAll(tokens.stream().map(Token::expire).toList());
+    public List<Token> expireToken(String concertScheduleId, List<Token> tokens){
+        return tokenRepository.saveAll(
+                tokens.stream()
+                        .map(Token::expire)
+                        .toList()
+        );
     }
 
     public int getRemainingTokenCount(String concertScheduleId, String tokenId){
@@ -92,8 +96,8 @@ public class QueueService {
      * @param tokenId
      * @return
      */
-    public boolean validateToken(String tokenId) {
-        return tokenRepository.findByTokenId(tokenId)
+    public boolean validateToken(String concertScheduleId, String tokenId) {
+        return tokenRepository.findTokenWithIdAndConcertScheduleId(concertScheduleId, tokenId)
                 .map(token -> {
                     if (token.isExpired()) {
                         throw new UnavailableRequestException("만료된 토큰이므로 사용 불가합니다.");
@@ -106,7 +110,19 @@ public class QueueService {
                 .orElseThrow(() -> new UnavailableRequestException("해당 토큰이 존재하지 않습니다."));
     }
 
-    public List<Token> getTokensToBeExpired(){
-        return tokenRepository.findTokensToBeExpired();
+    /**
+     * 만료될 활성화 토큰 조회
+     * @return
+     */
+    public List<Token> getActivatedTokensToBeExpired(String concertScheduleId){
+        return tokenRepository.findActivatedTokensToBeExpired(concertScheduleId);
+    }
+
+    /**
+     * 만료될 대기 중 토큰 조회
+     * @return
+     */
+    public List<Token> getWaitingTokensToBeExpired(){
+        return tokenRepository.findWaitingTokensToBeExpired();
     }
 }

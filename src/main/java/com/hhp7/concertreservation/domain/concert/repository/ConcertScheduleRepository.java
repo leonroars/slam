@@ -16,4 +16,7 @@ public interface ConcertScheduleRepository {
 
     // 예약 가능한 콘서트 목록 조회(일정 상 예약 가능함과 동시에 예약 가능 좌석도 존재하는 공연 일정 목록 조회)
     List<ConcertSchedule> findAllAvailable(LocalDateTime presentDateTime);
+
+    // 현재 예약 진행 중인 공연 일정 목록 조회
+    List<ConcertSchedule> findAllOngoingConcertSchedules(LocalDateTime presentDateTime);
 }

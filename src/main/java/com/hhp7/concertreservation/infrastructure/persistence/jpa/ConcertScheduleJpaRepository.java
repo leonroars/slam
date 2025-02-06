@@ -15,4 +15,9 @@ public interface ConcertScheduleJpaRepository extends JpaRepository<ConcertSched
             + "AND cs.reservationEndAt >= :presentDateTime"
             + " AND cs.availability = 'AVAILABLE'")
     List<ConcertScheduleJpaEntity> findAllAvailable(@Param("presentDateTime") LocalDateTime presentDateTime);
+
+    @Query("select cs from ConcertScheduleJpaEntity cs "
+            + "where cs.reservationStartAt <= :presentDateTime "
+            + "AND cs.reservationEndAt >= :presentDateTime")
+    List<ConcertScheduleJpaEntity> findAllOnGoing(@Param("presentDateTime") LocalDateTime presentDateTime);
 }

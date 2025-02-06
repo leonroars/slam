@@ -217,4 +217,13 @@ public class ConcertService {
     public List<ConcertSchedule> getAvailableConcertSchedule(LocalDateTime presentDateTime) {
         return concertScheduleRepository.findAllAvailable(presentDateTime);
     }
+
+    /**
+     * 예약 진행 중인 공연 일정 목록 조회
+     * @param presentDateTime
+     * @return
+     */
+    public List<ConcertSchedule> getOngoingConcertSchedules(LocalDateTime presentDateTime) {
+        return concertScheduleRepository.findAllOngoingConcertSchedules(presentDateTime);
+    }
 }
