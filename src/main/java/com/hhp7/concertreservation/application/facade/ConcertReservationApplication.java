@@ -11,15 +11,11 @@ import com.hhp7.concertreservation.domain.queue.model.Token;
 import com.hhp7.concertreservation.domain.queue.service.QueueService;
 import com.hhp7.concertreservation.domain.reservation.model.Reservation;
 import com.hhp7.concertreservation.domain.reservation.service.ReservationService;
-import com.hhp7.concertreservation.domain.user.service.UserService;
-import com.hhp7.concertreservation.exceptions.UnavailableRequestException;
-import com.hhp7.concertreservation.infrastructure.redis.redisson.aop.RedissonDistributedLock;
+import com.hhp7.concertreservation.infrastructure.distributedlock.redisson.aop.RedissonDistributedLock;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component

@@ -36,4 +36,12 @@ public class ConcertScheduleRepositoryImpl implements ConcertScheduleRepository 
                 .map(ConcertScheduleJpaEntity::toDomain)
                 .toList();
     }
+
+    @Override
+    public List<ConcertSchedule> findAllOngoingConcertSchedules(LocalDateTime presentDateTime) {
+        return concertScheduleJpaRepository.findAllOnGoing(presentDateTime)
+                .stream()
+                .map(ConcertScheduleJpaEntity::toDomain)
+                .toList();
+    }
 }

@@ -131,7 +131,7 @@ class QueueServiceUnitTest {
                 .thenReturn(List.of());
 
         // when & then
-        assertThatThrownBy(() -> queueService.activateTokens(concertScheduleId, 1))
+        assertThatThrownBy(() -> queueService.activateTokens(concertScheduleId, k))
                 .isInstanceOf(UnavailableRequestException.class);
 
         verify(tokenRepository, times(1)).countCurrentlyActiveTokens(concertScheduleId);
@@ -147,7 +147,7 @@ class QueueServiceUnitTest {
         String tokenId = "token1";
         Token existingToken = Token.create("userId", "concertScheduleId");
 
-        when(tokenRepository.findByTokenId(tokenId))
+        when(tokenRepository.findTokenWithIdAndConcertScheduleId("concertScheduleId", tokenId))
                 .thenReturn(Optional.of(existingToken));
 
         Token expiredToken = Token.create("userId", "concertScheduleId").expire();
@@ -155,11 +155,11 @@ class QueueServiceUnitTest {
                 .thenReturn(expiredToken);
 
         // when
-        Token result = queueService.expireToken(tokenId);
+        Token result = queueService.expireToken("concertScheduleId", tokenId);
 
         // then
         assertThat(result.getStatus()).isEqualTo(TokenStatus.EXPIRED);
-        verify(tokenRepository, times(1)).findByTokenId(tokenId);
+        verify(tokenRepository, times(1)).findTokenWithIdAndConcertScheduleId("concertScheduleId", tokenId);
         verify(tokenRepository, times(1)).save(existingToken);
     }
 
@@ -170,14 +170,14 @@ class QueueServiceUnitTest {
         String tokenId = "token1";
         Token token = Token.create("userId", "concertScheduleId").expire();
 
-        when(tokenRepository.findByTokenId(tokenId))
+        when(tokenRepository.findTokenWithIdAndConcertScheduleId("concertScheduleId", tokenId))
                 .thenReturn(Optional.of(token));
 
         // Act & Assert
-        assertThatThrownBy(() -> queueService.expireToken(tokenId))
+        assertThatThrownBy(() -> queueService.expireToken("concertScheduleId", tokenId))
                 .isInstanceOf(BusinessRuleViolationException.class);
 
-        verify(tokenRepository, times(1)).findByTokenId(tokenId);
+        verify(tokenRepository, times(1)).findTokenWithIdAndConcertScheduleId("concertScheduleId", tokenId);
         verify(tokenRepository, never()).save(any(Token.class));
     }
 
@@ -198,6 +198,6 @@ class QueueServiceUnitTest {
 
         // then
         assertThat(result).isEqualTo(expectedCount);
-        verify(tokenRepository, times(1)).countRemaining(concertScheduleId, userId);
+        verify(tokenRepository, times(1)).countRemaining(concertScheduleId, tokenId);
     }
 }

@@ -23,10 +23,10 @@ public class TokenValidationAspect {
     @Pointcut("@annotation(com.hhp7.concertreservation.component.interceptor.RequiresTokenValidation)")
     public void tokenValidationPointcut() {}
 
-    @Before("tokenValidationPointcut() && args(tokenId,..)")
-    public void validateToken(JoinPoint joinPoint, String tokenId) {
+    @Before("tokenValidationPointcut() && args(concertScheduleId, tokenId,..)")
+    public void validateToken(JoinPoint joinPoint, String concertScheduleId, String tokenId) {
 
-        boolean isValid = queueService.validateToken(tokenId);
+        boolean isValid = queueService.validateToken(concertScheduleId, tokenId);
         if (!isValid) {
             throw new UnavailableRequestException("해당 토큰은 유효하지 않습니다.");
         }
