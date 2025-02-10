@@ -6,7 +6,6 @@ import com.hhp7.concertreservation.domain.queue.model.Token;
 import com.hhp7.concertreservation.domain.queue.service.QueueService;
 import com.hhp7.concertreservation.domain.user.model.User;
 import com.hhp7.concertreservation.domain.user.service.UserService;
-import com.hhp7.concertreservation.exceptions.BusinessRuleViolationException;
 import com.hhp7.concertreservation.exceptions.UnavailableRequestException;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
@@ -19,7 +18,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -61,10 +59,10 @@ public class QueueServiceIntegrationTest {
             // when : 해당 사용자가 해당 공연 일정 대기열 진입
             Token expectedToken = queueService.issueToken(savedUser.getId(), savedConcertSchedule.getId());
 
-            // then : 발급된 토큰이 존재한다. 해당 공연일정과 Token ID로 조회시 '대기 상태' 토큰이 존재한다.
-            Assertions.assertThatThrownBy(() -> queueService.validateToken(savedConcertSchedule.getId(), expectedToken.getId()))
-                    .isInstanceOf(UnavailableRequestException.class)
-                    .hasMessageContaining("대기 중인 토큰은 사용 불가합니다.");
+            // then : 발급된 토큰이 존재한다.
+            // 현재 활성화 제한 인원 미만이므로 바로 활성화 상태로 발급되어 해당 공연일정과 Token ID로 조회시 '활성화 상태' 토큰이 존재한다.
+            Assertions.assertThat(queueService.validateToken(savedConcertSchedule.getId(), expectedToken.getId()))
+                    .isEqualTo(true);
         }
 
         @Test
