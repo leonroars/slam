@@ -8,11 +8,13 @@ import com.hhp7.concertreservation.infrastructure.persistence.jpa.entities.Token
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
+@ConditionalOnProperty(name = "app.queue.provider", havingValue = "DB", matchIfMissing = true)
 @Repository
 @RequiredArgsConstructor
-public class TokenRepositoryImpl implements TokenRepository {
+public class TokenRepositoryDbImpl implements TokenRepository {
     private final TokenJpaRepository tokenJpaRepository;
 
     @Override
@@ -30,8 +32,8 @@ public class TokenRepositoryImpl implements TokenRepository {
     }
 
     @Override
-    public Optional<Token> findById(String tokenId) {
-        return tokenJpaRepository.findById(Long.valueOf(tokenId))
+    public Optional<Token> findTokenWithIdAndConcertScheduleId(String concertScheduleId, String tokenId) {
+        return tokenJpaRepository.findTokenJpaEntityByConcertScheduleIdAndId(concertScheduleId, tokenId)
                 .map(TokenJpaEntity::toDomain);
     }
 
@@ -44,34 +46,34 @@ public class TokenRepositoryImpl implements TokenRepository {
     }
 
     @Override
-    public Optional<Token> findByConcertScheduleIdAndUserIdAndStatus(
-            String concertScheduleId, String userId, TokenStatus status) {
-        return tokenJpaRepository.findByConcertScheduleIdAndUserIdAndStatus(
-                concertScheduleId, userId, status.name())
-                .map(TokenJpaEntity::toDomain);
-    }
-
-    @Override
-    public List<Token> findNextKTokensByConcertScheduleIdAndStatus(String concertScheduleId, TokenStatus status, int k) {
-        return tokenJpaRepository.findTopKByConcertScheduleIdAndStatus(concertScheduleId, status.name(), k)
+    public List<Token> findNextKTokensToBeActivated(String concertScheduleId, int k) {
+        return tokenJpaRepository.findTopKByConcertScheduleIdAndStatus(concertScheduleId, TokenStatus.WAIT.name(), k)
                 .stream()
                 .map(TokenJpaEntity::toDomain)
                 .toList();
     }
 
     @Override
-    public int countTokensByConcertScheduleIdAndStatus(String concertScheduleId, TokenStatus status) {
-        return tokenJpaRepository.countTokensByConcertScheduleIdAndStatus(concertScheduleId, status.name());
+    public int countCurrentlyActiveTokens(String concertScheduleId) {
+        return tokenJpaRepository.countTokensByConcertScheduleIdAndStatus(concertScheduleId, TokenStatus.ACTIVE.name());
     }
 
     @Override
-    public int countRemainingByConcertScheduleIdAndTokenIdAndStatus(String concertScheduleId, String tokenId) {
+    public int countRemaining(String concertScheduleId, String tokenId) {
         return tokenJpaRepository.countRemainingByConcertScheduleIdAndTokenIdAndStatus(concertScheduleId, tokenId);
     }
 
     @Override
-    public List<Token> findExpiredTokens() {
-        return tokenJpaRepository.findExpiredTokens()
+    public List<Token> findActivatedTokensToBeExpired(String concertScheduleId) {
+        return tokenJpaRepository.findActivatedTokensToBeExpired()
+                .stream()
+                .map(TokenJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Token> findWaitingTokensToBeExpired() {
+        return tokenJpaRepository.findWaitingTokensToBeExpired()
                 .stream()
                 .map(TokenJpaEntity::toDomain)
                 .toList();

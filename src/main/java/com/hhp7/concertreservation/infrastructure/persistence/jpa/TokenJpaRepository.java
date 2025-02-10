@@ -9,6 +9,10 @@ import org.springframework.data.repository.query.Param;
 
 public interface TokenJpaRepository extends JpaRepository<TokenJpaEntity, Long> {
 
+    @Query("SELECT t FROM TokenJpaEntity t WHERE t.concertScheduleId = :concertScheduleId AND t.id = :tokenId")
+    Optional<TokenJpaEntity> findTokenJpaEntityByConcertScheduleIdAndId(@Param("concertScheduleId") String concertScheduleId,
+                                                                        @Param("tokenId") String tokenId);
+
     Optional<TokenJpaEntity> findByConcertScheduleIdAndUserIdAndStatus(String concertScheduleId, String userId, String status);
 
     List<TokenJpaEntity> findByConcertScheduleId(String concertScheduleId);
@@ -27,6 +31,9 @@ public interface TokenJpaRepository extends JpaRepository<TokenJpaEntity, Long> 
     @Query("SELECT COUNT(t) FROM TokenJpaEntity t WHERE t.concertScheduleId = :concertScheduleId AND t.id = :tokenId AND t.status = 'ACTIVE' OR t.status = 'WAIT'")
     int countRemainingByConcertScheduleIdAndTokenIdAndStatus(@Param("concertScheduleId") String concertScheduleId, @Param("tokenId") String tokenId);
 
-    @Query("SELECT t FROM TokenJpaEntity t WHERE t.expiredAt < CURRENT_TIMESTAMP AND t.status = 'ACTIVE' OR t.status = 'WAIT'")
-    List<TokenJpaEntity> findExpiredTokens();
+    @Query("SELECT t FROM TokenJpaEntity t WHERE t.expiredAt < CURRENT_TIMESTAMP AND t.status = 'ACTIVE'")
+    List<TokenJpaEntity> findActivatedTokensToBeExpired();
+
+    @Query("SELECT t FROM TokenJpaEntity t WHERE t.expiredAt < CURRENT_TIMESTAMP AND t.status = 'WAIT'")
+    List<TokenJpaEntity> findWaitingTokensToBeExpired();
 }

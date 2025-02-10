@@ -15,6 +15,7 @@ import lombok.Getter;
 @Table(name = "QUEUE")
 @Getter
 public class TokenJpaEntity extends BaseJpaEntity {
+
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String userId;
@@ -22,10 +23,7 @@ public class TokenJpaEntity extends BaseJpaEntity {
     private String status; // WAIT, ACTIVE, EXPIRED
     private LocalDateTime expiredAt;
 
-    @Version
-    private long version; // Row 단위 Optimistic Locking을 위한 Version 필드.
-
-    public static TokenJpaEntity fromDomain(com.hhp7.concertreservation.domain.queue.model.Token domainModel) {
+    public static TokenJpaEntity fromDomain(Token domainModel) {
         TokenJpaEntity entity = new TokenJpaEntity();
         entity.userId = domainModel.getUserId();
         entity.concertScheduleId = domainModel.getConcertScheduleId();
@@ -42,6 +40,15 @@ public class TokenJpaEntity extends BaseJpaEntity {
                 this.status,
                 this.getCreated_at(),
                 this.expiredAt);
+    }
+
+    public TokenJpaEntity updateFromDomain(Token domainModel) {
+        this.userId = domainModel.getUserId();
+        this.concertScheduleId = domainModel.getConcertScheduleId();
+        this.status = domainModel.getStatus().name();
+        this.expiredAt = domainModel.getExpiredAt();
+
+        return this;
     }
 
     public static List<TokenJpaEntity> createTokenJpaEntitiesFromDomain(List<Token> domainModels) {

@@ -10,6 +10,7 @@ import com.hhp7.concertreservation.exceptions.UnavailableRequestException;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -216,5 +217,15 @@ public class ConcertService {
      */
     public List<ConcertSchedule> getAvailableConcertSchedule(LocalDateTime presentDateTime) {
         return concertScheduleRepository.findAllAvailable(presentDateTime);
+    }
+
+    /**
+     * 예약 진행 중인 공연 일정 목록 조회
+     * @param presentDateTime
+     * @return
+     */
+    @Cacheable(value = "ongoingConcertSchedules", key = "'list'")
+    public List<ConcertSchedule> getOngoingConcertSchedules(LocalDateTime presentDateTime) {
+        return concertScheduleRepository.findAllOngoingConcertSchedules(presentDateTime);
     }
 }
