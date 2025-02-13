@@ -28,7 +28,8 @@ CREATE TABLE `CONCERT` (
 CREATE TABLE `CONCERTSCHEDULE` (
   `concert_schedule_id` VARCHAR(16) PRIMARY KEY,
   `concert_id` VARCHAR(16) NOT NULL,
-  `available_seats_count` INT DEFAULT (50),
+#   `available_seats_count` INT DEFAULT (50),
+  `availability` ENUM ('AVAILABLE', 'SOLDOUT') DEFAULT 'AVAILABLE',
   `datetime` DATETIME NOT NULL,
   `reservation_start_at` DATETIME NOT NULL,
   `reservation_end_at` DATETIME NOT NULL,
