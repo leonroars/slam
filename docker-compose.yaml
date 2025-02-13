@@ -6,8 +6,11 @@ services:
       - 'MYSQL_PASSWORD=secret'
       - 'MYSQL_ROOT_PASSWORD=verysecret'
       - 'MYSQL_USER=myuser'
+    volumes:
+      - './mock-data:/var/lib/mysql-files'
     ports:
       - "3306:3306"
+#    wq
 
   redis:
     image: docker.io/bitnami/redis:7.4

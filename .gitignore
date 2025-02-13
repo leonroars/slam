@@ -38,3 +38,6 @@ out/
 
 ### ETC ###
 .DS_Store
+
+./mock-data
+./mock-data/*

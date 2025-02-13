@@ -5,13 +5,15 @@ import com.hhp7.concertreservation.domain.concert.model.ConcertScheduleAvailabil
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import lombok.Getter;
 
 @Entity
-@Table(name = "CONCERTSCHEDULE")
+@Table(name = "CONCERTSCHEDULE"
+        , indexes = @Index(name = "IDX_RESERVATION_AVAILABLE_PERIOD", columnList = "reservationStartAt, reservationEndAt"))
 @Getter
 public class ConcertScheduleJpaEntity extends BaseJpaEntity{
 
