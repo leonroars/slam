@@ -4,6 +4,7 @@ import com.hhp7.concertreservation.domain.concert.model.Seat;
 import com.hhp7.concertreservation.domain.concert.model.SeatStatus;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.util.ArrayList;
@@ -11,7 +12,9 @@ import java.util.List;
 import lombok.Getter;
 
 @Entity
-@Table(name = "SEAT")
+@Table(name = "SEAT", indexes = {
+        @Index(name = "IDX_SEAT_CONCERT_SCHEDULE_ID", columnList = "concertScheduleId")
+})
 @Getter
 public class SeatJpaEntity extends BaseJpaEntity{
     @Id
