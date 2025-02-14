@@ -1,6 +1,5 @@
-package com.dataplatform.application.event;
+package com.hhp7.concertreservation.application.event;
 
-import com.hhp7.concertreservation.application.event.ReservationConfirmationEvent;
 import com.hhp7.concertreservation.domain.reservation.model.Reservation;
 import com.hhp7.concertreservation.interfaces.DataPlatformSenderController;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +11,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class ReservationEventListener {
 
-        private final DataPlatformSenderController dataPlatformSenderController
+        private final DataPlatformSenderController dataPlatformSenderController;
 
 
         @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -22,5 +21,4 @@ public class ReservationEventListener {
             // 실제 데이터 플랫폼에 이벤트(혹은 API 호출) 전달
             dataPlatformSenderController.sendReservationData(reservation);
         }
-    }
 }
