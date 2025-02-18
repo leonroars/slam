@@ -35,7 +35,8 @@ public class ReservationJpaEntity extends BaseJpaEntity{
                 this.getConcertScheduleId(),
                 ReservationStatus.valueOf(this.getStatus()),
                 this.getExpiredAt(),
-                this.getCreated_at()
+                this.getCreated_at(),
+                this.getUpdated_at()
         );
     }
 

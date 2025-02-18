@@ -227,7 +227,7 @@ public class ReservationServiceUnitTest {
             when(reservationRepository.save(reservation)).thenReturn(reservation);
 
             // when
-            Reservation result = reservationService.confirmReservation(reservationId);
+            Reservation result = reservationService.confirmReservation("schedule1", "user1", "seat1");
 
             // then
             verify(reservationRepository, times(1)).findById(reservationId);
@@ -247,7 +247,7 @@ public class ReservationServiceUnitTest {
 
             // when & then
             BusinessRuleViolationException exception = assertThrows(BusinessRuleViolationException.class, () ->
-                    reservationService.confirmReservation(reservationId));
+                    reservationService.confirmReservation("schedule1", "user1", "seat1"));
 
             assertEquals("완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.", exception.getMessage());
             verify(reservationRepository, times(1)).findById(reservationId);

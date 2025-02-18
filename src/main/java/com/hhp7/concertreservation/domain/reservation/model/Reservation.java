@@ -18,6 +18,7 @@ public class Reservation {
     // 따라서 Nullable 한 필드로 설정합니다.
     private LocalDateTime expiredAt;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static final int VALID_FOR_MINUTES = 5;
 
@@ -101,7 +102,7 @@ public class Reservation {
             , String seatId
             , String concertScheduleId
             , ReservationStatus status
-            , LocalDateTime expiredAt, LocalDateTime createdAt){
+            , LocalDateTime expiredAt, LocalDateTime createdAt, LocalDateTime updatedAt){
         Reservation reservation = new Reservation();
         reservation.id = id;
         reservation.userId = userId;
@@ -110,13 +111,14 @@ public class Reservation {
         reservation.status = status;
         reservation.expiredAt = expiredAt;
         reservation.createdAt = createdAt;
+        reservation.updatedAt = updatedAt;
 
         return reservation;
     }
 
     // 정적 팩토리 메서드 2 : status 미포함 (초기화 용도.)
     public static Reservation create(String id, String userId, String seatId, String concertScheduleId, LocalDateTime expiredAt, LocalDateTime createdAt){
-        return create(id, userId, seatId, concertScheduleId, ReservationStatus.BOOKED, expiredAt, createdAt);
+        return create(id, userId, seatId, concertScheduleId, ReservationStatus.BOOKED, expiredAt, createdAt, null);
     }
 
     // 정적 팩토리 메서드 2 : ID, 만료시간 미포함

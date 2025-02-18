@@ -33,8 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
@@ -206,7 +204,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
             Seat seat = concertReservationApplication.getAvailableSeats(concertSchedule.getId()).get(0);
 
             // when
-            concertReservationApplication.createTemporaryReservation(concertSchedule.getId(), user.getId(), seat.getId()); // 가예약 생성
+            concertReservationApplication.assignSeat(concertSchedule.getId(), user.getId(), seat.getId()); // 가예약 생성
             Reservation reservation = concertReservationApplication.confirmReservation(concertSchedule.getId(), user.getId(), seat.getId()); // 결제 및 예약 확정
             Seat reservedSeat = concertReservationApplication.getSeat(seat.getId()); // 예약된 좌석
             UserPointBalance updatedUserPointBalance = concertReservationApplication.getUserPointBalance(user.getId()); // 차감된 사용자 잔액

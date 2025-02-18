@@ -77,10 +77,10 @@ public class ConcertReservationController {
      * 가예약
      */
     @PostMapping("/concertSchedules/{scheduleId}/temporalReserve")
-    public ResponseEntity<Reservation> reserveSeat(@PathVariable String scheduleId,
+    public ResponseEntity<Seat> reserveSeat(@PathVariable String scheduleId,
                                                    @RequestParam String userId,
                                                    @RequestParam String seatId) {
-        return ResponseEntity.ok(reservationApp.createTemporaryReservation(scheduleId, userId, seatId));
+        return ResponseEntity.ok(reservationApp.assignSeat(scheduleId, userId, seatId));
     }
 
     /**
