@@ -8,7 +8,7 @@ import com.hhp7.concertreservation.domain.point.model.UserPointBalance;
 import com.hhp7.concertreservation.domain.queue.model.Token;
 import com.hhp7.concertreservation.domain.reservation.model.Reservation;
 import com.hhp7.concertreservation.domain.user.model.User;
-import com.hhp7.concertreservation.component.interceptor.RequiresTokenValidation;
+import com.hhp7.concertreservation.component.validator.token.RequiresTokenValidation;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.hhp7.concertreservation.config;
+package com.hhp7.concertreservation.interfaces;
 
 import com.hhp7.concertreservation.exceptions.BusinessRuleViolationException;
 import com.hhp7.concertreservation.exceptions.UnavailableRequestException;

@@ -11,7 +11,7 @@ import com.hhp7.concertreservation.domain.queue.model.Token;
 import com.hhp7.concertreservation.domain.queue.service.QueueService;
 import com.hhp7.concertreservation.domain.reservation.model.Reservation;
 import com.hhp7.concertreservation.domain.reservation.service.ReservationService;
-import com.hhp7.concertreservation.infrastructure.distributedlock.redisson.aop.RedissonDistributedLock;
+import com.hhp7.concertreservation.infrastructure.persistence.redis.locking.RedissonDistributedLock;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

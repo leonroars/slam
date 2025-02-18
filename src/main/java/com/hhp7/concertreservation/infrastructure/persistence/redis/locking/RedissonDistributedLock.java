@@ -1,4 +1,4 @@
-package com.hhp7.concertreservation.infrastructure.distributedlock.redisson.aop;
+package com.hhp7.concertreservation.infrastructure.persistence.redis.locking;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
