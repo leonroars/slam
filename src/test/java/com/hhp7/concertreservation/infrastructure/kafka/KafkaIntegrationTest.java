@@ -32,7 +32,7 @@ public class KafkaIntegrationTest {
         kafkaTemplate.send("test-topic", testMessage);
 
         // Wait up to 10 seconds for the message to be received
-        boolean messageReceived = testKafkaListener.getLatch().await(10, TimeUnit.SECONDS);
+        boolean messageReceived = testKafkaListener.getLatch().await(1, TimeUnit.SECONDS);
         assertTrue(messageReceived, "The message was not received within the timeout period");
 
         // Assert that the received message matches what was sent
