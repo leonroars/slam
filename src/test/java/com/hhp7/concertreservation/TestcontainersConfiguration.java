@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.context.annotation.Configuration;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -14,7 +15,7 @@ class TestcontainersConfiguration {
 
     public static final MySQLContainer<?> MYSQL_CONTAINER;
     public static final GenericContainer<?> REDIS_CONTAINER;
-    public static final GenericContainer<?> KAFKA_CONTAINER;
+    public static final KafkaContainer KAFKA_CONTAINER;
 
     static {
         // 1) MySQL Container
@@ -43,22 +44,10 @@ class TestcontainersConfiguration {
         System.setProperty("spring.data.redis.host", redisHost);
         System.setProperty("spring.data.redis.port", redisPort.toString());
 
-        // 3) Kafka Container : 전진님 감사합니다. 사랑합니다.
-        KAFKA_CONTAINER = new GenericContainer<>(DockerImageName.parse("bitnami/kafka:latest"))
-                .withExposedPorts(9092, 9093)
-                .withNetworkAliases("kafka")
-                .withEnv("KAFKA_CFG_NODE_ID", "0")
-                .withEnv("KAFKA_CFG_PROCESS_ROLES", "controller,broker")
-                .withEnv("KAFKA_CFG_LISTENERS", "PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094")
-                .withEnv("KAFKA_CFG_ADVERTISED_LISTENERS", "PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094")
-                .withEnv("KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP",
-                        "CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT")
-                .withEnv("KAFKA_CFG_CONTROLLER_QUORUM_VOTERS", "0@kafka:9093")
-                .withEnv("KAFKA_CFG_CONTROLLER_LISTENER_NAMES", "CONTROLLER")
-                .withEnv("KAFKA_CREATE_TOPICS", "topic1:1:1")
-                .waitingFor(Wait.forLogMessage(".*Starting Kafka.*\\n", 1));
-
-        KAFKA_CONTAINER.setPortBindings(List.of("9092:9092"));
+        // 3) Kafka Container
+        KAFKA_CONTAINER = new KafkaContainer("apache/kafka-native:3.8.0");
+        KAFKA_CONTAINER.start();
+        System.setProperty("spring.kafka.bootstrap-servers", KAFKA_CONTAINER.getBootstrapServers());
 
         KAFKA_CONTAINER.start();
     }

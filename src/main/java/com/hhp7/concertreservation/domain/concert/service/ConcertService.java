@@ -13,11 +13,14 @@ import com.hhp7.concertreservation.infrastructure.persistence.redis.locking.Redi
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ConcertService {
@@ -199,6 +202,9 @@ public class ConcertService {
     public ConcertSchedule makeConcertScheduleSoldOut(String concertScheduleId){
         ConcertSchedule concertSchedule = concertScheduleRepository.findById(concertScheduleId)
                 .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정이 존재하지 않습니다."));
+
+        int remainingSeatsCount = getRemainingSeatsCount(concertScheduleId);
+        log.info("남은 좌석 수 : {}", remainingSeatsCount);
 
         if(getRemainingSeatsCount(concertScheduleId) == 0){
             concertSchedule.makeSoldOut();

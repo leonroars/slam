@@ -30,17 +30,19 @@ services:
     volumes:
       - "kafka_data:/bitnami"
     environment:
-      # KRaft settings
-      - KAFKA_CFG_NODE_ID=0 # 카프카 노드 아이디.
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093 # 정족수. 즉, Apache Zookeeper에 의해 관리되는
-      # Listeners
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-
+      - KAFKA_CFG_NODE_ID=0 # Kafka 노드 ID 설정
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker # Kafka 프로세스 역할 설정 (컨트롤러와 브로커 역할)
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093 # 컨트롤러 쿼럼 투표자 설정
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093 # Kafka가 사용할 리스너 주소 설정
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092 # 외부에서 접속할 때 사용할 Kafka 리스너 주소
+      - ALLOW_PLAINTEXT_LISTENER=yes # 암호화 하지않은 리스너 허용(개발 테스트 용)
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT # 리스너에 대한 보안 프로토콜 매핑
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER # 컨트롤러 리스너 이름 설정
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT # 브로커 간 리스너 이름 설정
+      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1 # 오프셋 토픽의 복제 계수 설정
+      - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=1 # 트랜잭션 상태 로그에서 최소 ISR(동기화된 복제본 수) 설정
+      - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1 # 트랜잭션 상태 로그 복제 계수 설정
+      - KAFKA_CFG_MIN_INSYNC_REPLICAS=1 # 최소 동기화된 복제본 수 설정
 
 volumes:
   redis_data:
