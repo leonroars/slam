@@ -1,4 +1,4 @@
-package com.hhp7.concertreservation.component.interceptor;
+package com.hhp7.concertreservation.component.validator.token;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

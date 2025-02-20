@@ -8,7 +8,7 @@ import com.hhp7.concertreservation.domain.point.model.UserPointBalance;
 import com.hhp7.concertreservation.domain.queue.model.Token;
 import com.hhp7.concertreservation.domain.reservation.model.Reservation;
 import com.hhp7.concertreservation.domain.user.model.User;
-import com.hhp7.concertreservation.component.interceptor.RequiresTokenValidation;
+import com.hhp7.concertreservation.component.validator.token.RequiresTokenValidation;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -77,20 +77,20 @@ public class ConcertReservationController {
      * 가예약
      */
     @PostMapping("/concertSchedules/{scheduleId}/temporalReserve")
-    public ResponseEntity<Reservation> reserveSeat(@PathVariable String scheduleId,
+    public ResponseEntity<Seat> reserveSeat(@PathVariable String scheduleId,
                                                    @RequestParam String userId,
                                                    @RequestParam String seatId) {
-        return ResponseEntity.ok(reservationApp.createTemporaryReservation(scheduleId, userId, seatId));
+        return ResponseEntity.ok(reservationApp.assignSeat(scheduleId, userId, seatId));
     }
 
     /**
      * 예약 확정
      */
     @PostMapping("/concertSchedules/{scheduleId}/confirmReservation")
-    public ResponseEntity<Reservation> confirmReservation(@PathVariable String scheduleId,
-                                                          @RequestParam String userId,
-                                                          @RequestParam String seatId) {
-        return ResponseEntity.ok(reservationApp.confirmReservation(scheduleId, userId, seatId));
+    public ResponseEntity<String> paymentRequest(@RequestParam String userId,
+                                                      @RequestParam Integer price,
+                                                 @RequestParam String reservationId) {
+        return ResponseEntity.ok(reservationApp.paymentRequestForReservation(userId, price, reservationId));
     }
 
     @PostMapping("/reservations/{reservationId}/cancel")

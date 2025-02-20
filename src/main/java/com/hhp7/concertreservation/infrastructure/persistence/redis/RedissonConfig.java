@@ -1,4 +1,4 @@
-package com.hhp7.concertreservation.infrastructure.distributedlock.redisson.config;
+package com.hhp7.concertreservation.infrastructure.persistence.redis;
 
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;

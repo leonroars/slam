@@ -1,5 +1,7 @@
 package com.hhp7.concertreservation.domain.concert.service;
 
+import com.hhp7.concertreservation.domain.concert.event.SeatAssignedEvent;
+import com.hhp7.concertreservation.domain.concert.event.SeatUnassignedEvent;
 import com.hhp7.concertreservation.domain.concert.model.Concert;
 import com.hhp7.concertreservation.domain.concert.model.ConcertSchedule;
 import com.hhp7.concertreservation.domain.concert.model.Seat;
@@ -7,12 +9,13 @@ import com.hhp7.concertreservation.domain.concert.repository.ConcertRepository;
 import com.hhp7.concertreservation.domain.concert.repository.ConcertScheduleRepository;
 import com.hhp7.concertreservation.domain.concert.repository.SeatRepository;
 import com.hhp7.concertreservation.exceptions.UnavailableRequestException;
+import com.hhp7.concertreservation.infrastructure.persistence.redis.locking.RedissonDistributedLock;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -22,12 +25,14 @@ public class ConcertService {
     private final ConcertRepository concertRepository;
     private final ConcertScheduleRepository concertScheduleRepository;
     private final SeatRepository seatRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * Concert 등록
      * @param concert
      * @return
      */
+    @Transactional
     public Concert registerConcert(Concert concert) {
         return concertRepository.save(concert);
     }
@@ -48,6 +53,7 @@ public class ConcertService {
      * @param price
      * @return
      */
+    @Transactional
     public ConcertSchedule registerConcertSchedule(ConcertSchedule concertSchedule, int price){
         // 저장된 ConcertSchedule 도메인 모델 인스턴스
         ConcertSchedule registeredConcertSchedule = concertScheduleRepository.save(concertSchedule);
@@ -78,6 +84,7 @@ public class ConcertService {
      * @param numOfSeats
      * @return
      */
+    @Transactional
     public ConcertSchedule registerConcertSchedule(ConcertSchedule concertSchedule, int price, int numOfSeats){
 
         // 저장된 ConcertSchedule 도메인 모델 인스턴스
@@ -116,34 +123,24 @@ public class ConcertService {
      * @param seatId
      * @return
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Seat assignSeatOfConcertSchedule(String concertScheduleId, String seatId){
+    @Transactional
+    @RedissonDistributedLock(key = "seatId")
+    public Seat assignSeatOfConcertSchedule(String concertScheduleId, String seatId, String userId){
 
         // 배정될 좌석 조회
-        Seat assignedSeat = seatRepository.findById(seatId)
+        Seat targetSeat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new UnavailableRequestException("해당 좌석이 존재하지 않습니다."));
 
         // 배정될 좌석의 상태 변경
-        assignedSeat.makeUnavailable();
+        targetSeat.makeUnavailable();
 
         // 수정된 사항을 명시적으로 저장 및 반환
-        return seatRepository.save(assignedSeat);
-    }
+        Seat assignedSeat = seatRepository.save(targetSeat);
 
-    /**
-     * 특정 ConcertSchedule의 상태를 AVAILABLE로 변경.
-     * <br></br>
-     * 해당 메서드는 이후 파사드에서 좌석 예약 직후 호출되며, 두 메서드는 분리된 트랜잭션으로 처리됩니다.
-     * @param concertScheduleId
-     * @return
-     */
-    public ConcertSchedule makeConcertScheduleAvailable(String concertScheduleId){
-        ConcertSchedule concertSchedule = concertScheduleRepository.findById(concertScheduleId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정이 존재하지 않습니다."));
+        // 이벤트 발행
+        applicationEventPublisher.publishEvent(SeatAssignedEvent.fromDomain(assignedSeat, userId));
 
-        concertSchedule.makeAvailable();
-
-        return concertScheduleRepository.save(concertSchedule);
+        return assignedSeat;
     }
 
     /**
@@ -152,18 +149,45 @@ public class ConcertService {
      * @param seatId
      * @return
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
+    @RedissonDistributedLock(key = "seatId")
     public Seat unassignSeatOfConcertSchedule(String concertScheduleId, String seatId){
 
         // 배정될 좌석 조회
-        Seat assignedSeat = seatRepository.findById(seatId)
+        Seat targetSeat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new UnavailableRequestException("해당 좌석이 존재하지 않습니다."));
 
         // 배정될 좌석의 상태 변경
-        assignedSeat.makeAvailable();
+        targetSeat.makeAvailable();
 
         // 수정된 사항을 명시적으로 저장
-        return seatRepository.save(assignedSeat);
+        Seat unasignedSeat = seatRepository.save(targetSeat);
+
+        // 좌석 선점 해제를 알리는 이벤트 발행
+        applicationEventPublisher.publishEvent(
+                SeatUnassignedEvent.fromDomain(unasignedSeat)
+        );
+
+        return unasignedSeat;
+    }
+
+    /**
+     * 특정 ConcertSchedule의 상태를 AVAILABLE로 변경.
+     * <br></br>
+     * 변경 전 변경 필요 상태인지 확인합니다.
+     * @param concertScheduleId
+     * @return
+     */
+    @Transactional
+    public ConcertSchedule makeConcertScheduleAvailable(String concertScheduleId){
+        ConcertSchedule concertSchedule = concertScheduleRepository.findById(concertScheduleId)
+                .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정이 존재하지 않습니다."));
+
+        if(getRemainingSeatsCount(concertScheduleId) > 0 ){
+            concertSchedule.makeAvailable();
+        }
+
+        return concertScheduleRepository.save(concertSchedule);
     }
 
     /**
@@ -171,11 +195,14 @@ public class ConcertService {
      * @param concertScheduleId
      * @return
      */
+    @Transactional
     public ConcertSchedule makeConcertScheduleSoldOut(String concertScheduleId){
         ConcertSchedule concertSchedule = concertScheduleRepository.findById(concertScheduleId)
                 .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정이 존재하지 않습니다."));
 
-        concertSchedule.makeSoldOut();
+        if(getRemainingSeatsCount(concertScheduleId) == 0){
+            concertSchedule.makeSoldOut();
+        }
 
         return concertScheduleRepository.save(concertSchedule);
     }

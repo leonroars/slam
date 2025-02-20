@@ -27,5 +27,8 @@ public interface ReservationRepository {
     // 만료 대상인 예약 전체 조회.
     List<Reservation> findAllByExpirationCriteria();
 
+    // 특정 유저의 가예약 조회.
+    Optional<Reservation> findPendingReservationByUserId(String userId);
+
 
 }

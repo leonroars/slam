@@ -1,4 +1,4 @@
-package com.hhp7.concertreservation.infrastructure.distributedlock.redisson.aop;
+package com.hhp7.concertreservation.infrastructure.persistence.redis.locking;
 
 import com.hhp7.concertreservation.exceptions.UnavailableRequestException;
 import lombok.RequiredArgsConstructor;

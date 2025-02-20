@@ -5,6 +5,7 @@ import com.hhp7.concertreservation.application.facade.UserApplication;
 import com.hhp7.concertreservation.domain.concert.model.ConcertSchedule;
 import com.hhp7.concertreservation.domain.concert.model.ConcertScheduleAvailability;
 import com.hhp7.concertreservation.domain.concert.model.Seat;
+import com.hhp7.concertreservation.domain.concert.model.SeatStatus;
 import com.hhp7.concertreservation.domain.concert.repository.ConcertScheduleRepository;
 import com.hhp7.concertreservation.domain.concert.repository.SeatRepository;
 import com.hhp7.concertreservation.domain.concert.service.ConcertService;
@@ -96,13 +97,13 @@ public class ConcurrentConcertReservationIntegrationTest {
                 tasks.add(() -> {
                     try {
                         // 가예약 생성
-                        Reservation reservation = concertReservationApplication.createTemporaryReservation(
+                        Seat assignedSeat = concertReservationApplication.assignSeat(
                                 registeredConcertSchedule.getId(),
                                 localUsers.get(idx - 1).getId(),
                                 localSeats.get(idx - 1).getId()
                         );
-                        // 각 스레드 별 작업 결과가 !null && "PAID"인 경우 성공으로 간주
-                        return reservation != null && (reservation.getStatus() == ReservationStatus.BOOKED);
+                        // 각 스레드 별 작업 결과가 !null && "UNAVAILABLE"인 경우 성공으로 간주
+                        return assignedSeat != null && (assignedSeat.getStatus() == SeatStatus.UNAVAILABLE);
                     } catch (UnavailableRequestException e) {
                         return false; // 실패 처리
                     }
@@ -156,13 +157,13 @@ public class ConcurrentConcertReservationIntegrationTest {
                 tasks.add(() -> {
                     try {
                         // 가예약 생성
-                        Reservation reservation
-                                = concertReservationApplication.createTemporaryReservation(
+                        Seat assignedSeat
+                                = concertReservationApplication.assignSeat(
                                         registeredConcertSchedule.getId(),
                                 localUsers.get(idx-1).getId(),
                                 localSeats.get(0).getId());
-                        // 각 스레드 별로 할당된 task(각각 동일 좌석에 대한 예약 수행) 결과가 !null && PAID 인 경우 성공으로 간주 -> true.
-                        return reservation != null && (reservation.getStatus() == ReservationStatus.BOOKED);
+                        // 각 스레드 별로 할당된 task(각각 동일 좌석에 대한 예약 수행) 결과가 !null && BOOKED 인 경우 성공으로 간주 -> true.
+                        return assignedSeat != null && (assignedSeat.getStatus() == SeatStatus.UNAVAILABLE);
                     } catch(UnavailableRequestException | BusinessRuleViolationException e){
                         return false; // 실패 처리
                     }

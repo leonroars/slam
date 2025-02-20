@@ -2,6 +2,7 @@ package com.hhp7.concertreservation.domain.reservation.model;
 
 import com.hhp7.concertreservation.exceptions.BusinessRuleViolationException;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.Getter;
 
 @Getter
@@ -11,6 +12,7 @@ public class Reservation {
     private String seatId;
     private String concertScheduleId;
     private ReservationStatus status; // 최초 생성 시 BOOKED 상태
+    private Integer price; // 결제 금액
 
     // BOOKED 상태 예약의 만료 시간.
     // 만료 시간 이후에는 EXPIRED 상태로 변경됩니다.
@@ -18,6 +20,7 @@ public class Reservation {
     // 따라서 Nullable 한 필드로 설정합니다.
     private LocalDateTime expiredAt;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static final int VALID_FOR_MINUTES = 5;
 
@@ -66,6 +69,33 @@ public class Reservation {
     }
 
     /**
+     * 예약 취소 롤백. 좌석 선점 해제 실패 시 호출.
+     * @return
+     */
+    public Reservation rollbackCancel(){
+        this.status = ReservationStatus.PAID;
+        return this;
+    }
+
+    /**
+     * 예약 확정 롤백. 결제 실패 시 호출.
+     * @return
+     */
+    public Reservation rollbackReserve(){
+        this.status = ReservationStatus.BOOKED;
+        return this;
+    }
+
+    /**
+     * 예약 만료 롤백. 만료 처리 실패 시 호출.
+     * @return
+     */
+    public Reservation rollbackExpire(){
+        this.status = ReservationStatus.BOOKED;
+        return this;
+    }
+
+    /**
      * 현재 과제 요구사항 상 예약이 확정되지 않았을 때 만료시키기 위해 '만료 시점'을 명시하는 필드를 추가하였습니다.
      * <br></br>
      * 하지만 이를 도메인 로직 상에서 처리할 경우 실제 해당 객체의 persist가 이루어지기까지 시간 차가 발생할 수 있고,
@@ -101,36 +131,39 @@ public class Reservation {
             , String seatId
             , String concertScheduleId
             , ReservationStatus status
-            , LocalDateTime expiredAt, LocalDateTime createdAt){
+            , Integer price
+            , LocalDateTime expiredAt, LocalDateTime createdAt, LocalDateTime updatedAt){
         Reservation reservation = new Reservation();
         reservation.id = id;
         reservation.userId = userId;
         reservation.seatId = seatId;
         reservation.concertScheduleId = concertScheduleId;
         reservation.status = status;
+        reservation.price = price;
         reservation.expiredAt = expiredAt;
         reservation.createdAt = createdAt;
+        reservation.updatedAt = updatedAt;
 
         return reservation;
     }
 
     // 정적 팩토리 메서드 2 : status 미포함 (초기화 용도.)
-    public static Reservation create(String id, String userId, String seatId, String concertScheduleId, LocalDateTime expiredAt, LocalDateTime createdAt){
-        return create(id, userId, seatId, concertScheduleId, ReservationStatus.BOOKED, expiredAt, createdAt);
+    public static Reservation create(String id, String userId, String seatId, String concertScheduleId, Integer price, LocalDateTime expiredAt, LocalDateTime createdAt){
+        return create(id, userId, seatId, concertScheduleId, ReservationStatus.BOOKED, price, expiredAt, createdAt, null);
     }
 
     // 정적 팩토리 메서드 2 : ID, 만료시간 미포함
-    public static Reservation create(String userId, String seatId, String concertScheduleId){
-        return create(null, userId, seatId, concertScheduleId, null, null);
+    public static Reservation create(String userId, String seatId, String concertScheduleId, Integer price){
+        return create(UUID.randomUUID().toString(), userId, seatId, concertScheduleId, price, null, null);
     }
 
     // 정적 팩토리 메서드 3 : ID 미포함, 만료시간 포함
-    public static Reservation create(String userId, String seatId, String concertScheduleId, LocalDateTime expiredAt){
-        return create(null, userId, seatId, concertScheduleId, expiredAt, null);
+    public static Reservation create(String userId, String seatId, String concertScheduleId, Integer price, LocalDateTime expiredAt){
+        return create(UUID.randomUUID().toString(), userId, seatId, concertScheduleId, price, expiredAt, null);
     }
 
     // 정적 팩토리 메서드 4: ID 포함, 만료시간 미포함
-    public static Reservation create(String id, String userId, String seatId, String concertScheduleId){
-        return create(id, userId, seatId, concertScheduleId, null, null);
+    public static Reservation create(String id, String userId, String seatId, String concertScheduleId, Integer price){
+        return create(id, userId, seatId, concertScheduleId, price, null, null);
     }
 }

@@ -2,6 +2,8 @@ package com.hhp7.concertreservation;
 
 import jakarta.annotation.PreDestroy;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.KafkaListenerContainerFactory;
+import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
