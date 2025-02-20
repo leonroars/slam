@@ -102,7 +102,7 @@ public class ConcurrentConcertReservationIntegrationTest {
                                 localUsers.get(idx - 1).getId(),
                                 localSeats.get(idx - 1).getId()
                         );
-                        // 각 스레드 별 작업 결과가 !null && "PAID"인 경우 성공으로 간주
+                        // 각 스레드 별 작업 결과가 !null && "UNAVAILABLE"인 경우 성공으로 간주
                         return assignedSeat != null && (assignedSeat.getStatus() == SeatStatus.UNAVAILABLE);
                     } catch (UnavailableRequestException e) {
                         return false; // 실패 처리
@@ -162,7 +162,7 @@ public class ConcurrentConcertReservationIntegrationTest {
                                         registeredConcertSchedule.getId(),
                                 localUsers.get(idx-1).getId(),
                                 localSeats.get(0).getId());
-                        // 각 스레드 별로 할당된 task(각각 동일 좌석에 대한 예약 수행) 결과가 !null && PAID 인 경우 성공으로 간주 -> true.
+                        // 각 스레드 별로 할당된 task(각각 동일 좌석에 대한 예약 수행) 결과가 !null && BOOKED 인 경우 성공으로 간주 -> true.
                         return assignedSeat != null && (assignedSeat.getStatus() == SeatStatus.UNAVAILABLE);
                     } catch(UnavailableRequestException | BusinessRuleViolationException e){
                         return false; // 실패 처리

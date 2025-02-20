@@ -7,9 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Getter;
 
@@ -18,22 +16,24 @@ import lombok.Getter;
 @Table(name = "RESERVATION")
 public class ReservationJpaEntity extends BaseJpaEntity{
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
     @Column(name = "reservation_id")
-    private Long id;
+    private String id;
     private String userId;
     private String concertScheduleId;
     private String seatId;
+    private Integer price;
     private String status;
     private LocalDateTime expiredAt;
 
     public Reservation toDomain(){
         return Reservation.create(
-                String.valueOf(this.getId()),
+                this.getId(),
                 this.getUserId(),
                 this.getSeatId(),
                 this.getConcertScheduleId(),
                 ReservationStatus.valueOf(this.getStatus()),
+                this.getPrice(),
                 this.getExpiredAt(),
                 this.getCreated_at(),
                 this.getUpdated_at()
@@ -42,22 +42,23 @@ public class ReservationJpaEntity extends BaseJpaEntity{
 
     public static ReservationJpaEntity fromDomain(Reservation reservation){
         ReservationJpaEntity entity = new ReservationJpaEntity();
-        if(entity.getId() != null){
-            entity.id = Long.valueOf(reservation.getId());
-        }
+        entity.id = reservation.getId();
         entity.userId = reservation.getUserId();
         entity.seatId = reservation.getSeatId();
         entity.concertScheduleId = reservation.getConcertScheduleId();
         entity.status = reservation.getStatus().name();
+        entity.price = reservation.getPrice();
         entity.expiredAt = reservation.getExpiredAt();
         return entity;
     }
 
     public ReservationJpaEntity updateFromDomain(Reservation domain) {
+        this.id = domain.getId();
         this.userId = domain.getUserId();
         this.seatId = domain.getSeatId();
         this.concertScheduleId = domain.getConcertScheduleId();
         this.status = domain.getStatus().name();
+        this.price = domain.getPrice();
         this.expiredAt = domain.getExpiredAt();
         return this;
     }

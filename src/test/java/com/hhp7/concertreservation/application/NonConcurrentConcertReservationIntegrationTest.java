@@ -1,7 +1,9 @@
 package com.hhp7.concertreservation.application;
 
+import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Mockito.verify;
 
+import com.hhp7.concertreservation.application.event.listener.PaymentEventListener;
 import com.hhp7.concertreservation.application.facade.ConcertReservationApplication;
 import com.hhp7.concertreservation.application.facade.UserApplication;
 import com.hhp7.concertreservation.domain.concert.model.ConcertSchedule;
@@ -33,16 +35,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
-@Transactional
 public class NonConcurrentConcertReservationIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(NonConcurrentConcertReservationIntegrationTest.class);
 
     @Autowired
     private ConcertReservationApplication concertReservationApplication;
+
+    @Autowired
+    private PaymentEventListener paymentEventListener;
 
     @Autowired
     private UserApplication userApplication;
@@ -70,6 +75,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
 
     @Autowired
     private UserPointBalanceRepository userPointBalanceRepository;
+
 
 
     String userName = "userName";
@@ -195,7 +201,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
 
         @Test
         @DisplayName("성공 : 특정 공연 일정의 특정 좌석을 예약하고 결제한다. 예약 후 해당 좌석 조회 시 상태는 UNAVAILABLE 이다. 또한 예약 상태는 PAID 이다. 잔액은 차감된다.")
-        void shouldSuccessfullyReserveAndPaySeat() {
+        void shouldSuccessfullyReserveAndPaySeat() throws InterruptedException {
             // given
             User user = userApplication.registerUser(userName);
             concertReservationApplication.chargeUserPoint(user.getId(), 2000);
@@ -204,14 +210,36 @@ public class NonConcurrentConcertReservationIntegrationTest {
             Seat seat = concertReservationApplication.getAvailableSeats(concertSchedule.getId()).get(0);
 
             // when
-            concertReservationApplication.assignSeat(concertSchedule.getId(), user.getId(), seat.getId()); // 가예약 생성
-            Reservation reservation = concertReservationApplication.confirmReservation(concertSchedule.getId(), user.getId(), seat.getId()); // 결제 및 예약 확정
-            Seat reservedSeat = concertReservationApplication.getSeat(seat.getId()); // 예약된 좌석
+            Seat assignedSeat = concertReservationApplication.assignSeat(concertSchedule.getId(), user.getId(), seat.getId()); // 좌석 선점
+            Reservation createdTemporaryReservation
+                    = concertReservationApplication.createTemporaryReservation(user.getId(), concertSchedule.getId(), assignedSeat.getId(), assignedSeat.getPrice()); // 가예약 생성
+
+            concertReservationApplication.paymentRequestForReservation(user.getId(), seat.getPrice(), createdTemporaryReservation.getId()); // 결제 요청
+
+            // Poll for up to 5 seconds, checking every 200ms if the reservation is now PAID
+            long startTime = System.currentTimeMillis();
+            long maxWaitMillis = 5000;
+            boolean isPaid = false;
+
+            while ((System.currentTimeMillis() - startTime) < maxWaitMillis) {
+                Reservation current = concertReservationApplication.getReservation(createdTemporaryReservation.getId());
+                if (current.getStatus() == ReservationStatus.PAID) {
+                    isPaid = true;
+                    break;
+                }
+                Thread.sleep(200); // wait 200ms before next check
+            }
+
             UserPointBalance updatedUserPointBalance = concertReservationApplication.getUserPointBalance(user.getId()); // 차감된 사용자 잔액
+            Seat reservedSeat = concertReservationApplication.getSeat(seat.getId()); // 예약된 좌석
+            Reservation confirmedReservation = concertReservationApplication.getReservation(createdTemporaryReservation.getId()); // 확정된 예약
+            log.warn("결제 완료 후 예약 확정되어 저장된 Reservation 상태 : {}", confirmedReservation.getStatus());
+            log.warn("결제 완료 후 예약 확정되어 저장된 Reservation ID : {}", confirmedReservation.getId());
 
             // then
+            Assertions.assertEquals(updatedUserPointBalance.balance().getAmount(), 1000);
             Assertions.assertEquals(SeatStatus.UNAVAILABLE, reservedSeat.getStatus());
-            Assertions.assertEquals(ReservationStatus.PAID, reservation.getStatus());
+            Assertions.assertEquals(ReservationStatus.PAID, confirmedReservation.getStatus());
             Assertions.assertEquals(1000, updatedUserPointBalance.balance().getAmount());
         }
     }

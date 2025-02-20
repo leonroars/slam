@@ -1,17 +1,27 @@
 package com.hhp7.concertreservation.domain.reservation.service;
 
+import com.hhp7.concertreservation.domain.reservation.event.ReservationCancellationEvent;
+import com.hhp7.concertreservation.domain.reservation.event.ReservationConfirmationEvent;
+import com.hhp7.concertreservation.domain.reservation.event.ReservationCreationEvent;
+import com.hhp7.concertreservation.domain.reservation.event.ReservationExpirationEvent;
 import com.hhp7.concertreservation.domain.reservation.model.Reservation;
 import com.hhp7.concertreservation.domain.reservation.model.ReservationStatus;
 import com.hhp7.concertreservation.domain.reservation.repository.ReservationRepository;
 import com.hhp7.concertreservation.exceptions.UnavailableRequestException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReservationService {
     private final ReservationRepository reservationRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * 예약을 생성합니다. 생성 시 예약 상테는 {@code ReservationStatus.BOOKED} 입니다.
@@ -26,7 +36,8 @@ public class ReservationService {
      * @param seatId
      * @return
      */
-    public Reservation createReservation(String userId, String concertScheduleId, String seatId) {
+    @Transactional
+    public Reservation createReservation(String userId, String concertScheduleId, String seatId, Integer price) {
         reservationRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId)
                 .filter(reservation ->
                         reservation.getStatus() != ReservationStatus.EXPIRED &&
@@ -36,10 +47,14 @@ public class ReservationService {
                     throw new UnavailableRequestException("해당 좌석에 대한 예약이 이미 존재하므로 예약이 불가합니다.");
                 });
 
-        Reservation reservation = Reservation.create(userId, seatId, concertScheduleId);
-        Reservation savedReservation = reservationRepository.save(reservation);
-        savedReservation.initiateExpiredAt();
-        return reservationRepository.save(savedReservation);
+        Reservation reservation = Reservation.create(userId, seatId, concertScheduleId, price); // 가예약 생성
+        Reservation createdTemporaryReservation = reservationRepository.save(reservation); // 가예약 저장
+        createdTemporaryReservation.initiateExpiredAt(); // 만료 시간 초기화
+        Reservation savedReservation = reservationRepository.save(createdTemporaryReservation); // 만료 시간 갱신된 가예약 저장
+
+        applicationEventPublisher.publishEvent(ReservationCreationEvent.fromDomain(savedReservation)); // 이벤트 발행
+
+        return savedReservation;
     }
 
     /**
@@ -69,22 +84,35 @@ public class ReservationService {
      * 예약 취소. 물리적 삭제는 이루어지지 않고 상태 변경만 이루어집니다.
      * @param reservationId
      */
+    @Transactional
     public Reservation cancelReservation(String reservationId) {
-        Reservation reservation = getReservation(reservationId);
-        reservation.cancel();
-        return reservationRepository.save(reservation);
+        Reservation reservation = getReservation(reservationId); // 해당 예약 조회
+        reservation.cancel(); // 해당 예약 취소 상태로 변경
+        Reservation cancelledReservation = reservationRepository.save(reservation); // 취소된 예약 저장
+
+        applicationEventPublisher.publishEvent(ReservationCancellationEvent.fromDomain(cancelledReservation)); // 이벤트 발행
+
+        return cancelledReservation;
     }
 
     /**
      * 예약 확정. 결제 처리를 통해 예약을 완료합니다.
      * <br></br>
      * 해당 예약 상태를 {@code ReservationStatus.PAID} 로 변경합니다.
-     * @param reservationId
+     * @param concertScheduleId, userId, seatId
      */
+    @Transactional
     public Reservation confirmReservation(String reservationId) {
-        Reservation reservation = getReservation(reservationId);
-        reservation.reserve();
-        return reservationRepository.save(reservation);
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new UnavailableRequestException("해당 가예약이 존재하지 않습니다.")); // 해당 가예약 조회.
+
+        reservation.reserve(); // 가예약 -> 예약 확정. 조회한 예약이 이미 확정되어있을 경우 예외 발생.
+        Reservation confirmedReservation = reservationRepository.save(reservation); // 확정된 예약 저장.
+        log.info("결제 완료 후 예약 확정되어 저장된 Reservation 상태 : {}", confirmedReservation.getStatus());
+
+        // applicationEventPublisher.publishEvent(ReservationConfirmationEvent.fromDomain(confirmedReservation)); // 이벤트 발행
+
+        return confirmedReservation;
     }
 
     /**
@@ -92,10 +120,15 @@ public class ReservationService {
      * @param reservationId
      * @return
      */
+    @Transactional
     public Reservation expireReservation(String reservationId) {
-        Reservation reservation = getReservation(reservationId);
-        reservation.expire();
-        return reservationRepository.save(reservation);
+        Reservation reservation = getReservation(reservationId); // 해당 예약 조회
+        reservation.expire(); // 해당 예약 만료 처리
+        Reservation expiredReservation = reservationRepository.save(reservation); // 만료된 예약 저장
+
+        applicationEventPublisher.publishEvent(ReservationExpirationEvent.fromDomain(expiredReservation)); // 이벤트 발행
+
+        return expiredReservation;
     }
 
     /**

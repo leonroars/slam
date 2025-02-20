@@ -154,6 +154,7 @@ class ConcertServiceUnitTest {
         @DisplayName("성공 : 특정 ConcertSchedule의 특정 좌석을 배정하면 좌석 상태가 변경된다.")
         void shouldAssignSeatAndDecrementAvailableSeats_WhenValidSeatAndSchedule() {
             // given
+            String userId = "1";
             ConcertSchedule concertSchedule = ConcertSchedule.create("1", "1", third, first, second);
             Seat seat = Seat.create("1", 1, 1000, SeatStatus.AVAILABLE);
 
@@ -167,7 +168,7 @@ class ConcertServiceUnitTest {
                     .thenReturn(concertSchedule);
 
             // when
-            Seat assignedSeat = concertService.assignSeatOfConcertSchedule(concertSchedule.getId(), seat.getId());
+            Seat assignedSeat = concertService.assignSeatOfConcertSchedule(concertSchedule.getId(), seat.getId(), userId);
 
             // then
             assertEquals(SeatStatus.UNAVAILABLE, assignedSeat.getStatus());
@@ -177,6 +178,7 @@ class ConcertServiceUnitTest {
         @DisplayName("실패 : 존재하지 않는 Seat를 배정하려 하면 UnavailableRequestException이 발생하며 실패한다.")
         void shouldThrowUnavailableRequestException_WhenSeatNotFoundDuringAssignment() {
             // given
+            String userId = "1";
             ConcertSchedule concertSchedule = ConcertSchedule.create("1", "1", third, first, second);
             String seatId = "1";
 
@@ -187,7 +189,7 @@ class ConcertServiceUnitTest {
 
             // when & then
             assertThatThrownBy(
-                    () -> concertService.assignSeatOfConcertSchedule(concertSchedule.getId(), seatId)
+                    () -> concertService.assignSeatOfConcertSchedule(concertSchedule.getId(), seatId, userId)
             ).isInstanceOf(UnavailableRequestException.class);
 
         }
@@ -198,13 +200,14 @@ class ConcertServiceUnitTest {
             // given
             String concertScheduleId = "1";
             String seatId = "1";
+            String userId = "1";
 
             when(concertScheduleRepository.findById(concertScheduleId))
                     .thenReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(
-                    () -> concertService.assignSeatOfConcertSchedule(concertScheduleId, seatId)
+                    () -> concertService.assignSeatOfConcertSchedule(concertScheduleId, seatId, userId)
             ).isInstanceOf(UnavailableRequestException.class);
         }
 
@@ -212,6 +215,7 @@ class ConcertServiceUnitTest {
         @DisplayName("실패 : 이미 배정된 좌석을 다시 배정하려 하면 BusinessRuleViolation 발생하며 실패한다.")
         void shouldThrowIllegalStateException_WhenSeatAlreadyAssigned() {
             // given
+            String userId = "1";
             ConcertSchedule concertSchedule = ConcertSchedule.create("1", "1", third, first, second);
             Seat seat = Seat.create("1", 1, 1000, SeatStatus.UNAVAILABLE);
 
@@ -222,7 +226,7 @@ class ConcertServiceUnitTest {
 
             // when & then
             assertThatThrownBy(
-                    () -> concertService.assignSeatOfConcertSchedule(concertSchedule.getId(), seat.getId())
+                    () -> concertService.assignSeatOfConcertSchedule(concertSchedule.getId(), seat.getId(), userId)
             ).isInstanceOf(BusinessRuleViolationException.class);
         }
     }

@@ -27,12 +27,15 @@ spring:
 
 logging:
   level:
+    org:
+      springframework: info
     com:
       hhp7:
         concertreservation:
-            repository: warn
-            service: warn
-            controller: warn
+            repository:
+            service: info
+            controller: info
+            component: info
 
 server:
   port: 8080

@@ -14,23 +14,18 @@ import org.springframework.stereotype.Repository;
 public class ReservationRepositoryImpl implements ReservationRepository {
     private final ReservationJpaRepository reservationJpaRepository;
 
-    public Reservation save(Reservation reservation){
-        // 기존재 Entity 있는 경우 -> ReservationJpaEntity.updateFromDomain() 호출 이후 변경 내역 저장.
-        if(reservation.getId() != null && !reservation.getId().isBlank()){
-            ReservationJpaEntity existingEntity = reservationJpaRepository.findById(reservation.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 Reservation ID입니다."));
+    public Reservation save(Reservation reservation) {
+        ReservationJpaEntity toSave = reservationJpaRepository.findById(reservation.getId())
+                .map(existingEntity -> {
+                    // 만약 기존재 예약 Entity 존재 시 업데이트 후 반환
+                    existingEntity.updateFromDomain(reservation);
+                    return existingEntity;
+                })
+                .orElseGet(() -> ReservationJpaEntity.fromDomain(reservation));
 
-            existingEntity = existingEntity.updateFromDomain(reservation);
-
-            ReservationJpaEntity saved = reservationJpaRepository.save(existingEntity);
-            return saved.toDomain();
-        }
-        // 새로운 Entity인 경우 -> ReservationJpaEntity.fromDomain() 호출 이후 저장.
-        else {
-            ReservationJpaEntity newEntity = ReservationJpaEntity.fromDomain(reservation);
-            ReservationJpaEntity saved = reservationJpaRepository.save(newEntity);
-            return saved.toDomain();
-        }
+        // Finally, persist the JPA entity and return the domain model
+        ReservationJpaEntity saved = reservationJpaRepository.save(toSave);
+        return saved.toDomain();
     }
 
     @Override
@@ -70,5 +65,11 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         return reservationJpaRepository.findAllByExpirationCriteria().stream()
                 .map(ReservationJpaEntity::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<Reservation> findPendingReservationByUserId(String userId) {
+        return reservationJpaRepository.findPendingReservationByUserId(userId)
+                .map(ReservationJpaEntity::toDomain);
     }
 }

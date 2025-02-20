@@ -24,8 +24,6 @@ public class ReservationScheduler {
         toBeExpired
                 .forEach(reservation -> {
             reservationService.expireReservation(reservation.getId()); // 예약 상태 변경
-            concertService.unassignSeatOfConcertSchedule(reservation.getConcertScheduleId(), reservation.getSeatId());
-            concertService.makeConcertScheduleAvailable(reservation.getConcertScheduleId());
         });
     }
 }

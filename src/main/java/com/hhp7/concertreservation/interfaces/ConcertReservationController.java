@@ -87,10 +87,10 @@ public class ConcertReservationController {
      * 예약 확정
      */
     @PostMapping("/concertSchedules/{scheduleId}/confirmReservation")
-    public ResponseEntity<Reservation> confirmReservation(@PathVariable String scheduleId,
-                                                          @RequestParam String userId,
-                                                          @RequestParam String seatId) {
-        return ResponseEntity.ok(reservationApp.confirmReservation(scheduleId, userId, seatId));
+    public ResponseEntity<String> paymentRequest(@RequestParam String userId,
+                                                      @RequestParam Integer price,
+                                                 @RequestParam String reservationId) {
+        return ResponseEntity.ok(reservationApp.paymentRequestForReservation(userId, price, reservationId));
     }
 
     @PostMapping("/reservations/{reservationId}/cancel")
