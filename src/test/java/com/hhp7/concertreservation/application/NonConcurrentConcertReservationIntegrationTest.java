@@ -216,25 +216,13 @@ public class NonConcurrentConcertReservationIntegrationTest {
 
             concertReservationApplication.paymentRequestForReservation(user.getId(), seat.getPrice(), createdTemporaryReservation.getId()); // 결제 요청
 
-            // Poll for up to 5 seconds, checking every 200ms if the reservation is now PAID
-            long startTime = System.currentTimeMillis();
-            long maxWaitMillis = 5000;
-            boolean isPaid = false;
-
-            while ((System.currentTimeMillis() - startTime) < maxWaitMillis) {
-                Reservation current = concertReservationApplication.getReservation(createdTemporaryReservation.getId());
-                if (current.getStatus() == ReservationStatus.PAID) {
-                    isPaid = true;
-                    break;
-                }
-                Thread.sleep(200); // wait 200ms before next check
-            }
-
             UserPointBalance updatedUserPointBalance = concertReservationApplication.getUserPointBalance(user.getId()); // 차감된 사용자 잔액
             Seat reservedSeat = concertReservationApplication.getSeat(seat.getId()); // 예약된 좌석
             Reservation confirmedReservation = concertReservationApplication.getReservation(createdTemporaryReservation.getId()); // 확정된 예약
             log.warn("결제 완료 후 예약 확정되어 저장된 Reservation 상태 : {}", confirmedReservation.getStatus());
             log.warn("결제 완료 후 예약 확정되어 저장된 Reservation ID : {}", confirmedReservation.getId());
+
+            Thread.sleep(1000);
 
             // then
             Assertions.assertEquals(updatedUserPointBalance.balance().getAmount(), 1000);
