@@ -110,7 +110,7 @@ public class ReservationService {
         Reservation confirmedReservation = reservationRepository.save(reservation); // 확정된 예약 저장.
         log.info("결제 완료 후 예약 확정되어 저장된 Reservation 상태 : {}", confirmedReservation.getStatus());
 
-        // applicationEventPublisher.publishEvent(ReservationConfirmationEvent.fromDomain(confirmedReservation)); // 이벤트 발행
+        applicationEventPublisher.publishEvent(ReservationConfirmationEvent.fromDomain(confirmedReservation)); // 이벤트 발행
 
         return confirmedReservation;
     }

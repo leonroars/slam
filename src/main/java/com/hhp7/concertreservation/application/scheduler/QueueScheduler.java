@@ -21,7 +21,7 @@ public class QueueScheduler {
 
     // Queue 내에 저장된 Token을 만료시키고 만료시킨 토큰 수만큼 활성화 시켜준다.
     @Scheduled(fixedDelay = 10000) // 10초 간격 순회하며 작업.
-    public void expireAndActivateToken(String concertScheduleId) {
+    public void expireAndActivateToken() {
 
         // 현재 예약 진행 중인 공연 전체 조회 : 캐싱 적용하여 해당 데이터 캐시에 존재할 경우, Redis 캐시로부터 가져옵니다!
         List<ConcertSchedule> onGoingConcertSchedules = concertService.getOngoingConcertSchedules(LocalDateTime.now());
@@ -33,9 +33,9 @@ public class QueueScheduler {
             // 만료 대상 토큰이 존재할 경우 -> 만료 시키기.
             if(!activeTokensToBeExpired.isEmpty()){
                 // 만료 대상 토큰 만료 처리.
-                queueService.expireToken(concertScheduleId, activeTokensToBeExpired);
+                queueService.expireToken(concertSchedule.getId(), activeTokensToBeExpired);
                 // 정책 상 설정된 활성화 갯수만큼 토큰 활성화.
-                queueService.activateTokens(concertScheduleId, ACTIVATION_BATCH_SIZE);
+                queueService.activateTokens(concertSchedule.getId(), ACTIVATION_BATCH_SIZE);
             }
         }
     }
