@@ -166,8 +166,8 @@ public class ConcertReservationApplication {
      * @param seatId
      * @return
      */
-    public String paymentRequestForReservation(String userId, Integer price, String reservatinId){
-        pointService.processPaymentForReservation(userId, price, reservatinId);
+    public String paymentRequestForReservation(String userId, Integer price, String reservationId){
+        pointService.processPaymentForReservation(userId, price, reservationId);
         return "결제 완료";
     }
 

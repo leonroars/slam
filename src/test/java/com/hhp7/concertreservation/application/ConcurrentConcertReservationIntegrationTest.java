@@ -3,15 +3,12 @@ package com.hhp7.concertreservation.application;
 import com.hhp7.concertreservation.application.facade.ConcertReservationApplication;
 import com.hhp7.concertreservation.application.facade.UserApplication;
 import com.hhp7.concertreservation.domain.concert.model.ConcertSchedule;
-import com.hhp7.concertreservation.domain.concert.model.ConcertScheduleAvailability;
 import com.hhp7.concertreservation.domain.concert.model.Seat;
 import com.hhp7.concertreservation.domain.concert.model.SeatStatus;
 import com.hhp7.concertreservation.domain.concert.repository.ConcertScheduleRepository;
 import com.hhp7.concertreservation.domain.concert.repository.SeatRepository;
 import com.hhp7.concertreservation.domain.concert.service.ConcertService;
 import com.hhp7.concertreservation.domain.point.model.UserPointBalance;
-import com.hhp7.concertreservation.domain.reservation.model.Reservation;
-import com.hhp7.concertreservation.domain.reservation.model.ReservationStatus;
 import com.hhp7.concertreservation.domain.reservation.repository.ReservationRepository;
 import com.hhp7.concertreservation.domain.user.model.User;
 import com.hhp7.concertreservation.exceptions.BusinessRuleViolationException;
@@ -63,6 +60,7 @@ public class ConcurrentConcertReservationIntegrationTest {
 
     @Nested
     class ConcertReservationTest {
+
         @Test
         @DisplayName("성공 : 서로 다른 50개 좌석에 대한 동시 좌석 선점(가예약) 시도 -> 모두 성공, 예약 가능 잔여 좌석 0.")
         void concurrentReservationsForDifferentSeats() throws InterruptedException, ExecutionException {

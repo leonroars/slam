@@ -1,6 +1,7 @@
 package com.hhp7.concertreservation.infrastructure.outbox;
 
 import com.hhp7.concertreservation.infrastructure.persistence.jpa.entities.BaseJpaEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -9,6 +10,10 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
+import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "outbox")
@@ -21,11 +26,11 @@ public class OutboxJpaEntity extends BaseJpaEntity {
     @Id
     private String id;
 
+    @Column(columnDefinition = "json")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String payload;
 
     private OutboxStatus status;
-
-    private String eventType; // 이벤트 타입
 
     private String topicIdentifier; // 토픽 식별자
 
