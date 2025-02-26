@@ -33,7 +33,7 @@ spring:
 logging:
   level:
     org:
-      springframework: info
+      springframework: DEBUG
     com:
       hhp7:
         concertreservation:

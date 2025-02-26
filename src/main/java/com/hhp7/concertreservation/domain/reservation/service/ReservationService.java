@@ -101,7 +101,7 @@ public class ReservationService {
      * 해당 예약 상태를 {@code ReservationStatus.PAID} 로 변경합니다.
      * @param concertScheduleId, userId, seatId
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Reservation confirmReservation(String reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new UnavailableRequestException("해당 가예약이 존재하지 않습니다.")); // 해당 가예약 조회.

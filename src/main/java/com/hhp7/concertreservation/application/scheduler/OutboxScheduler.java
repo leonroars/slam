@@ -22,6 +22,7 @@ public class OutboxScheduler {
     public void sendOutboxMessages() {
         log.info("아웃박스 메세지 전송 시작");
         List<OutboxJpaEntity> pending = outboxService.getAllPendingOutbox();
+        log.info("아웃박스 메세지 전송 대상 수 : {}", pending.size());
         for (OutboxJpaEntity entity : pending) {
             try {
                 // Topic 이름

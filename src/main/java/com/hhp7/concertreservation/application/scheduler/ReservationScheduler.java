@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(isolation = Isolation.REPEATABLE_READ)
 public class ReservationScheduler {
     private final ReservationService reservationService;
-    private final ConcertService concertService;
 
     // 가예약 만료 처리
     @Scheduled(fixedDelay = 10000) // 약 10초 간격 순회하며 작업.

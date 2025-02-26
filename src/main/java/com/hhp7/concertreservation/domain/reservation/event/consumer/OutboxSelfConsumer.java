@@ -14,7 +14,7 @@ public class OutboxSelfConsumer {
 
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "reservation-confirmation", groupId = "publisher-self-group")
+    @KafkaListener(topics = "reservation-confirmation", groupId = "concert")
     public void consumeSelf(String message) {
         try {
             ReservationConfirmationEvent event = objectMapper.readValue(message, ReservationConfirmationEvent.class);

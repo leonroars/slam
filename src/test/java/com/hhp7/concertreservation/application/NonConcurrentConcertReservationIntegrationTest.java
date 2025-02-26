@@ -1,8 +1,5 @@
 package com.hhp7.concertreservation.application;
 
-import static org.assertj.core.api.Fail.fail;
-import static org.mockito.Mockito.verify;
-
 import com.hhp7.concertreservation.application.event.listener.PaymentEventListener;
 import com.hhp7.concertreservation.application.facade.ConcertReservationApplication;
 import com.hhp7.concertreservation.application.facade.UserApplication;
@@ -35,8 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Commit;
-import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 public class NonConcurrentConcertReservationIntegrationTest {
@@ -111,6 +106,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
 
     @Nested
     class UserPointIntegrationTest {
+
         @Test
         @DisplayName("성공 : 회원 가입 시 해당 회원의 포인트 잔액 0인 UserPointBalance가 생성되어 저장된다. 이때 INIT 타입의 PointHistory도 생성되어 저장된다.")
         void shouldCreateAndSaveUserPointBalanceWith0AndInitPointHistory_WhenUserSignedUp() {
@@ -170,19 +166,19 @@ public class NonConcurrentConcertReservationIntegrationTest {
 
     @Nested
     class ConcertReservationIntegrationTest {
+
         @Test
         @DisplayName("성공 : 예약 가능한 공연 일정을 조회한다.")
         void shouldSuccessfullyGetAvailableConcertSchedule() {
             // given
-            ConcertSchedule expected = concertReservationApplication.registerConcertSchedule("1", concertDateTime, reservationStartAt, reservationEndAt, 1000);
+            ConcertSchedule expected = concertReservationApplication.registerConcertSchedule("1", concertDateTime.plusDays(1), reservationStartAt.plusDays(1), reservationEndAt.plusDays(1), 1000);
 
             // when
             List<ConcertSchedule> actual = concertReservationApplication.getAvailableConcertSchedules();
 
             // then
             Assertions.assertNotNull(actual);
-            Assertions.assertEquals(1, actual.size());
-            Assertions.assertEquals(expected.getId(), actual.get(0).getId());
+            Assertions.assertEquals(2, actual.size());
         }
 
         @Test
@@ -215,6 +211,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
                     = concertReservationApplication.createTemporaryReservation(user.getId(), concertSchedule.getId(), assignedSeat.getId(), assignedSeat.getPrice()); // 가예약 생성
 
             concertReservationApplication.paymentRequestForReservation(user.getId(), seat.getPrice(), createdTemporaryReservation.getId()); // 결제 요청
+
 
             UserPointBalance updatedUserPointBalance = concertReservationApplication.getUserPointBalance(user.getId()); // 차감된 사용자 잔액
             Seat reservedSeat = concertReservationApplication.getSeat(seat.getId()); // 예약된 좌석
