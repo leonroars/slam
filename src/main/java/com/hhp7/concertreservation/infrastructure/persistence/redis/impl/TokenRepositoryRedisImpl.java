@@ -26,7 +26,7 @@ import org.springframework.stereotype.Repository;
 public class TokenRepositoryRedisImpl implements TokenRepository {
 
     private static final String TOKEN_HASH_STORAGE_NAME = "tokenHashStorage"; // 토큰 저장소(Map) 이름
-    private static final String TOKEN_RANK_SORTED_SET_NAME_PREFIX = "tokenRankSortedSet"; // 토큰 대기열 이름
+    private static final String TOKEN_RANK_SORTED_SET_NAME = "tokenRankSortedSet"; // 토큰 대기열 이름
     private static final String TOKEN_ACTIVATED_SET_NAME = "tokenActivatedSet"; // 활성화된 토큰 저장소(Set) 이름
 
     @Resource(name = "tokenRedisTemplate")
@@ -41,7 +41,7 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
      * @param token
      * @return
      */
-    private double getScore(Token token) {
+    private double calculateScoreFromCreatedTime(Token token) {
         return token.getCreatedAt()
                 .atZone(ZoneId.systemDefault())
                 .toInstant()
@@ -59,8 +59,8 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
      * @param concertScheduleId
      * @return
      */
-    private String getTokenRankSortedSetNamePrefix(String concertScheduleId) {
-        return TOKEN_RANK_SORTED_SET_NAME_PREFIX + ":" + concertScheduleId;
+    private String getTokenRankSortedSetName(String concertScheduleId) {
+        return TOKEN_RANK_SORTED_SET_NAME + ":" + concertScheduleId;
     }
 
     /**
@@ -93,13 +93,13 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
 
         // 토큰 저장소 이름과 대기열 이름 생성.
         String tokenHashStorageName = getTokenHashStorageName(token.getConcertScheduleId());
-        String tokenRankSortedSetName = getTokenRankSortedSetNamePrefix(token.getConcertScheduleId());
+        String tokenRankSortedSetName = getTokenRankSortedSetName(token.getConcertScheduleId());
 
         // 토큰 저장소에 토큰 저장.
         tokenHashStorage.put(tokenHashStorageName, token.getId(), token);
 
         // 대기열에 토큰 추가.
-        tokenScoredSortedSet.add(tokenRankSortedSetName, token, getScore(token));
+        tokenScoredSortedSet.add(tokenRankSortedSetName, token, calculateScoreFromCreatedTime(token));
 
         // 토큰 저장소에 보관된 토큰 저장.
         return tokenHashStorage.get(tokenHashStorageName, token.getId());
@@ -148,7 +148,7 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
     @Override
     public List<Token> findNextKTokensToBeActivated(String concertScheduleId, int k) {
         Set<ZSetOperations.TypedTuple<Token>> toBeActivated
-                = Optional.ofNullable(tokenScoredSortedSet.popMin(getTokenRankSortedSetNamePrefix(concertScheduleId),k))
+                = Optional.ofNullable(tokenScoredSortedSet.popMin(getTokenRankSortedSetName(concertScheduleId),k))
                 .orElseThrow(() -> new UnavailableRequestException("대기 중인 토큰이 존재하지 않습니다."));
 
         return toBeActivated
@@ -164,10 +164,8 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
      */
     @Override
     public int countCurrentlyActiveTokens(String concertScheduleId) {
-        Long activeTokenCount
-                = Optional.ofNullable(activatedTokenSet.size(getTokenActivatedSetName(concertScheduleId)))
-                .orElseThrow(() -> new UnavailableRequestException("활성화된 토큰이 존재하지 않습니다."));
-
+        Long activeTokenCount = activatedTokenSet.size(getTokenActivatedSetName(concertScheduleId));
+        // Operation Pipelining 하지 않고 단일 명령 호출이므로 null 이 발생하지 않는다.
         return activeTokenCount.intValue();
     }
 
@@ -179,17 +177,20 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
      */
     @Override
     public int countRemaining(String concertScheduleId, String tokenId) {
+        // 토큰 발급 이력 조회.
         Token targetToken
                 = findTokenWithIdAndConcertScheduleId(concertScheduleId, tokenId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 토큰이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException("해당 토큰의 발급 이력이 존재하지 않습니다."));
 
-        Long tokenRank
-                = Optional.ofNullable(
-                        tokenScoredSortedSet.rank(getTokenRankSortedSetNamePrefix(concertScheduleId), targetToken))
-                .orElseThrow(() -> new UnavailableRequestException("해당 토큰이 토큰 목록엔 있으나 대기열에 존재하지 않습니다."));
-
-        // 해당 토큰이 존재하는 경우에만 대기열에서의 순위를 반환.
-        return tokenRank.intValue();
+        // 활성화된 토큰 여부인지 먼저 확인.
+        if(activatedTokenSet.isMember(getTokenActivatedSetName(concertScheduleId), targetToken)){
+            return 0; // 활성화된 토큰은 대기열에서의 순위를 조회할 수 없다.
+        }
+        // 활성화되지 않은 토큰이라면 대기열에서의 순위 조회.
+        else {
+            Long rank = tokenScoredSortedSet.rank(getTokenRankSortedSetName(concertScheduleId), targetToken);
+            return rank.intValue();
+        }
     }
 
     /**

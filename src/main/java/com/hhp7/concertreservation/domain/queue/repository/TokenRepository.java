@@ -20,8 +20,7 @@ public interface TokenRepository {
     // 활성화 상태로 변경할 토큰 K 개 조회.
     List<Token> findNextKTokensToBeActivated(String concertScheduleId, int k);
 
-    // 공연 일정 ID와 상태로 토큰 수 집계.
-    // TokenStatus 를 고정(ACTIVE)로 받지 않는 이유는, 이후 다른 상태에 대한 토큰 목록 조회가 필요할 수 있다고 판단했기 때문입니다.
+    // 공연 일정 ID와 상태로 활성화 토큰 수 집계. 이는 곧 현재 서비스 이용 중인 사용자 수를 의미합니다.
     int countCurrentlyActiveTokens(String concertScheduleId);
 
     // 공연 일정 ID, 사용자 ID, 상태 목록으로 남은 토큰 수 집계.

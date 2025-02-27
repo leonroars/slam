@@ -122,7 +122,6 @@ public class ConcertReservationController {
     /**
      * 대기열 폴링: Cookie에서 tokenId 추출 후, 대기 상태 확인
      */
-    @RequiresTokenValidation
     @GetMapping("/queue/remaining")
     public ResponseEntity<Integer> getRemaining(@RequestParam String scheduleId,
                                                 @CookieValue(value = "tokenId", required = false) String tokenId) {
