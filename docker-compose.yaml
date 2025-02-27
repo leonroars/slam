@@ -1,4 +1,16 @@
 services:
+  application:
+    container_name : concert_reservation_app
+    image : julian247dev/slam-concert-reservation-app:latest
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+
   mysql:
     image: 'mysql:latest'
     environment:
