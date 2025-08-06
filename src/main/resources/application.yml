@@ -33,14 +33,14 @@ spring:
 logging:
   level:
     org:
-      springframework: DEBUG
+      springframework: WARN
     com:
       hhp7:
         concertreservation:
             repository:
-            service: info
-            controller: info
-            component: info
+            service: WARN
+            controller: WARN
+            component: WARN
 
 server:
   port: 8080
