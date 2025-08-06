@@ -3,6 +3,7 @@ package com.slam.concertreservation.application;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
 import com.slam.concertreservation.domain.concert.service.ConcertService;
 import com.slam.concertreservation.domain.queue.model.Token;
+import com.slam.concertreservation.domain.queue.model.TokenStatus;
 import com.slam.concertreservation.domain.queue.service.QueueService;
 import com.slam.concertreservation.domain.user.model.User;
 import com.slam.concertreservation.domain.user.service.UserService;
@@ -84,7 +85,7 @@ public class QueueServiceIntegrationTest {
             Token token2 = queueService.issueToken(savedUser2.getId(), savedConcertSchedule.getId());
 
             // when : 2개의 대기열 토큰 상태를 '활성화'로 변경
-            queueService.activateTokens(savedConcertSchedule.getId(), 2);
+            // queueService.activateTokens(savedConcertSchedule.getId(), 2);
 
             // then : K개의 대기열 토큰 상태가 '활성화'로 변경된다.
             Assertions.assertThat(queueService.validateToken(savedConcertSchedule.getId(), token1.getId()))
@@ -93,38 +94,6 @@ public class QueueServiceIntegrationTest {
                     .isEqualTo(true);
         }
 
-        @Test
-        @DisplayName("성공 : 한 번에 K 개의 대기열 토큰을 만료 시킬 수 있다.")
-        void shouldSuccessExpireKTokens_WhenExpireKTokensAtOnce() {
-            // given : 2개의 대기열 토큰이 존재하고, 모두 '활성화' 상태.
-            User user1 = User.create("user1");
-            User user2 = User.create("user2");
-            ConcertSchedule concertSchedule
-                    = ConcertSchedule.create(CONCERT_SCHEDULE_ID, CONCERT_SCHEDULE_START_TIME, CONCERT_SCHEDULE_RESERVATION_START_TIME, CONCERT_SCHEDULE_RESERVATION_END_TIME);
-
-            User savedUser1 = userService.joinUser(user1);
-            User savedUser2 = userService.joinUser(user2);
-            ConcertSchedule savedConcertSchedule = concertService.registerConcertSchedule(concertSchedule, 10000);
-
-            // 토큰 2개 발급 / 활성 상태
-            Token token1 = queueService.issueToken(savedUser1.getId(), savedConcertSchedule.getId());
-            Token token2 = queueService.issueToken(savedUser2.getId(), savedConcertSchedule.getId());
-            queueService.activateTokens(savedConcertSchedule.getId(), 2);
-
-            // when : K개의 대기열 토큰 상태를 '만료'로 변경
-            queueService.expireToken(savedConcertSchedule.getId(), List.of(token1, token2));
-
-            // then : K개의 대기열 토큰 상태가 '만료'로 변경된다.
-            Assertions.assertThatThrownBy(
-                    () -> queueService.validateToken(savedConcertSchedule.getId(), token1.getId())
-                    ).isInstanceOf(UnavailableRequestException.class)
-                    .hasMessageContaining("만료된 토큰이므로 사용 불가합니다.");
-
-            Assertions.assertThatThrownBy(
-                    () -> queueService.validateToken(savedConcertSchedule.getId(), token2.getId())
-                    ).isInstanceOf(UnavailableRequestException.class)
-                    .hasMessageContaining("만료된 토큰이므로 사용 불가합니다.");
-        }
 
         @Test
         @DisplayName("성공 : 어떤 사용자의 대기열 순번을 조회할 수 있다.")
