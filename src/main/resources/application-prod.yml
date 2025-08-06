@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: hhp7_concert_reservation
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://mysql:3306/mydatabase
+    username: myuser
+    password: secret
+    hikari:
+      auto-commit: false
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  #    properties:
+  #      hibernate:
+  #        jdbc:
+  #          batch_size: 60
+  #        order_inserts: true
+  #        rewriteBatchedStatements: true
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: concert
+
+  config:
+    activate:
+      on-profile: prod
+
+logging:
+  level:
+    org:
+      springframework: DEBUG
+    com:
+      hhp7:
+        concertreservation:
+          repository:
+          service: info
+          controller: info
+          component: info
+
+server:
+  port: 8080
+
+#### 데이터 플랫폼 EndPoint 설정
+dataplatform:
+  url: http://localhost:8080/api/dataplatform/reservations
+
+#### 대기열 구현체 설정 : Default - DB
+app:
+  queue:
+    provider: "redis"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs       # 기본값: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html   # Swagger UI 접속 경로 (기본값: /swagger-ui.html)
