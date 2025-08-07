@@ -2,6 +2,7 @@ package com.slam.concertreservation.interfaces;
 
 import com.slam.concertreservation.application.facade.ConcertReservationApplication;
 import com.slam.concertreservation.application.facade.UserApplication;
+import com.slam.concertreservation.domain.concert.model.Concert;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
 import com.slam.concertreservation.domain.concert.model.Seat;
 import com.slam.concertreservation.domain.point.model.UserPointBalance;
@@ -9,7 +10,9 @@ import com.slam.concertreservation.domain.queue.model.Token;
 import com.slam.concertreservation.domain.reservation.model.Reservation;
 import com.slam.concertreservation.domain.user.model.User;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.Cookie;
@@ -59,6 +62,47 @@ public class ConcertReservationController {
     }
 
     /* ========== Concert ========== */
+
+    /**
+     * 공연 등록
+     */
+    @PostMapping
+    public ResponseEntity<Concert> registerConcert(
+            @RequestParam String name,
+            @RequestParam String artist) {
+        Concert concert = reservationApp.registerConcert(name, artist);
+        return ResponseEntity.ok(concert);
+    }
+
+    /**
+     * 공연 조회
+     */
+    @GetMapping("/{concertId}")
+    public ResponseEntity<Concert> getConcert(@PathVariable String concertId) {
+        Concert concert = reservationApp.getConcert(concertId);
+        return ResponseEntity.ok(concert);
+    }
+
+    /**
+     * 공연 일정 등록
+     */
+    @PostMapping("/{concertId}/schedules")
+    public ResponseEntity<ConcertSchedule> registerConcertSchedule(
+            @PathVariable String concertId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime concertDateTime,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime reservationStartAt,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime reservationEndAt,
+            @RequestParam int price) {
+        ConcertSchedule schedule = reservationApp.registerConcertSchedule(
+                concertId,
+                concertDateTime,
+                reservationStartAt,
+                reservationEndAt,
+                price);
+        return ResponseEntity.ok(schedule);
+    }
+
+
 
     @GetMapping("/concertSchedules/available")
     public ResponseEntity<List<ConcertSchedule>> getAvailableConcertSchedules() {

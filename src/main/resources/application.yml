@@ -45,6 +45,16 @@ logging:
 server:
   port: 8080
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, swagger-ui
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
 #### 데이터 플랫폼 EndPoint 설정
 dataplatform:
   url: http://localhost:8080/api/dataplatform/reservations
