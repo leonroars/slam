@@ -2,6 +2,7 @@ package com.slam.concertreservation.domain.queue.model;
 
 import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import lombok.Getter;
 
 @Getter
@@ -62,6 +63,7 @@ public class Token {
             throw new BusinessRuleViolationException("이미 만료된 토큰입니다.");
         }
         this.status = TokenStatus.EXPIRED;
+        this.initiateExpiredAt(LocalDateTime.now());
         return this;
     }
 
@@ -91,5 +93,18 @@ public class Token {
 
     public boolean isWait(){
         return this.status == TokenStatus.WAIT;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Token)) return false;
+        Token token = (Token) o;
+        return Objects.equals(id, token.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

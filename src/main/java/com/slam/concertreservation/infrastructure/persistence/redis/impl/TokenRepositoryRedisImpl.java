@@ -15,26 +15,37 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.SetOperations;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @ConditionalOnProperty(name = "app.queue.provider", havingValue = "redis", matchIfMissing = false)
-@RequiredArgsConstructor
 public class TokenRepositoryRedisImpl implements TokenRepository {
 
     private static final String TOKEN_HASH_STORAGE_NAME = "tokenHashStorage"; // 토큰 저장소(Map) 이름
     private static final String TOKEN_RANK_SORTED_SET_NAME = "tokenRankSortedSet"; // 토큰 대기열 이름
     private static final String TOKEN_ACTIVATED_SET_NAME = "tokenActivatedSet"; // 활성화된 토큰 저장소(Set) 이름
 
-    @Resource(name = "tokenRedisTemplate")
-    private final ZSetOperations<String, Token> tokenScoredSortedSet;
-    @Resource(name = "tokenRedisTemplate")
+    private final StringRedisTemplate stringRedisTemplate;
+    private final RedisTemplate<String, Token> tokenRedisTemplate;
+
+    private final ZSetOperations<String, String> tokenScoredSortedSet;
     private final HashOperations<String, String, Token> tokenHashStorage;
-    @Resource(name = "tokenRedisTemplate")
-    private final SetOperations<String, Token> activatedTokenSet;
+    private final SetOperations<String, String> activatedTokenSet;
+
+    public TokenRepositoryRedisImpl(StringRedisTemplate stringRedisTemplate,
+                                    RedisTemplate<String, Token> tokenRedisTemplate) {
+
+        this.stringRedisTemplate = stringRedisTemplate;
+        this.tokenRedisTemplate = tokenRedisTemplate;
+        this.tokenScoredSortedSet = stringRedisTemplate.opsForZSet();
+        this.tokenHashStorage = tokenRedisTemplate.opsForHash();
+        this.activatedTokenSet = stringRedisTemplate.opsForSet();
+    }
 
     /**
      * 토큰의 생성 시점을 점수(Rank)로 환산해주는 메서드.
@@ -99,7 +110,7 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
         tokenHashStorage.put(tokenHashStorageName, token.getId(), token);
 
         // 대기열에 토큰 추가.
-        tokenScoredSortedSet.add(tokenRankSortedSetName, token, calculateScoreFromCreatedTime(token));
+        tokenScoredSortedSet.add(tokenRankSortedSetName, token.getId(), calculateScoreFromCreatedTime(token));
 
         // 토큰 저장소에 보관된 토큰 저장.
         return tokenHashStorage.get(tokenHashStorageName, token.getId());
@@ -118,11 +129,13 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
             for(Token token : tokens){
                 // pipelining 하지 않기 때문에 null 이 반환되지 않는다.
                 // 기존의 ACTIVE 상태인 토큰을 삭제하고 만료 상태인 해당 토큰으로 교체하기.
-                if(activatedTokenSet.isMember(getTokenActivatedSetName(token.getConcertScheduleId()), token)){
-                    activatedTokenSet.remove(getTokenActivatedSetName(token.getConcertScheduleId()), token);
+                String setKey = getTokenActivatedSetName(token.getConcertScheduleId());
+                String tokenId = token.getId();
+                if(activatedTokenSet.isMember(setKey, tokenId)) {
+                    activatedTokenSet.remove(setKey, tokenId);
                 }
                 // 만료 처리된 토큰 / 활성화된 토큰 저장.
-                activatedTokenSet.add(getTokenActivatedSetName(token.getConcertScheduleId()), token);
+                activatedTokenSet.add(setKey, tokenId);
             }
         }
         return List.of(); // 좋은 설계가 아닌 거 같다. 조용히 무시되도록 구현하는 쪽이 가장 좋을 것으로 생각.
@@ -147,13 +160,14 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
      */
     @Override
     public List<Token> findNextKTokensToBeActivated(String concertScheduleId, int k) {
-        Set<ZSetOperations.TypedTuple<Token>> toBeActivated
+        Set<ZSetOperations.TypedTuple<String>> toBeActivated
                 = Optional.ofNullable(tokenScoredSortedSet.popMin(getTokenRankSortedSetName(concertScheduleId),k))
                 .orElseThrow(() -> new UnavailableRequestException("대기 중인 토큰이 존재하지 않습니다."));
 
         return toBeActivated
                 .stream()
                 .map(ZSetOperations.TypedTuple::getValue)
+                .map(id -> tokenHashStorage.get(getTokenHashStorageName(concertScheduleId), id))
                 .toList();
     }
 
@@ -183,12 +197,12 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
                 .orElseThrow(() -> new UnavailableRequestException("해당 토큰의 발급 이력이 존재하지 않습니다."));
 
         // 활성화된 토큰 여부인지 먼저 확인.
-        if(activatedTokenSet.isMember(getTokenActivatedSetName(concertScheduleId), targetToken)){
+        if(activatedTokenSet.isMember(getTokenActivatedSetName(concertScheduleId), tokenId)){
             return 0; // 활성화된 토큰은 대기열에서의 순위를 조회할 수 없다.
         }
         // 활성화되지 않은 토큰이라면 대기열에서의 순위 조회.
         else {
-            Long rank = tokenScoredSortedSet.rank(getTokenRankSortedSetName(concertScheduleId), targetToken);
+            Long rank = tokenScoredSortedSet.rank(getTokenRankSortedSetName(concertScheduleId), tokenId);
             return rank.intValue();
         }
     }
@@ -209,11 +223,15 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
                 .build();
 
         // 특정 공연 일정의 대기열을 순회하는 Cursor 초기화.
-        Cursor<Token> cursor = activatedTokenSet.scan(getTokenActivatedSetName(concertScheduleId), scanOptions);
+        Cursor<String> cursor = activatedTokenSet.scan(getTokenActivatedSetName(concertScheduleId), scanOptions);
 
         try {
             while (cursor.hasNext()) {
-                Token token = cursor.next();
+                String tokenId = cursor.next();
+
+                // 토큰 ID로 토큰 조회.
+                Token token = tokenHashStorage.get(getTokenHashStorageName(concertScheduleId), tokenId);
+
                 if (token.getExpiredAt() != null && token.getExpiredAt().isBefore(now)) {
                     toBeExpiredActivatedTokens.add(token);
                 }
@@ -233,9 +251,7 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
      * @return
      */
     @Override
-    public List<Token> findWaitingTokensToBeExpired() {
-        return List.of();
-    }
+    public List<Token> findWaitingTokensToBeExpired() {return List.of();}
 
     /**
      * Redis 내 해당 공연 일정과 대응하는 토큰 저장소에서 토큰들을 조회하는 메서드.

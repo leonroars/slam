@@ -33,17 +33,27 @@ spring:
 logging:
   level:
     org:
-      springframework: DEBUG
+      springframework: WARN
     com:
       hhp7:
         concertreservation:
             repository:
-            service: info
-            controller: info
-            component: info
+            service: WARN
+            controller: WARN
+            component: WARN
 
 server:
   port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, swagger-ui
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 #### 데이터 플랫폼 EndPoint 설정
 dataplatform:

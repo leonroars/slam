@@ -1,15 +1,112 @@
+#services:
+#  application:
+#    container_name : concert_reservation_app
+#    image : julian247dev/slam-concert-reservation-app:latest
+#    expose:
+#      - "8080"
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - mysql
+#      - redis
+#      - kafka
+#
+#  mysql:
+#    image: 'mysql:latest'
+#    environment:
+#      - 'MYSQL_DATABASE=mydatabase'
+#      - 'MYSQL_PASSWORD=secret'
+#      - 'MYSQL_ROOT_PASSWORD=verysecret'
+#      - 'MYSQL_USER=myuser'
+#    volumes:
+#      - './mock-data:/var/lib/mysql-files'
+#    ports:
+#      - "3306:3306"
+##    wq
+#
+#  redis:
+#    image: docker.io/bitnami/redis:7.4
+#    environment:
+#      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+#      - ALLOW_EMPTY_PASSWORD=yes
+#      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+#    ports:
+#      - '6379:6379'
+#    volumes:
+#      - 'redis_data:/bitnami/redis/data'
+#
+#  kafka:
+#    image: docker.io/bitnami/kafka:3.9
+#    ports:
+#      - "9092:9092"
+#    volumes:
+#      - "kafka_data:/bitnami"
+#    environment:
+#      - KAFKA_CFG_NODE_ID=0 # Kafka 노드 ID 설정
+#      - KAFKA_CFG_PROCESS_ROLES=controller,broker # Kafka 프로세스 역할 설정 (컨트롤러와 브로커 역할)
+#      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093 # 컨트롤러 쿼럼 투표자 설정
+#      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093 # Kafka가 사용할 리스너 주소 설정
+#      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092 # 외부에서 접속할 때 사용할 Kafka 리스너 주소
+#      - ALLOW_PLAINTEXT_LISTENER=yes # 암호화 하지않은 리스너 허용(개발 테스트 용)
+#      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT # 리스너에 대한 보안 프로토콜 매핑
+#      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER # 컨트롤러 리스너 이름 설정
+#      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT # 브로커 간 리스너 이름 설정
+#      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1 # 오프셋 토픽의 복제 계수 설정
+#      - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=1 # 트랜잭션 상태 로그에서 최소 ISR(동기화된 복제본 수) 설정
+#      - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1 # 트랜잭션 상태 로그 복제 계수 설정
+#      - KAFKA_CFG_MIN_INSYNC_REPLICAS=1 # 최소 동기화된 복제본 수 설정
+#
+#volumes:
+#  redis_data:
+#    driver: local
+#
+#  kafka_data:
+#    driver: local
+
+# docker-compose.production.yml - 의존성 대기 로직 추가
 services:
   application:
-    container_name : concert_reservation_app
-    image : julian247dev/slam-concert-reservation-app:latest
+    container_name: concert_reservation_app
+    # 로컬 빌드 사용 (최신 이미지 미푸시 대응)
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # image: julian247dev/slam-concert-reservation-app:latest  # 주석 처리
     expose:
       - "8080"
     ports:
       - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/mydatabase
+      - SPRING_DATASOURCE_USERNAME=myuser
+      - SPRING_DATASOURCE_PASSWORD=secret
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
-      - mysql
-      - redis
-      - kafka
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+    # 애플리케이션 시작 지연 및 재시작 정책
+    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+    # 헬스체크 추가
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - app-network
 
   mysql:
     image: 'mysql:latest'
@@ -20,20 +117,30 @@ services:
       - 'MYSQL_USER=myuser'
     volumes:
       - './mock-data:/var/lib/mysql-files'
+      - 'mysql_data:/var/lib/mysql'
     ports:
       - "3306:3306"
-#    wq
+    # MySQL 헬스체크 추가
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pverysecret"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - app-network
 
   redis:
     image: docker.io/bitnami/redis:7.4
     environment:
-      # ALLOW_EMPTY_PASSWORD is recommended only for development.
       - ALLOW_EMPTY_PASSWORD=yes
       - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
     ports:
       - '6379:6379'
     volumes:
       - 'redis_data:/bitnami/redis/data'
+    networks:
+      - app-network
 
   kafka:
     image: docker.io/bitnami/kafka:3.9
@@ -42,23 +149,30 @@ services:
     volumes:
       - "kafka_data:/bitnami"
     environment:
-      - KAFKA_CFG_NODE_ID=0 # Kafka 노드 ID 설정
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker # Kafka 프로세스 역할 설정 (컨트롤러와 브로커 역할)
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093 # 컨트롤러 쿼럼 투표자 설정
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093 # Kafka가 사용할 리스너 주소 설정
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092 # 외부에서 접속할 때 사용할 Kafka 리스너 주소
-      - ALLOW_PLAINTEXT_LISTENER=yes # 암호화 하지않은 리스너 허용(개발 테스트 용)
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT # 리스너에 대한 보안 프로토콜 매핑
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER # 컨트롤러 리스너 이름 설정
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT # 브로커 간 리스너 이름 설정
-      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1 # 오프셋 토픽의 복제 계수 설정
-      - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=1 # 트랜잭션 상태 로그에서 최소 ISR(동기화된 복제본 수) 설정
-      - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1 # 트랜잭션 상태 로그 복제 계수 설정
-      - KAFKA_CFG_MIN_INSYNC_REPLICAS=1 # 최소 동기화된 복제본 수 설정
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_CFG_MIN_INSYNC_REPLICAS=1
+    networks:
+      - app-network
 
 volumes:
   redis_data:
     driver: local
-
   kafka_data:
     driver: local
+  mysql_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
