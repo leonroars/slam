@@ -69,7 +69,7 @@ dataplatform:
 #### 대기열 구현체 설정 : Default - DB
 app:
   queue:
-    provider: "redis"
+    provider: "DB"
 
 springdoc:
   api-docs:
