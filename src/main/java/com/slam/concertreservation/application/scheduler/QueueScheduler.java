@@ -21,7 +21,7 @@ public class QueueScheduler {
 
     private static final int ACTIVATION_BATCH_SIZE = 10;
 
-    // Queue 내에 저장된 Token을 만료시키고 만료시킨 토큰 수만큼 활성화 시켜준다.
+    // QueuePolicy 내에 저장된 Token을 만료시키고 만료시킨 토큰 수만큼 활성화 시켜준다.
     @Scheduled(fixedDelay = 10000) // 10초 간격 순회하며 작업.
     public void expireAndActivateToken() {
 

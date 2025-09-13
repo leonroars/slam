@@ -46,7 +46,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:mysql'
-    testImplementation group: 'org.testcontainers', name: 'kafka', version: '1.20.4' // kafka - test
+    testImplementation 'org.testcontainers:kafka'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.queue.service;
 
+import com.slam.concertreservation.domain.queue.model.QueuePolicy;
 import com.slam.concertreservation.domain.queue.model.Token;
 import com.slam.concertreservation.domain.queue.repository.TokenRepository;
 import com.slam.concertreservation.exceptions.UnavailableRequestException;
@@ -12,13 +13,8 @@ import org.springframework.stereotype.Service;
 public class QueueService {
 
     private final TokenRepository tokenRepository;
+    private final QueuePolicy queuePolicy;
 
-    public static final int MAX_CONCURRENT_USER = 40;
-    public static final double MAX_CONCURRENT_USER_THRESHOLD = 1.2; // N 초에 M 명 활성화 시에도 지켜져야하는 최대 동시 사용자 산출 계수.
-
-    private int calculateConcurrentUserThreshold(){
-        return (int)Math.floor(MAX_CONCURRENT_USER * MAX_CONCURRENT_USER_THRESHOLD);
-    }
 
     /**
      * 특정 공연 일정 예약을 위해 대기하는 어떤 사용자에게 토큰을 발급합니다.
@@ -42,7 +38,7 @@ public class QueueService {
         int activeTokenCount = tokenRepository.countCurrentlyActiveTokens(concertScheduleId);
 
         // 만약 대기가 필요 없을 경우 바로 활성화 및 만료 시간 설정(5분)
-        if(activeTokenCount < calculateConcurrentUserThreshold()){
+        if(activeTokenCount < queuePolicy.calculateConcurrentUserThreshold()){
             token.activate();
         }
 
@@ -57,7 +53,7 @@ public class QueueService {
     public List<Token> activateTokens(String concertScheduleId, int k){
         // 현재 동시 예약 서비스 이용 중인 사용자 수 확인
         int activeTokenCount = tokenRepository.countCurrentlyActiveTokens(concertScheduleId);
-        if(activeTokenCount >= MAX_CONCURRENT_USER){
+        if(activeTokenCount >= queuePolicy.getMaxConcurrentUser()){
             throw new UnavailableRequestException("최대 동시 예약 가능한 사용자 수를 초과했습니다.");
         }
 
@@ -124,5 +120,14 @@ public class QueueService {
      */
     public List<Token> getWaitingTokensToBeExpired(){
         return tokenRepository.findWaitingTokensToBeExpired();
+    }
+
+    /**
+     * 특정 공연 일정에 발급된 모든 토큰 조회
+     * @param concertScheduleId
+     * @return
+     */
+    public List<Token> getAllTokensByConcertScheduleId(String concertScheduleId){
+        return tokenRepository.findByConcertScheduleId(concertScheduleId);
     }
 }

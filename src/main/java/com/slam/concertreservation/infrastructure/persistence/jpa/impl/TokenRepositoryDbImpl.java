@@ -33,7 +33,7 @@ public class TokenRepositoryDbImpl implements TokenRepository {
 
     @Override
     public Optional<Token> findTokenWithIdAndConcertScheduleId(String concertScheduleId, String tokenId) {
-        return tokenJpaRepository.findTokenJpaEntityByConcertScheduleIdAndId(concertScheduleId, tokenId)
+        return tokenJpaRepository.findTokenJpaEntityByConcertScheduleIdAndId(concertScheduleId, Long.parseLong(tokenId))
                 .map(TokenJpaEntity::toDomain);
     }
 
@@ -60,7 +60,7 @@ public class TokenRepositoryDbImpl implements TokenRepository {
 
     @Override
     public int countRemaining(String concertScheduleId, String tokenId) {
-        return tokenJpaRepository.countRemainingByConcertScheduleIdAndTokenIdAndStatus(concertScheduleId, tokenId);
+        return tokenJpaRepository.countRemainingByConcertScheduleIdAndTokenId(concertScheduleId, Long.parseLong(tokenId));
     }
 
     @Override

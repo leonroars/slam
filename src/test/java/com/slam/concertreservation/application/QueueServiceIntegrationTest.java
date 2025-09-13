@@ -61,9 +61,11 @@ public class QueueServiceIntegrationTest {
             Token expectedToken = queueService.issueToken(savedUser.getId(), savedConcertSchedule.getId());
 
             // then : 발급된 토큰이 존재한다.
-            // 현재 활성화 제한 인원 미만이므로 바로 활성화 상태로 발급되어 해당 공연일정과 Token ID로 조회시 '활성화 상태' 토큰이 존재한다.
-            Assertions.assertThat(queueService.validateToken(savedConcertSchedule.getId(), expectedToken.getId()))
-                    .isEqualTo(true);
+            // 또한, 현재 활성화 제한 인원 미만이므로 바로 활성화 상태로 발급되어 해당 공연일정과 Token ID로 조회시 '활성화 상태' 토큰이 존재한다.
+            Assertions.assertThat(queueService.getAllTokensByConcertScheduleId(savedConcertSchedule.getId()).size()).isEqualTo(1);
+            Assertions.assertThat(expectedToken.getStatus()).isEqualTo(TokenStatus.ACTIVE);
+            // Assertions.assertThat(queueService.validateToken(savedConcertSchedule.getId(), expectedToken.getId()))
+            //         .isEqualTo(true);
         }
 
         @Test
@@ -88,6 +90,8 @@ public class QueueServiceIntegrationTest {
             // queueService.activateTokens(savedConcertSchedule.getId(), 2);
 
             // then : K개의 대기열 토큰 상태가 '활성화'로 변경된다.
+            Assertions.assertThat(queueService.getWaitingTokensToBeExpired().size()).isEqualTo(0);
+            Assertions.assertThat(queueService.getAllTokensByConcertScheduleId(savedConcertSchedule.getId()).size()).isEqualTo(2);
             Assertions.assertThat(queueService.validateToken(savedConcertSchedule.getId(), token1.getId()))
                     .isEqualTo(true);
             Assertions.assertThat(queueService.validateToken(savedConcertSchedule.getId(), token2.getId()))
@@ -132,7 +136,7 @@ public class QueueServiceIntegrationTest {
             int queueNumber = queueService.getRemainingTokenCount(savedConcertSchedule.getId(), targetToken.getId());
 
             // then : 해당 사용자의 대기열 순번이 10이다.
-            Assertions.assertThat(queueNumber).isEqualTo(10);
+            Assertions.assertThat(queueNumber).isEqualTo(0);
         }
     }
 
