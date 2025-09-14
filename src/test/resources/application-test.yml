@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: hhp7_concert_reservation
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  config:
+    activate:
+      on-profile: test
+
+
+logging:
+  level:
+    org:
+      springframework: DEBUG
+    com:
+      hhp7:
+        concertreservation:
+          repository:
+          service: info
+          controller: info
+          component: info
+
+server:
+  port: 8080
+
+#### 대기열 구현체 설정 : Default - DB
+app:
+  queue:
+    provider: "REDIS"
+    policy:
+      max-concurrent-user-threshold: 1.0
+      max-concurrent-user: 2
+      waiting-token-duration: 6
+      active-token-duration: 3

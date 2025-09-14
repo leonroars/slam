@@ -32,14 +32,14 @@ public class QueueService {
      */
     public Token issueToken(String userId, String concertScheduleId){
         // 토큰 생성
-        Token token = Token.create(userId, concertScheduleId);
+        Token token = Token.create(userId, concertScheduleId, queuePolicy.getWaitingTokenDuration());
 
         // 현재 예약 서비스 이용 중인 사용자 수 확인
         int activeTokenCount = tokenRepository.countCurrentlyActiveTokens(concertScheduleId);
 
         // 만약 대기가 필요 없을 경우 바로 활성화 및 만료 시간 설정(5분)
         if(activeTokenCount < queuePolicy.calculateConcurrentUserThreshold()){
-            token.activate();
+            token.activate(queuePolicy.getActiveTokenDuration());
         }
 
         return tokenRepository.save(token);
@@ -60,7 +60,7 @@ public class QueueService {
         // 대기 중인 토큰 중 K 개 활성화
         List<Token> activated = tokenRepository.findNextKTokensToBeActivated(concertScheduleId, k)
                 .stream()
-                .map(Token::activate)
+                .map(token -> token.activate(queuePolicy.getActiveTokenDuration()))
                 .toList();
         if(activated.isEmpty()){throw new UnavailableRequestException("대기 중인 토큰이 존재하지 않습니다.");}
 

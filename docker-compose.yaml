@@ -20,7 +20,7 @@ services:
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - APP_QUEUE_PROVIDER=DB
+#      - APP_QUEUE_PROVIDER=DB
     depends_on:
       mysql:
         condition: service_healthy

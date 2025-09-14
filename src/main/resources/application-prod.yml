@@ -53,7 +53,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus, beans, env, conditions
   endpoint:
     prometheus:
       access: unrestricted
@@ -69,7 +69,12 @@ dataplatform:
 #### 대기열 구현체 설정 : Default - DB
 app:
   queue:
-    provider: "DB"
+    provider: "REDIS"
+    policy:
+      max-concurrent-user-threshold: 1.2
+      max-concurrent-user: 50
+      waiting-token-duration: 6
+      active-token-duration: 3
 
 springdoc:
   api-docs:
