@@ -48,7 +48,7 @@ CREATE TABLE `SEAT` (
 );
 
 CREATE TABLE `QUEUE` (
-  `token_id` INT PRIMARY KEY AUTO_INCREMENT,
+  `token_id` BIGINT PRIMARY KEY AUTO_INCREMENT,
   `user_id` VARCHAR(16) NOT NULL,
   `token_status` ENUM ('ACTIVE', 'WAIT', 'EXPIRED') DEFAULT 'WAIT',
   `concert_schedule_id` VARCHAR(16),

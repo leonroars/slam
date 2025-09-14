@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 public class Token {
-    private String id; // DBMS 에서 자동 생성해주는 ID 를 사용하므로 Nullable 합니다.
+    private String id;
     private String userId;
     private String concertScheduleId;
     private TokenStatus status; // WAIT, ACTIVE, EXPIRED
@@ -30,38 +30,46 @@ public class Token {
         return token;
     }
 
+    public static Token create(String id, String userId, String concertScheduleId, String status, LocalDateTime createdAt, LocalDateTime expiredAt){
+        Token token = new Token();
+        token.id = id;
+        token.userId = userId;
+        token.concertScheduleId = concertScheduleId;
+        token.status = TokenStatus.valueOf(status);
+        token.createdAt = createdAt;
+        token.expiredAt = expiredAt;
+
+        return token;
+    }
+
     /**
      * 토큰 생성. 토큰은 생성 직후 저장되었다가 발급되므로, 생성 시점에 만료 시간을 설정합니다.
      * @param userId
      * @param concertScheduleId
      * @return
      */
-    public static Token create(String userId, String concertScheduleId){
+    public static Token create(String userId, String concertScheduleId, int waitingTokenDurationInHours){
+        if(waitingTokenDurationInHours <= 0){throw new BusinessRuleViolationException("대기 토큰의 유효 시간은 0시간보다 커야 합니다.");}
         return Token.create(
                 null,
                 userId,
                 concertScheduleId,
                 LocalDateTime.now(),
-                LocalDateTime.now().plusHours(Queue.WAITING_TOKEN_DURATION));
+                LocalDateTime.now().plusHours(waitingTokenDurationInHours));
     }
 
     /**
      * 단일 토큰 활성화. 활성화 시점 기준 5분 후로 만료 시간 초기화.
      * @return
      */
-    public Token activate(){
-        if(this.status == TokenStatus.ACTIVE){
-            throw new BusinessRuleViolationException("이미 활성화된 토큰입니다.");
-        }
+    public Token activate(int durationInMinutes){
+        if(durationInMinutes <= 0){throw new BusinessRuleViolationException("활성 토큰의 유효 시간은 0분보다 커야 합니다.");}
         this.status = TokenStatus.ACTIVE;
-        this.initiateExpiredAt(LocalDateTime.now().plusMinutes(Queue.ACTIVE_TOKEN_DURATION));
+        this.initiateExpiredAt(LocalDateTime.now().plusMinutes(durationInMinutes));
         return this;
     }
 
     public Token expire(){
-        if(this.status == TokenStatus.EXPIRED){
-            throw new BusinessRuleViolationException("이미 만료된 토큰입니다.");
-        }
         this.status = TokenStatus.EXPIRED;
         this.initiateExpiredAt(LocalDateTime.now());
         return this;

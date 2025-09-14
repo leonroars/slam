@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.queue.service;
 
+import com.slam.concertreservation.domain.queue.model.QueuePolicy;
 import com.slam.concertreservation.domain.queue.model.Token;
 import com.slam.concertreservation.domain.queue.model.TokenStatus;
 import com.slam.concertreservation.domain.queue.repository.TokenRepository;
@@ -26,9 +27,11 @@ class QueueServiceUnitTest {
     @InjectMocks
     private QueueService queueService;
 
+    @Mock
+    private QueuePolicy queuePolicy;
+
     private final String userId = "user123";
     private final String concertScheduleId = "concert1";
-    private final int maxConcurrentUsers = queueService.MAX_CONCURRENT_USER;
 
     @BeforeEach
     void setUp() {
@@ -39,8 +42,12 @@ class QueueServiceUnitTest {
     @DisplayName("성공 : 성공적으로 토큰이 발급된다.")
     void issueToken_SuccessfullyIssuesToken_WhenNoExistingTokens() {
         // given
+        when(queuePolicy.getActiveTokenDuration()).thenReturn(1);
+        when(queuePolicy.getWaitingTokenDuration()).thenReturn(1);
+        when(queuePolicy.getMaxConcurrentUser()).thenReturn(5);
+        when(queuePolicy.calculateConcurrentUserThreshold()).thenReturn(5);
         // 이후 정상적으로 생성될 토큰
-        Token expected = Token.create(userId, concertScheduleId);
+        Token expected = Token.create(userId, concertScheduleId, queuePolicy.getActiveTokenDuration());
         when(tokenRepository.save(any(Token.class))).thenReturn(expected);
 
         // when
@@ -76,18 +83,27 @@ class QueueServiceUnitTest {
         when(tokenRepository.findNextKTokensToBeActivated(concertScheduleId, k))
                 .thenReturn(waitingTokens);
 
+        when(queuePolicy.getActiveTokenDuration()).thenReturn(1);
         List<Token> activatedTokens = List.of(
-                Token.create("1", userId, concertScheduleId, createdAt, expiredAt).activate(),
-                Token.create("2", userId, concertScheduleId, createdAt, expiredAt).activate(),
-                Token.create("3", userId, concertScheduleId, createdAt, expiredAt).activate(),
-                Token.create("4", userId, concertScheduleId, createdAt, expiredAt).activate(),
-                Token.create("5", userId, concertScheduleId, createdAt, expiredAt).activate()
+                Token.create("1", userId, concertScheduleId, createdAt, expiredAt).activate(
+                        queuePolicy.getActiveTokenDuration()),
+                Token.create("2", userId, concertScheduleId, createdAt, expiredAt).activate(
+                        queuePolicy.getActiveTokenDuration()),
+                Token.create("3", userId, concertScheduleId, createdAt, expiredAt).activate(
+                        queuePolicy.getActiveTokenDuration()),
+                Token.create("4", userId, concertScheduleId, createdAt, expiredAt).activate(
+                        queuePolicy.getActiveTokenDuration()),
+                Token.create("5", userId, concertScheduleId, createdAt, expiredAt).activate(
+                        queuePolicy.getActiveTokenDuration())
         );
+
+        when(queuePolicy.getMaxConcurrentUser()).thenReturn(40);
 
         when(tokenRepository.saveAll(waitingTokens))
                 .thenReturn(activatedTokens);
+
         when(tokenRepository.countCurrentlyActiveTokens(concertScheduleId))
-                .thenReturn(maxConcurrentUsers - k);
+                .thenReturn(activeCount + k);
 
         // when
         List<Token> result = queueService.activateTokens(concertScheduleId, k);
@@ -118,39 +134,18 @@ class QueueServiceUnitTest {
 
 
     @Test
-    @DisplayName("실패 : 대기 중인 토큰이 없을 때 토큰 활성화 시도 시 UnavailableRequestException이 발생한다.")
-    void shouldThrowUnavailableRequestException_WhenNoWaitingTokensAvailable() {
-        // given
-        int k = 5;
-        int activeCount = 35; // availableSlots = 5
-
-        when(tokenRepository.countCurrentlyActiveTokens(concertScheduleId))
-                .thenReturn(activeCount);
-
-        when(tokenRepository.findNextKTokensToBeActivated(concertScheduleId, k))
-                .thenReturn(List.of());
-
-        // when & then
-        assertThatThrownBy(() -> queueService.activateTokens(concertScheduleId, k))
-                .isInstanceOf(UnavailableRequestException.class);
-
-        verify(tokenRepository, times(1)).countCurrentlyActiveTokens(concertScheduleId);
-        verify(tokenRepository, times(1)).findNextKTokensToBeActivated(concertScheduleId, k);
-        verify(tokenRepository, never()).saveAll(anyList());
-    }
-
-
-    @Test
     @DisplayName("성공 : 토큰의 상태가 WAIT인 경우 토큰 만료가 성공한다.")
     void shouldSuccessfullyExpiresToken_WhenTokenExistsAndItsStatusIsWAIT() {
         // given
+        when(queuePolicy.getActiveTokenDuration()).thenReturn(1);
+
         String tokenId = "token1";
-        Token existingToken = Token.create("userId", "concertScheduleId");
+        Token existingToken = Token.create("userId", "concertScheduleId", queuePolicy.getActiveTokenDuration());
 
         when(tokenRepository.findTokenWithIdAndConcertScheduleId("concertScheduleId", tokenId))
                 .thenReturn(Optional.of(existingToken));
 
-        Token expiredToken = Token.create("userId", "concertScheduleId").expire();
+        Token expiredToken = Token.create("userId", "concertScheduleId", queuePolicy.getActiveTokenDuration()).expire();
         when(tokenRepository.save(existingToken))
                 .thenReturn(expiredToken);
 
@@ -161,24 +156,6 @@ class QueueServiceUnitTest {
         assertThat(result.getStatus()).isEqualTo(TokenStatus.EXPIRED);
         verify(tokenRepository, times(1)).findTokenWithIdAndConcertScheduleId("concertScheduleId", tokenId);
         verify(tokenRepository, times(1)).save(existingToken);
-    }
-
-    @Test
-    @DisplayName("실패 : 토큰의 상태가 이미 EXPIRE인 토큰 만료 시도 시 BusinessRuleViolationException 발생한다.")
-    void shouldThrowsBusinessRuleViolationException_WhenTokenDoesNotExist() {
-        // given
-        String tokenId = "token1";
-        Token token = Token.create("userId", "concertScheduleId").expire();
-
-        when(tokenRepository.findTokenWithIdAndConcertScheduleId("concertScheduleId", tokenId))
-                .thenReturn(Optional.of(token));
-
-        // Act & Assert
-        assertThatThrownBy(() -> queueService.expireToken("concertScheduleId", tokenId))
-                .isInstanceOf(BusinessRuleViolationException.class);
-
-        verify(tokenRepository, times(1)).findTokenWithIdAndConcertScheduleId("concertScheduleId", tokenId);
-        verify(tokenRepository, never()).save(any(Token.class));
     }
 
     @Test

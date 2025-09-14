@@ -1,6 +1,7 @@
 package com.slam.concertreservation.infrastructure.persistence.redis.impl;
 
 import com.slam.concertreservation.domain.queue.model.Token;
+import com.slam.concertreservation.domain.queue.model.TokenStatus;
 import com.slam.concertreservation.domain.queue.repository.TokenRepository;
 import com.slam.concertreservation.exceptions.UnavailableRequestException;
 import jakarta.annotation.Resource;
@@ -23,7 +24,7 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Repository;
 
 @Repository
-@ConditionalOnProperty(name = "app.queue.provider", havingValue = "redis", matchIfMissing = false)
+@ConditionalOnProperty(name = "app.queue.provider", havingValue = "REDIS", matchIfMissing = false)
 public class TokenRepositoryRedisImpl implements TokenRepository {
 
     private static final String TOKEN_HASH_STORAGE_NAME = "tokenHashStorage"; // 토큰 저장소(Map) 이름
@@ -99,20 +100,29 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
     @Override
     public Token save(Token token) {
 
-        // Token ID 생성.
-        token.assignId(UUID.randomUUID().toString());
+        // 처음 생성된 토큰인 경우 ID 할당.
+        if(token.getId() == null){token.assignId(UUID.randomUUID().toString());}
 
         // 토큰 저장소 이름과 대기열 이름 생성.
         String tokenHashStorageName = getTokenHashStorageName(token.getConcertScheduleId());
         String tokenRankSortedSetName = getTokenRankSortedSetName(token.getConcertScheduleId());
 
-        // 토큰 저장소에 토큰 저장.
+        // Case A : 만료 토큰인 경우 -> 대기열에서 삭제 / 활성화된 토큰 저장소에서도 삭제.
+        if(token.getStatus() == TokenStatus.EXPIRED) {
+            activatedTokenSet.remove(getTokenActivatedSetName(token.getConcertScheduleId()), token.getId());
+            tokenScoredSortedSet.remove(tokenRankSortedSetName, token.getId());
+        }
+
+        // Case B : 활성화된 토큰일 경우 활성화된 토큰 저장소에도 추가.
+        else if(token.getStatus() == TokenStatus.ACTIVE) {activatedTokenSet.add(getTokenActivatedSetName(token.getConcertScheduleId()), token.getId());}
+
+        // Case C : 아닐 경우 대기열에 토큰 추가.
+        else {tokenScoredSortedSet.add(tokenRankSortedSetName, token.getId(), calculateScoreFromCreatedTime(token));}
+
+        // 토큰 저장소에 저장 -> 해당 토큰 기존재시 덮어씀(갱신된 최신 상태가 더 우선이기 때문.)
         tokenHashStorage.put(tokenHashStorageName, token.getId(), token);
 
-        // 대기열에 토큰 추가.
-        tokenScoredSortedSet.add(tokenRankSortedSetName, token.getId(), calculateScoreFromCreatedTime(token));
-
-        // 토큰 저장소에 보관된 토큰 저장.
+        // 토큰 저장소에 보관된 토큰 회수하여 반환..
         return tokenHashStorage.get(tokenHashStorageName, token.getId());
     }
 
@@ -125,20 +135,13 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
      */
     @Override
     public List<Token> saveAll(List<Token> tokens) {
-        if(tokens != null && !tokens.isEmpty()) {
-            for(Token token : tokens){
-                // pipelining 하지 않기 때문에 null 이 반환되지 않는다.
-                // 기존의 ACTIVE 상태인 토큰을 삭제하고 만료 상태인 해당 토큰으로 교체하기.
-                String setKey = getTokenActivatedSetName(token.getConcertScheduleId());
-                String tokenId = token.getId();
-                if(activatedTokenSet.isMember(setKey, tokenId)) {
-                    activatedTokenSet.remove(setKey, tokenId);
-                }
-                // 만료 처리된 토큰 / 활성화된 토큰 저장.
-                activatedTokenSet.add(setKey, tokenId);
-            }
+        // 토큰 목록이 비어있을 경우 비어있는 목록 반환.
+        if (tokens == null || tokens.isEmpty()){return List.of();}
+        for (Token token : tokens) {
+            save(token);
         }
-        return List.of(); // 좋은 설계가 아닌 거 같다. 조용히 무시되도록 구현하는 쪽이 가장 좋을 것으로 생각.
+
+        return tokens;
     }
 
     /**
@@ -256,13 +259,14 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
     /**
      * Redis 내 해당 공연 일정과 대응하는 토큰 저장소에서 토큰들을 조회하는 메서드.
      * <br></br>
-     * 사실 상 이 메서드는 사용되지 않을 것으로 예상됩니다.
      * @param concertScheduleId
      * @return
      */
     @Override
     public List<Token> findByConcertScheduleId(String concertScheduleId) {
-        return List.of();
+        String tokenHashStorageName = getTokenHashStorageName(concertScheduleId);
+
+        return new ArrayList<>(tokenHashStorage.values(tokenHashStorageName));
     }
 
 }

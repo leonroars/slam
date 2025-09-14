@@ -16,7 +16,7 @@ class TestcontainersConfiguration {
 
     static {
         // 1) MySQL Container
-        MYSQL_CONTAINER = new MySQLContainer<>(DockerImageName.parse("mysql:latest"))
+        MYSQL_CONTAINER = new MySQLContainer<>(DockerImageName.parse("mysql:8.0"))
                 .withDatabaseName("mydatabase")
                 .withUsername("myuser")
                 .withPassword("secret");
