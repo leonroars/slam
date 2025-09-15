@@ -15,7 +15,6 @@ services:
       - .env.prod
     depends_on:
       - redis
-      - kafka
     restart: always
     networks:
       - app-network
@@ -33,7 +32,6 @@ services:
 
 volumes:
   redis_prod_data:
-  kafka_prod_data:
 
 networks:
   app-network:

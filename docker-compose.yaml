@@ -19,14 +19,10 @@ services:
       - SPRING_DATASOURCE_PASSWORD=secret
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-#      - APP_QUEUE_PROVIDER=DB
     depends_on:
       mysql:
         condition: service_healthy
       redis:
-        condition: service_started
-      kafka:
         condition: service_started
     # 애플리케이션 시작 지연 및 재시작 정책
     restart: on-failure
@@ -81,8 +77,6 @@ services:
 
 volumes:
   redis_data:
-    driver: local
-  kafka_data:
     driver: local
   mysql_data:
     driver: local
