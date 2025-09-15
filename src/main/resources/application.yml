@@ -25,11 +25,6 @@ spring:
       host: localhost
       port: 6379
 
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: concert
-
 logging:
   level:
     org:
