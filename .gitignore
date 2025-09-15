@@ -36,6 +36,11 @@ out/
 ### VS Code ###
 .vscode/
 
+# Environment files
+.env
+.env.prod
+.env.local
+
 ### ETC ###
 .DS_Store
 
