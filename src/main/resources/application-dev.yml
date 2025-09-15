@@ -20,11 +20,6 @@ spring:
       host: redis
       port: 6379
 
-  kafka:
-    bootstrap-servers: kafka:9092
-    consumer:
-      group-id: concert
-
 logging:
   level:
     org:

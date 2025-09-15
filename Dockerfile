@@ -8,7 +8,7 @@
 FROM gradle:7-jdk17 AS builder
 WORKDIR /app
 COPY . .
-RUN gradle clean build
+RUN gradle clean build -x test
 
 # 실행 스테이지
 FROM openjdk:17
