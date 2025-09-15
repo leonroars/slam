@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  application:
+    container_name: concert_app_prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    env_file:
+      - .env.prod
+    depends_on:
+      - redis
+      - kafka
+    restart: always
+    networks:
+      - app-network
+
+  redis:
+    image: bitnami/redis:7.4
+    container_name: redis_prod
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - redis_prod_data:/bitnami/redis/data
+    restart: always
+    networks:
+      - app-network
+
+  kafka:
+    image: bitnami/kafka:3.9
+    container_name: kafka_prod
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    volumes:
+      - kafka_prod_data:/bitnami
+    restart: always
+    networks:
+      - app-network
+
+volumes:
+  redis_prod_data:
+  kafka_prod_data:
+
+networks:
+  app-network:
+    driver: bridge
