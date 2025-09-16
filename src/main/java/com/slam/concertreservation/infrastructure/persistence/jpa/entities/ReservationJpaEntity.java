@@ -11,7 +11,7 @@ import lombok.Getter;
 
 @Entity
 @Getter
-@Table(name = "RESERVATION")
+@Table(name = "'RESERVATION'")
 public class ReservationJpaEntity extends BaseJpaEntity{
 
     @Id

@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 
 @Entity
-@Table(name = "CONCERT")
+@Table(name = "'CONCERT'")
 @Getter
 public class ConcertJpaEntity extends BaseJpaEntity{
 

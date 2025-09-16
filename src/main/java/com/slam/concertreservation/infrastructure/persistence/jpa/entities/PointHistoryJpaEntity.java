@@ -11,7 +11,7 @@ import lombok.Getter;
 
 @Entity
 @Getter
-@Table(name = "POINTHISTORY")
+@Table(name = "'POINTHISTORY'")
 public class PointHistoryJpaEntity {
 
     @Id
