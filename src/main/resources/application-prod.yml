@@ -17,7 +17,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate  # 프로덕션은 validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl # @Coloumn 이름을 스네이크 케이스로 변경하지 않음
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl # 백틱 사용을 위해 설정
     show-sql: false  # 프로덕션은 false
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true # 테이블, 컬럼명에 백틱(`) 적용
 
   data:
     redis:
