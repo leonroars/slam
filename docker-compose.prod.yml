@@ -10,6 +10,8 @@ services:
       - "8080:8080"
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro # Server Host 환경(Ubuntu)에서 cgroup 접근을 위해 마운트.
+      - /proc:/host/proc:ro  # 현재 호스트의 docker 세팅 상 필요.
+
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - JAVA_OPTS=-Xmx512m -Xms256m
