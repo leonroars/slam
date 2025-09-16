@@ -144,3 +144,27 @@ CREATE TABLE IF NOT EXISTS `RESERVATION` (
     ) ENGINE=InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_0900_ai_ci;
+
+-- ============================================================
+-- 9) outbox (OutboxJpaEntity, extends BaseJpaEntity)
+--    OutboxStatus: PENDING, SENT, ERROR
+--    처리 패턴: status='PENDING'인 오래된 레코드부터 폴링 → 전송 → SENT/ERROR 업데이트
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `outbox` (
+                                        `id`              CHAR(36)                                NOT NULL,
+    `payload`         JSON                                    NOT NULL,
+    `status`          ENUM('PENDING','SENT','ERROR')          NOT NULL DEFAULT 'PENDING',
+    `topicIdentifier` VARCHAR(255)                            NOT NULL,
+    `retryCount`      INT                                     NOT NULL DEFAULT 0,
+    `created_at`      DATETIME(6)                             NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `updated_at`      DATETIME(6)                             NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (`id`),
+    -- 폴링/처리 효율 인덱스(상태별 오래된 순)
+    INDEX `IDX_OUTBOX_STATUS_CREATED` (`status`, `created_at`),
+    -- 토픽별 처리/재시도 스캔 최적화
+    INDEX `IDX_OUTBOX_TOPIC_STATUS` (`topicIdentifier`, `status`)
+    -- 필요 시 재시도 제한 보조 조건:
+    -- , CHECK (`retryCount` >= 0)
+    ) ENGINE=InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_0900_ai_ci;
