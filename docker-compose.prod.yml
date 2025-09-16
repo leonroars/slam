@@ -8,6 +8,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro # Server Host 환경(Ubuntu)에서 cgroup 접근을 위해 마운트.
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - JAVA_OPTS=-Xmx512m -Xms256m
