@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import lombok.Getter;
 
 @Entity
-@Table(name = "'CONCERTSCHEDULE'"
+@Table(name = "`CONCERTSCHEDULE`"
         , indexes = @Index(name = "IDX_RESERVATION_AVAILABLE_PERIOD", columnList = "reservationStartAt, reservationEndAt"))
 @Getter
 public class ConcertScheduleJpaEntity extends BaseJpaEntity{

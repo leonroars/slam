@@ -11,7 +11,7 @@ import java.util.List;
 import lombok.Getter;
 
 @Entity
-@Table(name = "'SEAT'", indexes = {
+@Table(name = "`SEAT`", indexes = {
         @Index(name = "IDX_SEAT_CONCERT_SCHEDULE_ID", columnList = "concertScheduleId")
 })
 @Getter

@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "'QUEUE'")
+@Table(name = "`QUEUE`")
 @Getter
 public class TokenJpaEntity extends BaseJpaEntity {
 

@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "'USER'")
+@Table(name = "`USER`")
 @Getter
 @NoArgsConstructor
 public class UserJpaEntity extends BaseJpaEntity {

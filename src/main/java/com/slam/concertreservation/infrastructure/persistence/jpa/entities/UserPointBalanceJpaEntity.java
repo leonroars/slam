@@ -13,7 +13,7 @@ import lombok.Getter;
 
 @Entity
 @Getter
-@Table(name = "'POINTBALANCE'")
+@Table(name = "`POINTBALANCE`")
 public class UserPointBalanceJpaEntity extends BaseJpaEntity{
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
