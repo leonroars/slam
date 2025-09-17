@@ -1,0 +1,31 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  # 1) 배포
+  deploy:
+    runs-on: ubuntu-latest
+
+    // 2) 변경 사항 체크아웃
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        # Host 환경에서 pull 실시 후 도커 컴포즈 -> health 체크 까지 하는 쉘 스크립트.
+        script: |
+          cd ~/app
+          git pull origin main
+          docker-compose -f docker-compose.prod.yml down
+          docker-compose -f docker-compose.prod.yml build --no-cache
+          docker-compose -f docker-compose.prod.yml up -d
+          sleep 10
+          docker ps
+          curl -f http://localhost:8080/actuator/health || exit 1
