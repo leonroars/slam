@@ -28,7 +28,7 @@ jobs:
     - name: Build and push Docker image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: concert-app
+        ECR_REPOSITORY: slam/slam-server
         IMAGE_TAG: latest
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
@@ -44,7 +44,7 @@ jobs:
         script: |
           aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_URI }}
           cd ~/app
-          docker pull ${{ secrets.ECR_URI }}/concert-app:latest
+          docker pull ${{ secrets.ECR_URI }}:latest
           docker-compose -f docker-compose.prod.yml down
           docker-compose -f docker-compose.prod.yml up -d
           sleep 30
