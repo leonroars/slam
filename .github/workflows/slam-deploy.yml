@@ -35,6 +35,12 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
     
     # EC2 배포
+    - name: Test EC2 Connection
+      run: |
+        echo "Testing connection to EC2..."
+        nc -zv ${{ secrets.EC2_HOST }} 22 || echo "Connection failed"
+        nmap -p 22 ${{ secrets.EC2_HOST }} || echo "Port scan failed"
+      
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v0.1.5
       with:
