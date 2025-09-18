@@ -42,30 +42,21 @@ jobs:
     
     - name: Direct SSH Test (diagnostic)
       env:
-        HOST: ${{ secrets.EC2_HOST }}
-        USERNAME: ${{ secrets.EC2_USERNAME }}   # <-- secrets 값 사용
+        HOST: ${{ secrets.EC2_HOST }}         # EIP
+        USERNAME: ${{ secrets.EC2_USERNAME }} # ubuntu or ec2-user
         SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         SSH_PORT: ${{ secrets.EC2_SSH_PORT || 22 }}
       run: |
         set -euo pipefail
         mkdir -p ~/.ssh
-        # 개행 보존: echo 대신 printf 사용
         printf "%s" "$SSH_KEY" > ~/.ssh/key.pem
         chmod 600 ~/.ssh/key.pem
 
-        echo "== DNS/IP 확인 =="
-        getent ahosts "$HOST" || true
-
-        echo "== TCP 22 스캔(nc) =="
-        # 포트 통신 자체가 되는지 먼저 확인 (여기서 타임아웃이면 네트워크/SG/NACL/라우팅 문제)
+        echo "== nc scan =="
         timeout 10s bash -c "command -v nc >/dev/null && nc -vz -w 5 $HOST $SSH_PORT" || echo "nc not available or port closed"
 
-        echo "== SSH -vvv 진단 =="
-        ssh -vvv -4 \
-          -o ConnectTimeout=15 \
-          -o StrictHostKeyChecking=no \
-          -p "$SSH_PORT" \
-          -i ~/.ssh/key.pem "$USERNAME@$HOST" "echo 'Connected!' && uname -a && whoami"
+        echo "== ssh -vvv =="
+        ssh -vvv -4 -o ConnectTimeout=15 -o StrictHostKeyChecking=no -p "$SSH_PORT" -i ~/.ssh/key.pem "$USERNAME@$HOST" "echo 'Connected'; whoami; uname -a"
 
     # EC2 배포
     - name: Deploy to EC2
