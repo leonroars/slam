@@ -39,24 +39,6 @@ jobs:
       run: |
           echo "Attempting to connect to: ${{ secrets.EC2_HOST }}"
           echo "Username: ${{ secrets.EC2_USERNAME }}"
-    
-    - name: Direct SSH Test (diagnostic)
-      env:
-        HOST: ${{ secrets.EC2_HOST }}         # EIP
-        USERNAME: ${{ secrets.EC2_USERNAME }} # ubuntu or ec2-user
-        SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-        SSH_PORT: ${{ secrets.EC2_SSH_PORT || 22 }}
-      run: |
-        set -euo pipefail
-        mkdir -p ~/.ssh
-        printf "%s" "$SSH_KEY" > ~/.ssh/key.pem
-        chmod 600 ~/.ssh/key.pem
-
-        echo "== nc scan =="
-        timeout 10s bash -c "command -v nc >/dev/null && nc -vz -w 5 $HOST $SSH_PORT" || echo "nc not available or port closed"
-
-        echo "== ssh -vvv =="
-        ssh -vvv -4 -o ConnectTimeout=15 -o StrictHostKeyChecking=no -p "$SSH_PORT" -i ~/.ssh/key.pem "$USERNAME@$HOST" "echo 'Connected'; whoami; uname -a"
 
     # EC2 배포
     - name: Deploy to EC2
@@ -71,6 +53,6 @@ jobs:
           docker pull ${{ secrets.ECR_URI }}:latest
           docker-compose -f docker-compose.prod.yml down
           docker-compose -f docker-compose.prod.yml up -d
-          sleep 30
+          sleep 90
           docker ps
           curl -f http://localhost:8080/actuator/health || exit 1
