@@ -33,7 +33,20 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    # GitHub Actions 워크플로우 임시 수정
+    - name: Debug Info
+      run: |
+          echo "Attempting to connect to: ${{ secrets.EC2_HOST }}"
+          echo "Username: ${{ secrets.EC2_USERNAME }}"
     
+    - name: Direct SSH Test
+      run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/key.pem
+          chmod 600 ~/.ssh/key.pem
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ubuntu@${{ secrets.EC2_HOST }} "echo 'Connected!'"
+
     # EC2 배포
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v0.1.5
