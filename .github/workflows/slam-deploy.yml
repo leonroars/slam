@@ -5,27 +5,48 @@ on:
     branches: [ main ]
 
 jobs:
-  # 1) 배포
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
-    # 2) 변경 사항 체크아웃
+    
     steps:
     - uses: actions/checkout@v3
     
+    # AWS 자격증명 설정
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-2
+    
+    # ECR 로그인
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+    
+    # Docker 이미지 빌드 및 푸시
+    - name: Build and push Docker image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: concert-app
+        IMAGE_TAG: latest
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    
+    # EC2 배포
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v0.1.5
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
-        # Host 환경에서 pull 실시 후 도커 컴포즈 -> health 체크 까지 하는 쉘 스크립트.
         script: |
+          aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_URI }}
           cd ~/app
-          git pull origin main
+          docker pull ${{ secrets.ECR_URI }}/concert-app:latest
           docker-compose -f docker-compose.prod.yml down
-          docker-compose -f docker-compose.prod.yml build --no-cache
           docker-compose -f docker-compose.prod.yml up -d
-          sleep 300
+          sleep 30
           docker ps
           curl -f http://localhost:8080/actuator/health || exit 1
