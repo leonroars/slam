@@ -3,7 +3,7 @@ version: '3.8'
 services:
   application:
     container_name: concert_app_prod
-    image: 285325327828.dkr.ecr.ap-northeast-2.amazonaws.com/slam/slam-server/concert-app:latest
+    image: 285325327828.dkr.ecr.ap-northeast-2.amazonaws.com/slam/slam-server:latest
 #    build:
 #      context: .
 #      dockerfile: Dockerfile
@@ -25,12 +25,10 @@ services:
       - app-network
 
   redis:
-    image: bitnami/redis:7.4
+    image: redis:7-alpine # bitnami 정책 변경으로 인한 공식 이미지 사용
     container_name: redis_prod
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
     volumes:
-      - redis_prod_data:/bitnami/redis/data
+      - redis_prod_data:/data
     restart: always
     networks:
       - app-network
