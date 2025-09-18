@@ -16,7 +16,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create  # 최초에는 create, 이후에는 validate
+      ddl-auto: validate  # 최초에는 create, 이후에는 validate
     show-sql: false  # 프로덕션은 false
 
   data:
