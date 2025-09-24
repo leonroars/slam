@@ -1,7 +1,22 @@
 package com.slam.concertreservation.common.exceptions;
 
-public class BusinessRuleViolationException extends RuntimeException {
-    public BusinessRuleViolationException(String message) {
-        super(message);
+import com.slam.concertreservation.common.error.ErrorCode;
+
+public class BusinessRuleViolationException extends RuntimeException implements IServiceException {
+
+    private final ErrorCode errorCode;
+    private final String detail;
+
+
+    public BusinessRuleViolationException(ErrorCode errorCode, String detail) {
+        super(detail != null ? detail : errorCode.getMessage());
+        this.errorCode = errorCode;
+        this.detail = detail;
     }
+
+    @Override
+    public ErrorCode getErrorCode() {return this.errorCode;}
+
+    @Override
+    public String getDetail() {return this.detail;}
 }

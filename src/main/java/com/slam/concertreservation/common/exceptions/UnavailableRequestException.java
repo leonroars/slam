@@ -1,7 +1,9 @@
 package com.slam.concertreservation.common.exceptions;
 
+import com.slam.concertreservation.common.error.ErrorCode;
+
 /**
- * 성립할 수 없는 요청에 대해 발생하는 예외입니다.
+ * 성립할 수 없는 요청에 대해 발생하는 예외입니다.500 계열의 에러코드와 대응하는 문제를 위해 정의하였습니다.
  * <br></br>
  * <i>성립할 수 없는 요청</i>은 다음으로 정의됩니다.
  * <br></br>
@@ -11,8 +13,20 @@ package com.slam.concertreservation.common.exceptions;
  * <br>
  * -
  */
-public class UnavailableRequestException extends RuntimeException {
-    public UnavailableRequestException(String message) {
-        super(message);
+public class UnavailableRequestException extends RuntimeException implements IServiceException {
+
+    private final ErrorCode errorCode;
+    private final String detail;
+
+    public UnavailableRequestException(ErrorCode errorCode, String detail) {
+        super(detail != null ? detail : errorCode.getMessage());
+        this.errorCode = errorCode;
+        this.detail = detail;
     }
+
+    @Override
+    public ErrorCode getErrorCode() {return this.errorCode;}
+
+    @Override
+    public String getDetail() {return this.detail;}
 }
