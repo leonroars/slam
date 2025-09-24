@@ -1,7 +1,7 @@
 package com.slam.concertreservation.component.validator.token;
 
 import com.slam.concertreservation.domain.queue.service.QueueService;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;

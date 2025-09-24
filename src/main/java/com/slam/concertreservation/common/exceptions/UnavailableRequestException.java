@@ -1,4 +1,4 @@
-package com.slam.concertreservation.exceptions;
+package com.slam.concertreservation.common.exceptions;
 
 /**
  * 성립할 수 없는 요청에 대해 발생하는 예외입니다.

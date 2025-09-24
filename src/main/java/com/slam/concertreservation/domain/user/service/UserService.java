@@ -2,7 +2,7 @@ package com.slam.concertreservation.domain.user.service;
 
 import com.slam.concertreservation.domain.user.model.User;
 import com.slam.concertreservation.domain.user.repository.UserRepository;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

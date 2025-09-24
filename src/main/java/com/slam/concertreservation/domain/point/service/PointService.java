@@ -7,7 +7,7 @@ import com.slam.concertreservation.domain.point.model.PointTransactionType;
 import com.slam.concertreservation.domain.point.model.UserPointBalance;
 import com.slam.concertreservation.domain.point.repository.PointHistoryRepository;
 import com.slam.concertreservation.domain.point.repository.UserPointBalanceRepository;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;

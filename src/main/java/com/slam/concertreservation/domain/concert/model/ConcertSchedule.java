@@ -1,6 +1,6 @@
 package com.slam.concertreservation.domain.concert.model;
 
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Getter;

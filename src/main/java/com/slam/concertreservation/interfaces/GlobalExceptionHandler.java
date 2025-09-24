@@ -1,7 +1,7 @@
 package com.slam.concertreservation.interfaces;
 
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;

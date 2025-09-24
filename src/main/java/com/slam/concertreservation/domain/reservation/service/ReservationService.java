@@ -7,7 +7,7 @@ import com.slam.concertreservation.domain.reservation.event.ReservationExpiratio
 import com.slam.concertreservation.domain.reservation.model.Reservation;
 import com.slam.concertreservation.domain.reservation.model.ReservationStatus;
 import com.slam.concertreservation.domain.reservation.repository.ReservationRepository;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.slam.concertreservation.exceptions;
+package com.slam.concertreservation.common.exceptions;
 
 public class BusinessRuleViolationException extends RuntimeException {
     public BusinessRuleViolationException(String message) {

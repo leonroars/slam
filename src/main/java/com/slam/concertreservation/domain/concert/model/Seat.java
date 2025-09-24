@@ -1,6 +1,6 @@
 package com.slam.concertreservation.domain.concert.model;
 
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;

@@ -10,7 +10,7 @@ import com.slam.concertreservation.domain.queue.model.TokenStatus;
 import com.slam.concertreservation.domain.queue.service.QueueService;
 import com.slam.concertreservation.domain.user.model.User;
 import com.slam.concertreservation.domain.user.service.UserService;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;

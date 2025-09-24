@@ -8,7 +8,7 @@ import com.slam.concertreservation.domain.concert.model.Seat;
 import com.slam.concertreservation.domain.concert.repository.ConcertRepository;
 import com.slam.concertreservation.domain.concert.repository.ConcertScheduleRepository;
 import com.slam.concertreservation.domain.concert.repository.SeatRepository;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import com.slam.concertreservation.infrastructure.persistence.redis.locking.RedissonDistributedLock;
 import java.time.LocalDateTime;
 import java.util.List;

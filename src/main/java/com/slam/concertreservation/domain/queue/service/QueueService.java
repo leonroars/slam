@@ -3,7 +3,7 @@ package com.slam.concertreservation.domain.queue.service;
 import com.slam.concertreservation.domain.queue.model.QueuePolicy;
 import com.slam.concertreservation.domain.queue.model.Token;
 import com.slam.concertreservation.domain.queue.repository.TokenRepository;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

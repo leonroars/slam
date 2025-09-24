@@ -1,6 +1,6 @@
 package com.slam.concertreservation.domain.point.model;
 
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import java.util.Objects;
 
 /**

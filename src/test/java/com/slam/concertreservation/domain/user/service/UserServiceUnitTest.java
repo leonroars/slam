@@ -7,7 +7,7 @@ import static org.mockito.Mockito.verify;
 
 import com.slam.concertreservation.domain.user.model.User;
 import com.slam.concertreservation.domain.user.repository.UserRepository;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.util.Optional;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
