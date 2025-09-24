@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.concert.model;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -95,13 +96,13 @@ public class ConcertSchedule {
             , LocalDateTime reservationEndAt)
     {
         if(reservationStartAt.isAfter(reservationEndAt)){
-            throw new BusinessRuleViolationException("예약 시작 일자는 예약 종료 일자보다 늦을 수 없습니다.");
+            throw new BusinessRuleViolationException(ErrorCode.INVALID_RESERVATION_PERIOD, "예약 시작 일자는 예약 종료 일자보다 늦을 수 없습니다.");
         }
         if(dateTime.isBefore(reservationStartAt)){
-            throw new BusinessRuleViolationException("공연 일자가 예약 가능 시작 일자에 선행합니다.");
+            throw new BusinessRuleViolationException(ErrorCode.INVALID_CONCERT_DATE_BEFORE_RESERVATION, "공연 일자가 예약 가능 시작 일자에 선행합니다.");
         }
         if(dateTime.isBefore(reservationEndAt)){
-            throw new BusinessRuleViolationException("예약 가능 기간 중엔 공연이 종료될 수 없습니다.");
+            throw new BusinessRuleViolationException(ErrorCode.INVALID_CONCERT_DATE_DURING_RESERVATION, "예약 가능 기간 중엔 공연이 종료될 수 없습니다.");
         }
     }
 
