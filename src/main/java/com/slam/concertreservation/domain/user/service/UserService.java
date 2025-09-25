@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.user.service;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.user.model.User;
 import com.slam.concertreservation.domain.user.repository.UserRepository;
 import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
@@ -19,6 +20,6 @@ public class UserService {
     // 회원 조회
     public User findUserByUserId(String userId) {
         return userRepository.findUserByUserId(userId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 사용자가 존재하지 않으므로 조회가 불가합니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND, "해당 사용자가 존재하지 않으므로 조회가 불가합니다."));
     }
 }
