@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.reservation.model;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -34,7 +35,7 @@ public class Reservation {
      */
     public Reservation expire(){
         if(this.status != ReservationStatus.BOOKED){
-            throw new BusinessRuleViolationException("만료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
+            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "만료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
         }
         this.status = ReservationStatus.EXPIRED;
         return this;
@@ -48,7 +49,7 @@ public class Reservation {
      */
     public Reservation cancel() {
         if (this.status != ReservationStatus.PAID) {
-            throw new BusinessRuleViolationException("취소 처리는 오직 PAID 상태의 예약에 대해서만 가능합니다.");
+            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "취소 처리는 오직 PAID 상태의 예약에 대해서만 가능합니다.");
         }
         this.status = ReservationStatus.CANCELLED;
         return this;
@@ -62,7 +63,7 @@ public class Reservation {
      */
     public Reservation reserve() {
         if (this.status != ReservationStatus.BOOKED) {
-            throw new BusinessRuleViolationException("완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
+            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
         }
         this.status = ReservationStatus.PAID;
         return this;

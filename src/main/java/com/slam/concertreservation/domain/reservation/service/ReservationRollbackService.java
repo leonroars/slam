@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.reservation.service;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.reservation.event.ReservationConfirmationRollbackEvent;
 import com.slam.concertreservation.domain.reservation.event.ReservationExpirationRollbackEvent;
 import com.slam.concertreservation.domain.reservation.model.Reservation;
@@ -35,7 +36,7 @@ public class ReservationRollbackService {
     @Transactional
     public void rollbackConfirmReservation(String reservationId) {
         Reservation correspondingReservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 예약이 존재하지 않아 롤백이 불가합니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND, "해당 예약이 존재하지 않아 롤백이 불가합니다."));
 
         correspondingReservation.rollbackReserve();
         Reservation rollbackedReservation = reservationRepository.save(correspondingReservation);
@@ -57,7 +58,7 @@ public class ReservationRollbackService {
     @Transactional
     public void rollbackExpireReservation(String reservationId) {
         Reservation correspondingReservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 예약이 존재하지 않아 롤백이 불가합니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND, "해당 예약이 존재하지 않아 롤백이 불가합니다."));
 
         correspondingReservation.rollbackExpire();
         Reservation rollbackedReservation = reservationRepository.save(correspondingReservation);
