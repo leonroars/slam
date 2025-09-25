@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.point.model;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import java.util.Objects;
 
@@ -48,7 +49,7 @@ public class UserPointBalance {
     public UserPointBalance increase(int increaseAmount) {
         // Fail : 0보다 작은 충전 금액 충전 시도
         if (increaseAmount < 0) {
-            throw new BusinessRuleViolationException("충전하고자 하는 포인트는 0보다 커야 합니다.");
+            throw new BusinessRuleViolationException(ErrorCode.POINT_CHARGE_AMOUNT_INVALID, "충전하고자 하는 포인트는 0보다 커야 합니다.");
         }
         int newAmount = this.balance().getAmount() + increaseAmount;
         // Success : 합산된 잔액을 갖는 새로운 UserPointBalance 객체 인스턴스 생성 후 반환.
@@ -66,9 +67,9 @@ public class UserPointBalance {
      */
     public UserPointBalance decrease(int decreaseAmount) {
         if (decreaseAmount < 0) {
-            throw new IllegalArgumentException("차감하고자 하는 포인트는 0보다 커야합니다.");
+            throw new BusinessRuleViolationException(ErrorCode.POINT_USE_AMOUNT_INVALID, "차감하고자 하는 포인트는 0보다 커야합니다.");
         } else if (decreaseAmount > 1_000_000) {
-            throw new IllegalArgumentException("차감 시 보유 잔액이 0원 미만이 되므로 해당 차감은 불가합니다.");
+            throw new BusinessRuleViolationException(ErrorCode.INSUFFICIENT_BALANCE, "차감 시 보유 잔액이 0원 미만이 되므로 해당 차감은 불가합니다.");
         }
 
         int newAmount = this.balance().getAmount() - decreaseAmount;
