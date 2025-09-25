@@ -1,5 +1,6 @@
 package com.slam.concertreservation.infrastructure.outbox;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class OutboxService {
 
     public OutboxJpaEntity get(String outboxId) {
         return outboxRepository.findById(outboxId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 아웃박스가 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESOURCE_NOT_FOUND, "해당 아웃박스가 존재하지 않습니다."));
     }
 
     @Transactional
