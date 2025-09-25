@@ -2,7 +2,7 @@ package com.slam.concertreservation.domain.point.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ public class UserPointBalanceUnitTest {
 
         // when & then
         Assertions.assertThatThrownBy(() -> userPointBalance.decrease(negativeAmount))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(BusinessRuleViolationException.class);
 
     }
 
@@ -36,7 +36,7 @@ public class UserPointBalanceUnitTest {
 
         // when & then
         Assertions.assertThatThrownBy(() -> userPointBalance.decrease(overMillion))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(BusinessRuleViolationException.class);
     }
 
     @Test

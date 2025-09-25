@@ -2,7 +2,6 @@ package com.slam.concertreservation.domain.queue.model;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;

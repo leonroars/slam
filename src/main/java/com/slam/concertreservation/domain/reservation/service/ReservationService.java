@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.reservation.service;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.reservation.event.ReservationCancellationEvent;
 import com.slam.concertreservation.domain.reservation.event.ReservationConfirmationEvent;
 import com.slam.concertreservation.domain.reservation.event.ReservationCreationEvent;
@@ -7,7 +8,7 @@ import com.slam.concertreservation.domain.reservation.event.ReservationExpiratio
 import com.slam.concertreservation.domain.reservation.model.Reservation;
 import com.slam.concertreservation.domain.reservation.model.ReservationStatus;
 import com.slam.concertreservation.domain.reservation.repository.ReservationRepository;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +45,7 @@ public class ReservationService {
                                 reservation.getStatus() != ReservationStatus.CANCELLED
                 )
                 .ifPresent(reservation -> {
-                    throw new UnavailableRequestException("해당 좌석에 대한 예약이 이미 존재하므로 예약이 불가합니다.");
+                    throw new UnavailableRequestException(ErrorCode.RESERVATION_ALREADY_EXISTS, "해당 좌석에 대한 예약이 이미 존재하므로 예약이 불가합니다.");
                 });
 
         Reservation reservation = Reservation.create(userId, seatId, concertScheduleId, price); // 가예약 생성
@@ -64,7 +65,7 @@ public class ReservationService {
      */
     public Reservation getReservation(String reservationId) {
         return reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 예약이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND, "해당 예약이 존재하지 않습니다."));
     }
 
     /**
@@ -75,7 +76,7 @@ public class ReservationService {
     public List<Reservation> getUserReservation(String userId) {
         List<Reservation> reservations =  reservationRepository.findByUserId(userId);
         if(reservations.isEmpty()){
-            throw new UnavailableRequestException("해당 사용자의 예약이 존재하지 않습니다.");
+            throw new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND, "해당 사용자의 예약이 존재하지 않습니다.");
         }
         return reservations;
     }
@@ -104,7 +105,7 @@ public class ReservationService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Reservation confirmReservation(String reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 가예약이 존재하지 않습니다.")); // 해당 가예약 조회.
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND, "해당 가예약이 존재하지 않습니다.")); // 해당 가예약 조회.
 
         reservation.reserve(); // 가예약 -> 예약 확정. 조회한 예약이 이미 확정되어있을 경우 예외 발생.
         Reservation confirmedReservation = reservationRepository.save(reservation); // 확정된 예약 저장.
@@ -143,11 +144,11 @@ public class ReservationService {
 
     public Reservation getReservationByConcertScheduleIdAndSeatId(String concertScheduleId, String seatId) {
         return reservationRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정과 좌석에 대한 예약이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND, "해당 공연 일정과 좌석에 대한 예약이 존재하지 않습니다."));
     }
 
     public Reservation getReservationByConcertScheduleIdAndUserId(String concertScheduleId, String userId){
         return reservationRepository.findByConcertScheduleIdAndUserId(concertScheduleId, userId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 사용자의 예약이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND, "해당 사용자의 예약이 존재하지 않습니다."));
     }
 }

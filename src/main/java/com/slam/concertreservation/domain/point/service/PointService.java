@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.point.service;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.point.event.PaymentEvent;
 import com.slam.concertreservation.domain.point.model.Point;
 import com.slam.concertreservation.domain.point.model.PointHistory;
@@ -7,7 +8,7 @@ import com.slam.concertreservation.domain.point.model.PointTransactionType;
 import com.slam.concertreservation.domain.point.model.UserPointBalance;
 import com.slam.concertreservation.domain.point.repository.PointHistoryRepository;
 import com.slam.concertreservation.domain.point.repository.UserPointBalanceRepository;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -43,7 +44,7 @@ public class PointService {
     public UserPointBalance decreaseUserPointBalance(String userId, int decreaseAmount){
 
         UserPointBalance userPointBalance = userPointBalanceRepository.getBalanceByUserId(userId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));;
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND, "해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));;
         UserPointBalance updatedUserPointBalance = userPointBalance.decrease(decreaseAmount);
         PointHistory pointHistory = PointHistory.create(
                 userId,
@@ -73,7 +74,7 @@ public class PointService {
     @Transactional
     public UserPointBalance increaseUserPointBalance(String userId, int increaseAmount){
         UserPointBalance userPointBalance = userPointBalanceRepository.getBalanceByUserId(userId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND, "해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));
         UserPointBalance updatedUserPointBalance = userPointBalance.increase(increaseAmount);
         PointHistory pointHistory = PointHistory.create(
                 userId,
@@ -110,7 +111,7 @@ public class PointService {
      */
     public UserPointBalance getUserPointBalance(String userId){
         return userPointBalanceRepository.getBalanceByUserId(userId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND, "해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));
     }
 
     /**
@@ -122,7 +123,7 @@ public class PointService {
      */
     public List<PointHistory> getUserPointHistories(String userId){
         List<PointHistory> pointHistories = pointHistoryRepository.findByUserId(userId);
-        if(pointHistories.isEmpty()){throw new UnavailableRequestException("해당 회원이 존재하지 않으므로 포인트 내역 조회가 불가합니다.");}
+        if(pointHistories.isEmpty()){throw new UnavailableRequestException(ErrorCode.USER_NOT_FOUND, "해당 회원이 존재하지 않으므로 포인트 내역 조회가 불가합니다.");}
         return pointHistories;
     }
 }

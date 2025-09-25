@@ -1,7 +1,8 @@
 package com.slam.concertreservation.component.validator.token;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.queue.service.QueueService;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
@@ -22,7 +23,7 @@ public class TokenValidationAspect {
 
         boolean isValid = queueService.validateToken(concertScheduleId, tokenId);
         if (!isValid) {
-            throw new UnavailableRequestException("해당 토큰은 유효하지 않습니다.");
+            throw new UnavailableRequestException(ErrorCode.INVALID_REQUEST, "해당 토큰은 유효하지 않습니다.");
         }
     }
 }

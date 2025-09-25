@@ -3,7 +3,7 @@ package com.slam.concertreservation.domain.reservation.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

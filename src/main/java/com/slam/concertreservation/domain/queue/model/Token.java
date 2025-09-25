@@ -1,6 +1,7 @@
 package com.slam.concertreservation.domain.queue.model;
 
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.error.ErrorCode;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import lombok.Getter;
@@ -49,7 +50,7 @@ public class Token {
      * @return
      */
     public static Token create(String userId, String concertScheduleId, int waitingTokenDurationInHours){
-        if(waitingTokenDurationInHours <= 0){throw new BusinessRuleViolationException("대기 토큰의 유효 시간은 0시간보다 커야 합니다.");}
+        if(waitingTokenDurationInHours <= 0){throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "대기 토큰의 유효 시간은 0시간보다 커야 합니다.");}
         return Token.create(
                 null,
                 userId,
@@ -63,7 +64,7 @@ public class Token {
      * @return
      */
     public Token activate(int durationInMinutes){
-        if(durationInMinutes <= 0){throw new BusinessRuleViolationException("활성 토큰의 유효 시간은 0분보다 커야 합니다.");}
+        if(durationInMinutes <= 0){throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "활성 토큰의 유효 시간은 0분보다 커야 합니다.");}
         this.status = TokenStatus.ACTIVE;
         this.initiateExpiredAt(LocalDateTime.now().plusMinutes(durationInMinutes));
         return this;

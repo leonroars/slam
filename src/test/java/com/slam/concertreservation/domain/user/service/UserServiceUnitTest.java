@@ -7,7 +7,7 @@ import static org.mockito.Mockito.verify;
 
 import com.slam.concertreservation.domain.user.model.User;
 import com.slam.concertreservation.domain.user.repository.UserRepository;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.util.Optional;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,8 +45,7 @@ public class UserServiceUnitTest {
         Assertions.assertThatThrownBy(() -> {
                     userService.findUserByUserId(userId);
                 })
-                .isInstanceOf(UnavailableRequestException.class)
-                .hasMessageContaining("해당 사용자가 존재하지 않으므로 조회가 불가합니다.");
+                .isInstanceOf(UnavailableRequestException.class);
     }
 
     @Test

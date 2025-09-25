@@ -2,6 +2,7 @@ package com.slam.concertreservation.application;
 
 import com.slam.concertreservation.application.facade.ConcertReservationApplication;
 import com.slam.concertreservation.application.facade.UserApplication;
+import com.slam.concertreservation.common.exceptions.ConcurrencyException;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
 import com.slam.concertreservation.domain.concert.model.Seat;
 import com.slam.concertreservation.domain.concert.model.SeatStatus;
@@ -11,8 +12,8 @@ import com.slam.concertreservation.domain.concert.service.ConcertService;
 import com.slam.concertreservation.domain.point.model.UserPointBalance;
 import com.slam.concertreservation.domain.reservation.repository.ReservationRepository;
 import com.slam.concertreservation.domain.user.model.User;
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
@@ -162,7 +163,7 @@ public class ConcurrentConcertReservationIntegrationTest {
                                 localSeats.get(0).getId());
                         // 각 스레드 별로 할당된 task(각각 동일 좌석에 대한 예약 수행) 결과가 !null && BOOKED 인 경우 성공으로 간주 -> true.
                         return assignedSeat != null && (assignedSeat.getStatus() == SeatStatus.UNAVAILABLE);
-                    } catch(UnavailableRequestException | BusinessRuleViolationException e){
+                    } catch(UnavailableRequestException | BusinessRuleViolationException | ConcurrencyException e){
                         return false; // 실패 처리
                     }
                 });

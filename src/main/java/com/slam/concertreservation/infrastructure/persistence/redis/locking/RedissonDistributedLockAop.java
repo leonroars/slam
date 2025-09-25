@@ -1,6 +1,9 @@
 package com.slam.concertreservation.infrastructure.persistence.redis.locking;
 
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.error.ErrorCode;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.exceptions.ConcurrencyException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -41,7 +44,7 @@ public class RedissonDistributedLockAop {
             }
         }
         if (paramIndex == -1) {
-            throw new IllegalStateException(
+            throw new BusinessRuleViolationException(ErrorCode.INTERNAL_SERVER_ERROR,
                     "해당 이름을 가진 메서드 파라미터가 존재하지 않습니다. : " + paramName + " _ 발생 메서드 : " + signature.getMethod());
         }
 
@@ -57,7 +60,7 @@ public class RedissonDistributedLockAop {
         try {
             boolean isLockAvailable = rLock.tryLock(redissonDistributedLock.waitTime(), redissonDistributedLock.leaseTime(), redissonDistributedLock.timeUnit());
             if (!isLockAvailable) {
-                throw new UnavailableRequestException("다음 자원에 대한 락 획득에 실패하였습니다. 이미 해당 자원에 대한 락이 존재합니다.: " + lockKey);
+                throw new ConcurrencyException(ErrorCode.INTERNAL_SERVER_ERROR, "다음 자원에 대한 락 획득에 실패하였습니다. 이미 해당 자원에 대한 락이 존재합니다.: " + lockKey);
             }
             rLock.lock(); // 락 실시
             currentlyLocked = true; // 현재 락 획득 상태 변경.

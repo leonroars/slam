@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.concert.service;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.concert.model.Concert;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
 import com.slam.concertreservation.domain.concert.model.Seat;
@@ -7,8 +8,8 @@ import com.slam.concertreservation.domain.concert.model.SeatStatus;
 import com.slam.concertreservation.domain.concert.repository.ConcertRepository;
 import com.slam.concertreservation.domain.concert.repository.ConcertScheduleRepository;
 import com.slam.concertreservation.domain.concert.repository.SeatRepository;
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -136,7 +137,7 @@ class ConcertServiceUnitTest {
             ConcertSchedule expected = ConcertSchedule.create("1", third, first, second);
 
             when(concertScheduleRepository.save(any(ConcertSchedule.class)))
-                    .thenThrow(new BusinessRuleViolationException("ConcertSchedule 저장 실패"));
+                    .thenThrow(new BusinessRuleViolationException(ErrorCode.INTERNAL_SERVER_ERROR, "ConcertSchedule 저장 실패"));
 
             // when & then
 

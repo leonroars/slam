@@ -1,6 +1,7 @@
 package com.slam.concertreservation.domain.concert.model;
 
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.error.ErrorCode;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +31,7 @@ public class Seat {
     public static Seat create(String concertScheduleId, int number, int price, SeatStatus status){
         // 비즈니스 정책 검증
         if(number < MIN_SEAT_NUMBER || number > MAX_SEAT_NUMBER){
-            throw new BusinessRuleViolationException("존재할 수 없는 좌석 번호입니다.");
+            throw new BusinessRuleViolationException(ErrorCode.INVALID_SEAT_NUMBER, "존재할 수 없는 좌석 번호입니다.");
         }
 
         Seat seat = new Seat();
@@ -80,7 +81,7 @@ public class Seat {
     // 도메인 로직 : 좌석 상태를 예약 불가 상태로 변경한다.
     public void makeUnavailable(){
         if(this.status == SeatStatus.UNAVAILABLE){
-            throw new BusinessRuleViolationException("이미 선점되었거나 이용 불가한 좌석입니다.");
+            throw new BusinessRuleViolationException(ErrorCode.SEAT_ALREADY_OCCUPIED, "이미 선점되었거나 이용 불가한 좌석입니다.");
         }
         this.status = SeatStatus.UNAVAILABLE;
     }
@@ -88,7 +89,7 @@ public class Seat {
     // 도메인 로직 : 좌석 상태를 예약 가능하도록 변경한다.
     public void makeAvailable(){
         if(this.status == SeatStatus.AVAILABLE){
-            throw new BusinessRuleViolationException("이미 예약 가능 상태인 좌석입니다.");
+            throw new BusinessRuleViolationException(ErrorCode.SEAT_ALREADY_OCCUPIED, "이미 예약 가능 상태인 좌석입니다.");
         }
         this.status = SeatStatus.AVAILABLE;
     }

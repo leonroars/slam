@@ -1,4 +1,4 @@
-package com.slam.concertreservation.infrastructure.persistence.impl;
+package com.slam.concertreservation.infrastructure.persistence.jpa.impl;
 
 import com.slam.concertreservation.domain.user.model.User;
 import com.slam.concertreservation.domain.user.repository.UserRepository;

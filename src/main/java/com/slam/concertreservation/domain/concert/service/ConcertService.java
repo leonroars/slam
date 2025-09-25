@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.concert.service;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.concert.event.SeatAssignedEvent;
 import com.slam.concertreservation.domain.concert.event.SeatUnassignedEvent;
 import com.slam.concertreservation.domain.concert.model.Concert;
@@ -8,7 +9,7 @@ import com.slam.concertreservation.domain.concert.model.Seat;
 import com.slam.concertreservation.domain.concert.repository.ConcertRepository;
 import com.slam.concertreservation.domain.concert.repository.ConcertScheduleRepository;
 import com.slam.concertreservation.domain.concert.repository.SeatRepository;
-import com.slam.concertreservation.exceptions.UnavailableRequestException;
+import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import com.slam.concertreservation.infrastructure.persistence.redis.locking.RedissonDistributedLock;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,7 +47,7 @@ public class ConcertService {
      */
     public Concert getConcert(String concertId){
         return concertRepository.findById(concertId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 공연이 존재하지 않아 조회에 실파했습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.CONCERT_SCHEDULE_NOT_FOUND, "해당 공연이 존재하지 않아 조회에 실패했습니다."));
     }
 
     /**
@@ -76,7 +77,7 @@ public class ConcertService {
      */
     public ConcertSchedule getConcertSchedule(String concertScheduleId) {
         return concertScheduleRepository.findById(concertScheduleId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.CONCERT_SCHEDULE_NOT_FOUND, "해당 공연 일정이 존재하지 않습니다."));
     }
 
     /**
@@ -131,7 +132,7 @@ public class ConcertService {
 
         // 배정될 좌석 조회
         Seat targetSeat = seatRepository.findById(seatId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 좌석이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.SEAT_NOT_FOUND, "해당 좌석이 존재하지 않습니다."));
 
         // 배정될 좌석의 상태 변경
         targetSeat.makeUnavailable();
@@ -157,7 +158,7 @@ public class ConcertService {
 
         // 배정될 좌석 조회
         Seat targetSeat = seatRepository.findById(seatId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 좌석이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.SEAT_NOT_FOUND, "해당 좌석이 존재하지 않습니다."));
 
         // 배정될 좌석의 상태 변경
         targetSeat.makeAvailable();
@@ -183,7 +184,7 @@ public class ConcertService {
     @Transactional
     public ConcertSchedule makeConcertScheduleAvailable(String concertScheduleId){
         ConcertSchedule concertSchedule = concertScheduleRepository.findById(concertScheduleId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.CONCERT_SCHEDULE_NOT_FOUND, "해당 공연 일정이 존재하지 않습니다."));
 
         if(getRemainingSeatsCount(concertScheduleId) > 0 ){
             concertSchedule.makeAvailable();
@@ -200,7 +201,7 @@ public class ConcertService {
     @Transactional
     public ConcertSchedule makeConcertScheduleSoldOut(String concertScheduleId){
         ConcertSchedule concertSchedule = concertScheduleRepository.findById(concertScheduleId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 공연 일정이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.CONCERT_SCHEDULE_NOT_FOUND, "해당 공연 일정이 존재하지 않습니다."));
 
         int remainingSeatsCount = getRemainingSeatsCount(concertScheduleId);
         log.info("남은 좌석 수 : {}", remainingSeatsCount);
@@ -228,7 +229,7 @@ public class ConcertService {
      */
     public Seat getSeat(String seatId) {
         return seatRepository.findById(seatId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 좌석이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.SEAT_NOT_FOUND, "해당 좌석이 존재하지 않습니다."));
     }
 
     /**
@@ -238,7 +239,7 @@ public class ConcertService {
      */
     public List<Seat> getAvailableSeatsOfConcertSchedule(String concertScheduleId) {
         List<Seat> availableSeats =  seatRepository.findAllAvailableSeatsByConcertScheduleId(concertScheduleId);
-        if(availableSeats.isEmpty()){throw new UnavailableRequestException("예약 가능한 좌석이 존재하지 않습니다.");}
+        if(availableSeats.isEmpty()){throw new UnavailableRequestException(ErrorCode.NO_AVAILABLE_SEATS, "예약 가능한 좌석이 존재하지 않습니다.");}
         return availableSeats;
     }
 

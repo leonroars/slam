@@ -1,6 +1,7 @@
 package com.slam.concertreservation.domain.point.model;
 
-import com.slam.concertreservation.exceptions.BusinessRuleViolationException;
+import com.slam.concertreservation.common.error.ErrorCode;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import java.util.Objects;
 
 /**
@@ -51,9 +52,9 @@ public class Point {
      */
     public static Point create(int pointAmount) {
         if (pointAmount < MIN_AMOUNT) {
-            throw new BusinessRuleViolationException("사용자는 0보다 작은 포인트 잔액을 가질 수 없습니다.");
+            throw new BusinessRuleViolationException(ErrorCode.POINT_BELOW_ZERO, "사용자는 0보다 작은 포인트 잔액을 가질 수 없습니다.");
         } else if (pointAmount > MAX_AMOUNT) {
-            throw new BusinessRuleViolationException("사용자의 보유 포인트 최대 한도는 1,000,000점 입니다.");
+            throw new BusinessRuleViolationException(ErrorCode.POINT_EXCEED_LIMIT, "사용자의 보유 포인트 최대 한도는 1,000,000점 입니다.");
         }
         return new Point(pointAmount);
     }
@@ -77,7 +78,7 @@ public class Point {
     public Point increase(int increment) {
         int newAmount = this.amount + increment;
         if (newAmount > MAX_AMOUNT) {
-            throw new BusinessRuleViolationException("포인트 증액으로 인해 최대 한도를 초과했습니다.");
+            throw new BusinessRuleViolationException(ErrorCode.POINT_CHARGE_EXCEED_LIMIT, "최대 한도를 초과하는 금액은 충전 불가합니다.");
         }
         return new Point((int) newAmount);
     }
@@ -92,7 +93,7 @@ public class Point {
     public Point decrease(int decrement) {
         int newAmount = this.amount - decrement;
         if (newAmount < MIN_AMOUNT) {
-            throw new BusinessRuleViolationException("포인트 감액으로 인해 잔액이 음수가 될 수 없습니다.");
+            throw new BusinessRuleViolationException(ErrorCode.INSUFFICIENT_BALANCE, "포인트 감액으로 인해 잔액이 음수가 될 수 없습니다.");
         }
         return Point.create(newAmount);
     }

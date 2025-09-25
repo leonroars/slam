@@ -1,5 +1,7 @@
 package com.slam.concertreservation.infrastructure.persistence.jpa.impl;
 
+import com.slam.concertreservation.common.error.ErrorCode;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import com.slam.concertreservation.domain.point.model.UserPointBalance;
 import com.slam.concertreservation.domain.point.repository.UserPointBalanceRepository;
 import com.slam.concertreservation.infrastructure.persistence.jpa.UserPointBalanceJpaRepository;
@@ -26,7 +28,7 @@ public class UserPointBalanceRepositoryImpl implements UserPointBalanceRepositor
         if (userPointBalance.id() != null && !userPointBalance.id().isBlank()) {
             UserPointBalanceJpaEntity existingEntity = userPointBalanceJpaRepository
                     .findById(userPointBalance.id())
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 PointBalance ID입니다."));
+                    .orElseThrow(() -> new BusinessRuleViolationException(ErrorCode.INTERNAL_SERVER_ERROR, "존재하지 않는 PointBalance ID입니다."));
 
             // 기존 엔티티의 version, id 유지, point 등만 갱신
             existingEntity = existingEntity.updateFromDomain(userPointBalance);
