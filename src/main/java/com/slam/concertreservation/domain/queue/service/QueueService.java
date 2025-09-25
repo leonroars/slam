@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.queue.service;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.queue.model.QueuePolicy;
 import com.slam.concertreservation.domain.queue.model.Token;
 import com.slam.concertreservation.domain.queue.repository.TokenRepository;
@@ -54,7 +55,7 @@ public class QueueService {
         // 현재 동시 예약 서비스 이용 중인 사용자 수 확인
         int activeTokenCount = tokenRepository.countCurrentlyActiveTokens(concertScheduleId);
         if(activeTokenCount >= queuePolicy.getMaxConcurrentUser()){
-            throw new UnavailableRequestException("최대 동시 예약 가능한 사용자 수를 초과했습니다.");
+            throw new UnavailableRequestException(ErrorCode.TOO_MANY_REQUESTS, "최대 동시 예약 가능한 사용자 수를 초과했습니다.");
         }
 
         // 대기 중인 토큰 중 K 개 활성화
@@ -62,14 +63,14 @@ public class QueueService {
                 .stream()
                 .map(token -> token.activate(queuePolicy.getActiveTokenDuration()))
                 .toList();
-        if(activated.isEmpty()){throw new UnavailableRequestException("대기 중인 토큰이 존재하지 않습니다.");}
+        if(activated.isEmpty()){throw new UnavailableRequestException(ErrorCode.TOKEN_NOT_FOUND, "대기 중인 토큰이 존재하지 않습니다.");}
 
         return tokenRepository.saveAll(activated);
     }
 
     public Token expireToken(String concertScheduleId, String tokenId){
         Token token = tokenRepository.findTokenWithIdAndConcertScheduleId(concertScheduleId, tokenId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 토큰이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.TOKEN_NOT_FOUND, "해당 토큰이 존재하지 않습니다."));
         token.expire();
 
         return tokenRepository.save(token);
@@ -96,14 +97,14 @@ public class QueueService {
         return tokenRepository.findTokenWithIdAndConcertScheduleId(concertScheduleId, tokenId)
                 .map(token -> {
                     if (token.isExpired()) {
-                        throw new UnavailableRequestException("만료된 토큰이므로 사용 불가합니다.");
+                        throw new UnavailableRequestException(ErrorCode.TOKEN_EXPIRED, "만료된 토큰이므로 사용 불가합니다.");
                     } else if (token.isWait()) {
-                        throw new UnavailableRequestException("대기 중인 토큰은 사용 불가합니다.");
+                        throw new UnavailableRequestException(ErrorCode.INVALID_REQUEST, "대기 중인 토큰은 사용 불가합니다.");
                     } else {
                         return true;
                     }
                 })
-                .orElseThrow(() -> new UnavailableRequestException("해당 토큰이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.TOKEN_NOT_FOUND, "해당 토큰이 존재하지 않습니다."));
     }
 
     /**

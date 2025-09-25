@@ -1,5 +1,6 @@
 package com.slam.concertreservation.infrastructure.persistence.redis.impl;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.queue.model.Token;
 import com.slam.concertreservation.domain.queue.model.TokenStatus;
 import com.slam.concertreservation.domain.queue.repository.TokenRepository;
@@ -163,7 +164,7 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
     public List<Token> findNextKTokensToBeActivated(String concertScheduleId, int k) {
         Set<ZSetOperations.TypedTuple<String>> toBeActivated
                 = Optional.ofNullable(tokenScoredSortedSet.popMin(getTokenRankSortedSetName(concertScheduleId),k))
-                .orElseThrow(() -> new UnavailableRequestException("대기 중인 토큰이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.TOKEN_NOT_FOUND, "대기 중인 토큰이 존재하지 않습니다."));
 
         return toBeActivated
                 .stream()
@@ -195,7 +196,7 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
         // 토큰 발급 이력 조회.
         Token targetToken
                 = findTokenWithIdAndConcertScheduleId(concertScheduleId, tokenId)
-                .orElseThrow(() -> new UnavailableRequestException("해당 토큰의 발급 이력이 존재하지 않습니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.TOKEN_NOT_FOUND, "해당 토큰의 발급 이력이 존재하지 않습니다."));
 
         // 활성화된 토큰 여부인지 먼저 확인.
         if(activatedTokenSet.isMember(getTokenActivatedSetName(concertScheduleId), tokenId)){
