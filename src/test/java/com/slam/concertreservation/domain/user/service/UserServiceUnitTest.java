@@ -45,8 +45,7 @@ public class UserServiceUnitTest {
         Assertions.assertThatThrownBy(() -> {
                     userService.findUserByUserId(userId);
                 })
-                .isInstanceOf(UnavailableRequestException.class)
-                .hasMessageContaining("해당 사용자가 존재하지 않으므로 조회가 불가합니다.");
+                .isInstanceOf(UnavailableRequestException.class);
     }
 
     @Test

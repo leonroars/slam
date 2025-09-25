@@ -1,5 +1,6 @@
 package com.slam.concertreservation.domain.concert.service;
 
+import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.concert.model.Concert;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
 import com.slam.concertreservation.domain.concert.model.Seat;
@@ -136,7 +137,7 @@ class ConcertServiceUnitTest {
             ConcertSchedule expected = ConcertSchedule.create("1", third, first, second);
 
             when(concertScheduleRepository.save(any(ConcertSchedule.class)))
-                    .thenThrow(new BusinessRuleViolationException("ConcertSchedule 저장 실패"));
+                    .thenThrow(new BusinessRuleViolationException(ErrorCode.INTERNAL_SERVER_ERROR, "ConcertSchedule 저장 실패"));
 
             // when & then
 

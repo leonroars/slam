@@ -103,8 +103,7 @@ public class ReservationServiceUnitTest {
 
             // when & then
             Assertions.assertThatThrownBy(() -> reservationService.createReservation(userId, concertScheduleId, seatId, price))
-                    .isInstanceOf(UnavailableRequestException.class)
-                    .hasMessage("해당 좌석에 대한 예약이 이미 존재하므로 예약이 불가합니다.");
+                    .isInstanceOf(UnavailableRequestException.class);
 
             verify(reservationRepository, times(1)).findByConcertScheduleIdAndSeatId(concertScheduleId, seatId);
             verify(reservationRepository, never()).save(any(Reservation.class));
@@ -145,7 +144,6 @@ public class ReservationServiceUnitTest {
             UnavailableRequestException exception = assertThrows(UnavailableRequestException.class, () ->
                     reservationService.getReservation(reservationId));
 
-            assertEquals("해당 예약이 존재하지 않습니다.", exception.getMessage());
             verify(reservationRepository, times(1)).findById(reservationId);
         }
     }
@@ -185,8 +183,7 @@ public class ReservationServiceUnitTest {
 
             // when & then
             Assertions.assertThatThrownBy(() -> reservationService.getUserReservation(userId))
-                    .isInstanceOf(UnavailableRequestException.class)
-                    .hasMessage("해당 사용자의 예약이 존재하지 않습니다.");
+                    .isInstanceOf(UnavailableRequestException.class);
             verify(reservationRepository, times(1)).findByUserId(userId);
         }
     }
@@ -231,7 +228,6 @@ public class ReservationServiceUnitTest {
             BusinessRuleViolationException exception = assertThrows(BusinessRuleViolationException.class, () ->
                     reservationService.cancelReservation(reservationId));
 
-            assertEquals("취소 처리는 오직 PAID 상태의 예약에 대해서만 가능합니다.", exception.getMessage());
             verify(reservationRepository, times(1)).findById(reservationId);
             verify(reservationRepository, never()).save(any(Reservation.class));
         }

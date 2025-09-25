@@ -22,7 +22,7 @@ public class UserPointBalanceUnitTest {
 
         // when & then
         Assertions.assertThatThrownBy(() -> userPointBalance.decrease(negativeAmount))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(BusinessRuleViolationException.class);
 
     }
 
@@ -36,7 +36,7 @@ public class UserPointBalanceUnitTest {
 
         // when & then
         Assertions.assertThatThrownBy(() -> userPointBalance.decrease(overMillion))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(BusinessRuleViolationException.class);
     }
 
     @Test
