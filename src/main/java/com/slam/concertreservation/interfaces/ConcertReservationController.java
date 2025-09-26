@@ -146,7 +146,7 @@ public class ConcertReservationController {
      * 예약 확정
      */
     @PostMapping("/concertSchedules/{scheduleId}/confirmReservation")
-    public ResponseEntity<String> paymentRequest(@RequestParam String userId,
+    public ResponseEntity<Reservation> paymentRequest(@RequestParam String userId,
                                                       @RequestParam Integer price,
                                                  @RequestParam String reservationId) {
         return ResponseEntity.ok(reservationApp.paymentRequestForReservation(userId, price, reservationId));
