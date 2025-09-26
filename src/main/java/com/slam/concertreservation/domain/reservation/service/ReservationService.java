@@ -102,18 +102,14 @@ public class ReservationService {
      * 해당 예약 상태를 {@code ReservationStatus.PAID} 로 변경합니다.
      * @param concertScheduleId, userId, seatId
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public Reservation confirmReservation(String reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND, "해당 가예약이 존재하지 않습니다.")); // 해당 가예약 조회.
 
         reservation.reserve(); // 가예약 -> 예약 확정. 조회한 예약이 이미 확정되어있을 경우 예외 발생.
-        Reservation confirmedReservation = reservationRepository.save(reservation); // 확정된 예약 저장.
-        log.info("결제 완료 후 예약 확정되어 저장된 Reservation 상태 : {}", confirmedReservation.getStatus());
 
-        applicationEventPublisher.publishEvent(ReservationConfirmationEvent.fromDomain(confirmedReservation)); // 이벤트 발행
-
-        return confirmedReservation;
+        return reservationRepository.save(reservation);
     }
 
     /**
