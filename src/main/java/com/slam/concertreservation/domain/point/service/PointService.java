@@ -53,13 +53,8 @@ public class PointService {
         );
         // 포인트 내역 저장
         pointHistoryRepository.save(pointHistory);
-        // 차감 후의 포인트 잔액 저장
-        UserPointBalance decreasedUserPoint = userPointBalanceRepository.save(updatedUserPointBalance);
 
-        // 포인트 감소 이벤트 발행. 만약 롤백 발생 시 사용자 ID 와 금액을 전달하는 이벤트를 발행한다.
-        applicationEventPublisher.publishEvent(UserPointBalance.create(userId, Point.create(decreaseAmount)));
-
-        return decreasedUserPoint;
+        return userPointBalanceRepository.save(updatedUserPointBalance);
     }
 
     /**

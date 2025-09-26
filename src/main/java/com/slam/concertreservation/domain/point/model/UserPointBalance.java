@@ -69,11 +69,13 @@ public class UserPointBalance {
         if (decreaseAmount < 0) {
             throw new BusinessRuleViolationException(ErrorCode.POINT_USE_AMOUNT_INVALID, "차감하고자 하는 포인트는 0보다 커야합니다.");
         } else if (decreaseAmount > 1_000_000) {
-            throw new BusinessRuleViolationException(ErrorCode.INSUFFICIENT_BALANCE, "차감 시 보유 잔액이 0원 미만이 되므로 해당 차감은 불가합니다.");
+            throw new BusinessRuleViolationException(ErrorCode.INSUFFICIENT_BALANCE, "최대 한도 초과 금액은 사용할 수 없습니다.");
         }
 
         int newAmount = this.balance().getAmount() - decreaseAmount;
+        if(newAmount < 0){throw new BusinessRuleViolationException(ErrorCode.INSUFFICIENT_BALANCE, "차감 시 보유 잔액이 0원 미만이 되므로 해당 차감은 불가합니다.");}
         this.balance = Point.create(newAmount);
+
         return this;
     }
 

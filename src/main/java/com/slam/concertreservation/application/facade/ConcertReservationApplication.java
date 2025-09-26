@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
@@ -166,9 +167,14 @@ public class ConcertReservationApplication {
      * @param seatId
      * @return
      */
-    public String paymentRequestForReservation(String userId, Integer price, String reservationId){
-        pointService.processPaymentForReservation(userId, price, reservationId);
-        return "결제 완료";
+    @Transactional(propagation = Propagation.REQUIRED)
+    public Reservation paymentRequestForReservation(String userId, Integer price, String reservationId){
+        // 사용자 포인트 차감
+        pointService.decreaseUserPointBalance(userId, price);
+
+        // 예약 확정(결제 완료)
+        return reservationService.confirmReservation(reservationId);
+
     }
 
     /**
