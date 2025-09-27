@@ -16,18 +16,13 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate  # 최초에는 create, 이후에는 validate
+      ddl-auto: create-drop # 운영 환경에서는 validate 가 적합하나, 향후 반복적 테스트를 위해 create-drop 유지
     show-sql: false  # 프로덕션은 false
 
   data:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
-
-logging:
-  level:
-    root: INFO
-    com.hhp7.concertreservation: INFO
 
 server:
   port: 8080

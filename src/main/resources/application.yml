@@ -12,30 +12,12 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
-    show-sql: true
-#    properties:
-#      hibernate:
-#        jdbc:
-#          batch_size: 60
-#        order_inserts: true
-#        rewriteBatchedStatements: true
+    show-sql: false
 
   data:
     redis:
       host: localhost
       port: 6379
-
-logging:
-  level:
-    org:
-      springframework: WARN
-    com:
-      hhp7:
-        concertreservation:
-            repository:
-            service: WARN
-            controller: WARN
-            component: WARN
 
 server:
   port: 8080
