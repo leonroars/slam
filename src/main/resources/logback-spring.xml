@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <!-- Spring Boot 기본 패턴/변수 -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-    <!--
-        환경변수 직접 참조 (.env.prod에서 로드됨)
-        defaultValue는 로컬 개발 시 사용
-    -->
-    <property name="APP_NAME" value="${APP_NAME:-slam-local}"/>
-    <property name="LOKI_HOST" value="${LOKI_HOST:-localhost}"/>
-    <property name="LOKI_PORT" value="${LOKI_PORT:-3100}"/>
-    <property name="LOG_LEVEL_ROOT" value="${LOG_LEVEL_ROOT:-INFO}"/>
-    <property name="LOG_LEVEL_APP" value="${LOG_LEVEL_APP:-DEBUG}"/>
-    <property name="LOG_LEVEL_SQL" value="${LOG_LEVEL_SQL:-DEBUG}"/>
-    <property name="HOSTNAME" value="${HOSTNAME:-unknown}"/>
+    <!-- ========= 환경변수(.env) + 활성 프로파일 참조 ========= -->
+    <property name="APP_NAME"        value="${APP_NAME:-slam}"/>
+    <property name="ENV"             value="${spring.profiles.active:-local}"/>
+    <property name="LOG_DIR"         value="${LOG_DIR:-/var/log/${APP_NAME}/${ENV}}"/>
+    <property name="HOSTNAME"        value="${HOSTNAME:-unknown}"/>
+    <property name="LOG_LEVEL_ROOT"  value="${LOG_LEVEL_ROOT:-INFO}"/>
+    <property name="LOG_LEVEL_APP"   value="${LOG_LEVEL_APP:-INFO}"/>
+    <property name="LOG_LEVEL_SQL"   value="${LOG_LEVEL_SQL:-WARN}"/>
 
-    <!-- Console Appender (개발/디버깅용) -->
+    <!-- ========= 콘솔(JSON) : 로컬/개발용 ========= -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSXXX</timestampPattern>
             <charset>UTF-8</charset>
-
-            <!-- 앱 식별 정보 -->
-            <customFields>{"service":"${APP_NAME}","env":"${spring.profiles.active:-local}","host":"${HOSTNAME}"}</customFields>
-
-            <!-- 스택트레이스 최적화 (프리티어 메모리 고려) -->
+            <timeZone>Asia/Seoul</timeZone>
+            <customFields>{"service":"${APP_NAME}","env":"${ENV}","host":"${HOSTNAME}"}</customFields>
+            <!-- Promtail 파이프라인 편의: timestamp 필드명 고정 -->
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+            </fieldNames>
+            <!-- 스택트레이스 단축(로컬/개발 기본) -->
             <shortenedLoggerNameLength>30</shortenedLoggerNameLength>
             <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
                 <maxDepthPerThrowable>5</maxDepthPerThrowable>
@@ -32,121 +32,107 @@
         </encoder>
     </appender>
 
-    <!-- Loki Appender (중앙 로그 수집) -->
-    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
-        <http>
-            <!-- .env.prod의 LOKI_HOST 사용 -->
-            <url>http://${LOKI_HOST}:${LOKI_PORT}/loki/api/v1/push</url>
-
-            <!-- EC2 간 통신 고려 -->
-            <connectionTimeout>5000</connectionTimeout>
-            <requestTimeout>10000</requestTimeout>
-
-            <!-- 재시도 설정 (네트워크 불안정 대비) -->
-            <retryConfig>
-                <maxRetries>3</maxRetries>
-                <retryBackoff>1000</retryBackoff>
-            </retryConfig>
-        </http>
-
-        <!-- 배치 설정 (프리티어 네트워크 대역폭 고려) -->
-        <batchSize>100</batchSize>
-        <batchTimeoutMs>10000</batchTimeoutMs>
-
-        <format>
-            <!--
-                레이블 (인덱싱용 - 최소한으로 유지)
-                주의: 동적 값(userId, requestId)은 레이블 사용 금지
-            -->
-            <label>
-                <pattern>app=${APP_NAME},env=${spring.profiles.active:-local},level=%level,host=${HOSTNAME}</pattern>
-            </label>
-
-            <!--
-                메시지 본문 (검색 가능한 JSON)
-                MDC 필드들이 자동 포함됨
-            -->
-            <message>
-                <pattern>
-                    {
-                    "timestamp":"%d{ISO8601}",
-                    "level":"%level",
-                    "logger":"%logger{30}",
-                    "thread":"%thread",
-                    "message":"%message",
-                    "trace_id":"%X{traceId:-}",
-                    "user_id":"%X{userId:-}",
-                    "error_code":"%X{errorCode:-}",
-                    "concert_id":"%X{concertId:-}",
-                    "reservation_id":"%X{reservationId:-}",
-                    "duration_ms":"%X{duration:-}",
-                    "exception":"%ex{short}"
-                    }
-                </pattern>
-            </message>
-        </format>
-
-        <!-- 메트릭 비활성화 (프리티어 CPU 절약) -->
-        <metricsEnabled>false</metricsEnabled>
+    <!-- ========= 파일(JSON, 전체 레벨) ========= -->
+    <appender name="FILE_JSON_ALL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/app.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/app-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSXXX</timestampPattern>
+            <charset>UTF-8</charset>
+            <timeZone>Asia/Seoul</timeZone>
+            <customFields>{"service":"${APP_NAME}","env":"${ENV}","host":"${HOSTNAME}"}</customFields>
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+            </fieldNames>
+        </encoder>
     </appender>
 
-    <!-- Async Wrapper (논블로킹 로깅) -->
-    <appender name="ASYNC_LOKI" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="LOKI"/>
-        <!-- 프리티어 메모리 고려한 큐 사이즈 -->
-        <queueSize>256</queueSize>
-        <!-- 큐 80% 찰 때까지는 DEBUG 이상 로그 버림 -->
-        <discardingThreshold>20</discardingThreshold>
-        <!-- 호출자 정보 제외 (성능) -->
-        <includeCallerData>false</includeCallerData>
-        <!-- 절대 블로킹 금지 -->
+    <!-- ========= 파일(JSON, WARN 이상만) : Promtail 수집 대상 ========= -->
+    <appender name="FILE_JSON_WARN" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <file>${LOG_DIR}/app-warn.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/app-warn-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>14</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSXXX</timestampPattern>
+            <charset>UTF-8</charset>
+            <timeZone>Asia/Seoul</timeZone>
+            <customFields>{"service":"${APP_NAME}","env":"${ENV}","host":"${HOSTNAME}"}</customFields>
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+            </fieldNames>
+        </encoder>
+    </appender>
+
+    <!-- ========= 비동기 래퍼 ========= -->
+    <!-- 전체 채널: 혼잡 시 저레벨 일부 폐기, 절대 블로킹 금지 -->
+    <appender name="ASYNC_FILE_ALL" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>10000</queueSize>
+        <discardingThreshold>80</discardingThreshold>
         <neverBlock>true</neverBlock>
+        <includeCallerData>false</includeCallerData>
+        <appender-ref ref="FILE_JSON_ALL"/>
     </appender>
 
-    <!-- ============ 프로파일별 설정 ============ -->
+    <!-- WARN+ 전용 채널: 유실 최소화(필요시 블록 허용) -->
+    <appender name="ASYNC_FILE_WARN_STRICT" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>2000</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>false</neverBlock>
+        <includeCallerData>false</includeCallerData>
+        <appender-ref ref="FILE_JSON_WARN"/>
+    </appender>
 
-    <!-- 로컬 환경 (default) -->
+    <!-- ========= 프로파일 별 ========= -->
     <springProfile name="local,default">
-        <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
-        </root>
-        <logger name="com.slam.concertreservation" level="DEBUG"/>
-        <logger name="org.hibernate.SQL" level="DEBUG"/>
-    </springProfile>
-
-    <!-- 개발 서버 -->
-    <springProfile name="dev">
-        <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_LOKI"/>
-        </root>
-        <logger name="com.slam.concertreservation" level="DEBUG"/>
-        <logger name="org.hibernate.SQL" level="DEBUG"/>
-    </springProfile>
-
-    <!-- 프로덕션 (환경변수로 제어) -->
-    <springProfile name="prod">
-        <!-- .env.prod의 LOG_LEVEL_ROOT 사용 -->
         <root level="${LOG_LEVEL_ROOT}">
-            <appender-ref ref="ASYNC_LOKI"/>
-            <!-- 프로덕션은 콘솔 출력 없음 (성능) -->
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE_ALL"/>
+            <appender-ref ref="ASYNC_FILE_WARN_STRICT"/>
         </root>
+        <logger name="com.slam.concertreservation" level="${LOG_LEVEL_APP}"/>
+        <logger name="org.hibernate.SQL" level="${LOG_LEVEL_SQL}"/>
+        <logger name="org.hibernate.orm.jdbc.bind" level="WARN"/>
+    </springProfile>
 
-        <!--
-            계층별 로그 레벨 (.env.prod로 제어 가능)
-            운영 중 재배포 없이 조정 가능한 장점
-        -->
+    <springProfile name="dev">
+        <root level="${LOG_LEVEL_ROOT}">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE_ALL"/>
+            <appender-ref ref="ASYNC_FILE_WARN_STRICT"/>
+        </root>
+        <logger name="com.slam.concertreservation" level="${LOG_LEVEL_APP}"/>
+        <logger name="org.hibernate.SQL" level="${LOG_LEVEL_SQL}"/>
+        <logger name="org.hibernate.orm.jdbc.bind" level="WARN"/>
+    </springProfile>
+
+    <springProfile name="prod">
+        <!-- 운영: 콘솔 미사용, 파일만 -->
+        <root level="${LOG_LEVEL_ROOT}">
+            <appender-ref ref="ASYNC_FILE_ALL"/>
+            <appender-ref ref="ASYNC_FILE_WARN_STRICT"/>
+        </root>
+        <!-- 관찰가능성 중심 기본값. 필요 시 .env로 조정 -->
         <logger name="com.slam.concertreservation" level="${LOG_LEVEL_APP}"/>
         <logger name="com.slam.concertreservation.interfaces" level="${LOG_LEVEL_APP}"/>
         <logger name="com.slam.concertreservation.application" level="${LOG_LEVEL_APP}"/>
-        <logger name="com.slam.concertreservation.domain" level="WARN"/>
-        <logger name="com.slam.concertreservation.infrastructure" level="ERROR"/>
+        <logger name="com.slam.concertreservation.domain" level="INFO"/>
+        <logger name="com.slam.concertreservation.infrastructure" level="WARN"/>
 
-        <!-- SQL 로깅 (성능 이슈 시에만 활성화) -->
         <logger name="org.hibernate.SQL" level="${LOG_LEVEL_SQL}"/>
-        <logger name="org.hibernate.type.descriptor.sql" level="${LOG_LEVEL_SQL}"/>
+        <logger name="org.hibernate.orm.jdbc.bind" level="WARN"/>
 
-        <!-- 외부 라이브러리 노이즈 제거 -->
         <logger name="org.springframework" level="ERROR"/>
         <logger name="org.apache" level="ERROR"/>
         <logger name="io.lettuce" level="ERROR"/>
