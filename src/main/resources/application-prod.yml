@@ -24,11 +24,6 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
-logging:
-  level:
-    root: INFO
-    com.hhp7.concertreservation: INFO
-
 server:
   port: 8080
 
