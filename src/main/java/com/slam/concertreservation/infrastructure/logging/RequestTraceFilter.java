@@ -44,7 +44,11 @@ public class RequestTraceFilter implements Filter {
 
         try {
             // 6. 요청 시작 로그
-            log.info("Request started");
+            log.info("Incoming Request - Method: {}, URI: {}, ClientIP: {}, UserID: {}",
+                    httpRequest.getMethod(),
+                    httpRequest.getRequestURI(),
+                    getClientIp(httpRequest),
+                    userId != null ? userId : "Anonymous");
 
             // 7. 실제 요청 처리
             chain.doFilter(request, response);
@@ -55,14 +59,15 @@ public class RequestTraceFilter implements Filter {
             MDC.put("duration", String.valueOf(duration));
             MDC.put("status", String.valueOf(httpResponse.getStatus()));
 
-            // 9. 요청 완료 로그
-            if (httpResponse.getStatus() >= 400) {
-                log.warn("Request failed - {} ms", duration);
-            } else {
-                log.info("Request completed - {} ms", duration);
+            // 요청 완료 로그
+            if(httpResponse.getStatus() < 400){
+                log.info("Completed Request - trace_id: {}, Status: {}, Duration: {} ms",
+                        MDC.get("traceId"),
+                        httpResponse.getStatus(),
+                        duration);
             }
 
-            // 10. MDC 정리 (ThreadLocal 내부에 적재된 내용을 정리하여 Memory Leak 방지)
+            // 9. MDC 정리 (ThreadLocal 내부에 적재된 내용을 정리하여 Memory Leak 방지)
             MDC.clear();
         }
     }
