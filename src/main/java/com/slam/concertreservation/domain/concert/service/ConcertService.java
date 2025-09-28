@@ -140,6 +140,9 @@ public class ConcertService {
         // 수정된 사항을 명시적으로 저장 및 반환
         Seat assignedSeat = seatRepository.save(targetSeat);
 
+        log.info("좌석 선점 완료 - seatId: {}, userId: {}, concertScheduleId: {}, price: {}",
+                seatId, userId, concertScheduleId, assignedSeat.getPrice());
+
         // 이벤트 발행
         applicationEventPublisher.publishEvent(SeatAssignedEvent.fromDomain(assignedSeat, userId));
 
@@ -165,6 +168,9 @@ public class ConcertService {
 
         // 수정된 사항을 명시적으로 저장
         Seat unasignedSeat = seatRepository.save(targetSeat);
+
+        log.warn("좌석 선점 해제 - seatId: {}, concertScheduleId: {}",
+                seatId, concertScheduleId);
 
         // 좌석 선점 해제를 알리는 이벤트 발행
         applicationEventPublisher.publishEvent(
@@ -208,6 +214,7 @@ public class ConcertService {
 
         if(getRemainingSeatsCount(concertScheduleId) == 0){
             concertSchedule.makeSoldOut();
+            log.warn("공연 매진 처리 - concertScheduleId: {}", concertScheduleId);
         }
 
         return concertScheduleRepository.save(concertSchedule);
