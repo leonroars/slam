@@ -29,7 +29,7 @@ server:
 
 app:
   queue:
-    provider: "REDIS"
+    provider: "DB"
     policy:
       max-concurrent-user: 50
       waiting-token-duration: 6
