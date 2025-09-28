@@ -11,12 +11,14 @@ import com.slam.concertreservation.domain.point.repository.UserPointBalanceRepos
 import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PointService {
 
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -24,6 +26,7 @@ public class PointService {
     private final UserPointBalanceRepository userPointBalanceRepository;
 
     @Transactional
+    @Deprecated
     public UserPointBalance processPaymentForReservation(String userId, int price, String reservationId){
         UserPointBalance processedUserPointBalance = decreaseUserPointBalance(userId, price);
 
@@ -54,7 +57,14 @@ public class PointService {
         // 포인트 내역 저장
         pointHistoryRepository.save(pointHistory);
 
-        return userPointBalanceRepository.save(updatedUserPointBalance);
+        // 변경된 잔액 저장
+        UserPointBalance updated = userPointBalanceRepository.save(updatedUserPointBalance);
+
+        // 로그 기록
+        log.info("포인트 사용 완료 - userId: {}, amount: {}, balance: {}",
+                userId, decreaseAmount, updated.balance().getAmount());
+
+        return updated;
     }
 
     /**
@@ -77,7 +87,12 @@ public class PointService {
                 increaseAmount
         );
         pointHistoryRepository.save(pointHistory);
-        return userPointBalanceRepository.save(updatedUserPointBalance);
+        UserPointBalance updated = userPointBalanceRepository.save(updatedUserPointBalance);
+
+        log.info("포인트 충전 완료 - userId: {}, amount: {}, balance: {}",
+                userId, increaseAmount, updated.balance().getAmount());
+
+        return updated;
 
     }
 
