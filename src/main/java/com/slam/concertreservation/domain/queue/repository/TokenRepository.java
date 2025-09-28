@@ -32,4 +32,6 @@ public interface TokenRepository {
     // 대기 중인 토큰 중 만료될 토큰 조회.
     List<Token> findWaitingTokensToBeExpired();
 
+    // 공연 일정 ID로 대기 중 토큰 수 집계.
+    int countCurrentlyWaitingTokens(String concertScheduleId);
 }

@@ -7,10 +7,12 @@ import com.slam.concertreservation.domain.queue.repository.TokenRepository;
 import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class QueueService {
 
     private final TokenRepository tokenRepository;
@@ -37,13 +39,21 @@ public class QueueService {
 
         // 현재 예약 서비스 이용 중인 사용자 수 확인
         int activeTokenCount = tokenRepository.countCurrentlyActiveTokens(concertScheduleId);
+        int waitingCount = tokenRepository.countCurrentlyWaitingTokens(concertScheduleId);
 
         // 만약 대기가 필요 없을 경우 바로 활성화 및 만료 시간 설정(5분)
         if(activeTokenCount < queuePolicy.calculateConcurrentUserThreshold()){
             token.activate(queuePolicy.getActiveTokenDuration());
         }
 
-        return tokenRepository.save(token);
+        // 발급된 토큰 저장.
+        Token saved = tokenRepository.save(token);
+
+        // 로그 기록
+        log.info("토큰 발급 완료 - tokenId: {}, userId: {}, status: {}, activeUsers: {}, waitingUsers: {}",
+                saved.getId(), userId, saved.getStatus(), activeTokenCount, waitingCount);
+
+        return saved;
     }
 
     /**
@@ -65,7 +75,12 @@ public class QueueService {
                 .toList();
         if(activated.isEmpty()){throw new UnavailableRequestException(ErrorCode.TOKEN_NOT_FOUND, "대기 중인 토큰이 존재하지 않습니다.");}
 
-        return tokenRepository.saveAll(activated);
+        List<Token> saved = tokenRepository.saveAll(activated);
+
+        log.info("토큰 활성화 완료 - concertScheduleId: {}, activatedCount: {}, currentActiveUsers: {}",
+                concertScheduleId, activated.size(), activeTokenCount + activated.size());
+
+        return saved;
     }
 
     public Token expireToken(String concertScheduleId, String tokenId){
@@ -77,11 +92,16 @@ public class QueueService {
     }
 
     public List<Token> expireToken(String concertScheduleId, List<Token> tokens){
-        return tokenRepository.saveAll(
+        List<Token> expiredTokens =  tokenRepository.saveAll(
                 tokens.stream()
                         .map(Token::expire)
                         .toList()
         );
+
+        log.info("토큰 일괄 만료 처리 완료 - concertScheduleId: {}, expiredCount: {}",
+                concertScheduleId, expiredTokens.size());
+
+        return expiredTokens;
     }
 
     public int getRemainingTokenCount(String concertScheduleId, String tokenId){

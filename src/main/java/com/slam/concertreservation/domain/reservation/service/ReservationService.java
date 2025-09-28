@@ -53,6 +53,9 @@ public class ReservationService {
         createdTemporaryReservation.initiateExpiredAt(); // 만료 시간 초기화
         Reservation savedReservation = reservationRepository.save(createdTemporaryReservation); // 만료 시간 갱신된 가예약 저장
 
+        log.info("예약 생성 완료 - reservationId: {}, userId: {}, seatId: {}, concertScheduleId: {}, price: {}, expiredAt: {}",
+                savedReservation.getId(), userId, seatId, concertScheduleId, price, savedReservation.getExpiredAt());
+
         applicationEventPublisher.publishEvent(ReservationCreationEvent.fromDomain(savedReservation)); // 이벤트 발행
 
         return savedReservation;
@@ -108,8 +111,12 @@ public class ReservationService {
                 .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND, "해당 가예약이 존재하지 않습니다.")); // 해당 가예약 조회.
 
         reservation.reserve(); // 가예약 -> 예약 확정. 조회한 예약이 이미 확정되어있을 경우 예외 발생.
+        Reservation confirmed = reservationRepository.save(reservation); // 예약 확정 저장
 
-        return reservationRepository.save(reservation);
+        log.info("예약 확정 완료 - reservationId: {}, userId: {}, status: PAID",
+                reservationId, confirmed.getUserId());
+
+        return confirmed;
     }
 
     /**
@@ -122,6 +129,9 @@ public class ReservationService {
         Reservation reservation = getReservation(reservationId); // 해당 예약 조회
         reservation.expire(); // 해당 예약 만료 처리
         Reservation expiredReservation = reservationRepository.save(reservation); // 만료된 예약 저장
+
+        log.info("예약 만료 처리 - reservationId: {}, userId: {}, seatId: {}",
+                reservationId, expiredReservation.getUserId(), expiredReservation.getSeatId());
 
         applicationEventPublisher.publishEvent(ReservationExpirationEvent.fromDomain(expiredReservation)); // 이벤트 발행
 
