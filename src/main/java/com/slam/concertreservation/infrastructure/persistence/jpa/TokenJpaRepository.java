@@ -37,4 +37,7 @@ public interface TokenJpaRepository extends JpaRepository<TokenJpaEntity, Long> 
 
     @Query("SELECT t FROM TokenJpaEntity t WHERE t.expiredAt < CURRENT_TIMESTAMP AND t.status = 'WAIT'")
     List<TokenJpaEntity> findWaitingTokensToBeExpired();
+
+    @Query("SELECT COUNT(t) FROM TokenJpaEntity t WHERE t.concertScheduleId = :concertScheduleId AND t.status = 'WAIT'")
+    int countCurrentlyWaitingTokens(@Param("concertScheduleId") String concertScheduleId);
 }

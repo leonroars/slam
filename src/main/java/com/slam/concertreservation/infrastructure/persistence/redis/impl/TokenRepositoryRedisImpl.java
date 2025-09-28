@@ -268,4 +268,10 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
         return new ArrayList<>(tokenHashStorage.values(tokenHashStorageName));
     }
 
+    @Override
+    public int countCurrentlyWaitingTokens(String concertScheduleId) {
+        Long waitingTokenCount = tokenScoredSortedSet.size(getTokenRankSortedSetName(concertScheduleId));
+        return waitingTokenCount.intValue();
+    }
+
 }

@@ -78,4 +78,9 @@ public class TokenRepositoryDbImpl implements TokenRepository {
                 .map(TokenJpaEntity::toDomain)
                 .toList();
     }
+
+    @Override
+    public int countCurrentlyWaitingTokens(String concertScheduleId) {
+        return tokenJpaRepository.countTokensByConcertScheduleIdAndStatus(concertScheduleId, TokenStatus.WAIT.name());
+    }
 }
