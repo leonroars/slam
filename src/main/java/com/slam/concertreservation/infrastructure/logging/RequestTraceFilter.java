@@ -44,6 +44,9 @@ public class RequestTraceFilter implements Filter {
         httpResponse.setHeader("X-Trace-Id", traceId);
 
         try {
+            // 7. 실제 요청 처리
+            chain.doFilter(request, response);
+
             // 정규화된 URI 패턴 추출 (예: /api/users/{userId}) -> Loki 에서 Labelling 시 High Cardinality 문제 완화 목적
             String uriNormalizedPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
             // 6. 요청 시작 로그
@@ -52,10 +55,6 @@ public class RequestTraceFilter implements Filter {
                     (uriNormalizedPattern == null ? httpRequest.getRequestURI() : uriNormalizedPattern),
                     getClientIp(httpRequest),
                     userId != null ? userId : "Anonymous");
-
-            // 7. 실제 요청 처리
-            chain.doFilter(request, response);
-
         } finally {
             // 8. 처리 시간 계산
             long duration = System.currentTimeMillis() - startTime;
