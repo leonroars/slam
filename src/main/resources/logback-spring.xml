@@ -128,11 +128,17 @@
         <logger name="com.slam.concertreservation.interfaces" level="${LOG_LEVEL_APP}"/>
         <logger name="com.slam.concertreservation.application" level="${LOG_LEVEL_APP}"/>
         <logger name="com.slam.concertreservation.domain" level="INFO"/>
+
+        <!-- Infrastructure는 위험 징후 발생 시 파악 가능하도록 WARN. 단, LoggingFilter 는 INFO -->
         <logger name="com.slam.concertreservation.infrastructure" level="WARN"/>
+        <logger name="com.slam.concertreservation.infrastructure.logging" level="INFO" additivity="false">
+            <appender-ref ref="ASYNC_FILE_ALL"/>
+            <appender-ref ref="ASYNC_FILE_WARN_STRICT"/>
+        </logger>
 
-        <logger name="org.hibernate.SQL" level="${LOG_LEVEL_SQL}"/>
-        <logger name="org.hibernate.orm.jdbc.bind" level="WARN"/>
-
+        <!-- Framework 로그는 기본 ERROR 로 설정하여 노이즈 최소화하기. 필요하면 나중에 조정해보자! -->
+        <logger name="org.hibernate.SQL" level="ERROR"/>
+        <logger name="org.hibernate.orm.jdbc.bind" level="ERROR"/> <!-- 바인딩은 너무 상세하므로 운영에서 ERROR -->
         <logger name="org.springframework" level="ERROR"/>
         <logger name="org.apache" level="ERROR"/>
         <logger name="io.lettuce" level="ERROR"/>
