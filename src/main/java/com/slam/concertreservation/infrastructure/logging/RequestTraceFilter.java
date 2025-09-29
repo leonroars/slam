@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.UUID;
+import org.springframework.web.servlet.HandlerMapping;
 
 @Slf4j
 @Component
@@ -43,10 +44,12 @@ public class RequestTraceFilter implements Filter {
         httpResponse.setHeader("X-Trace-Id", traceId);
 
         try {
+            // 정규화된 URI 패턴 추출 (예: /api/users/{userId}) -> Loki 에서 Labelling 시 High Cardinality 문제 완화 목적
+            String uriNormalizedPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
             // 6. 요청 시작 로그
             log.info("Incoming Request - Method: {}, URI: {}, ClientIP: {}, UserID: {}",
                     httpRequest.getMethod(),
-                    httpRequest.getRequestURI(),
+                    (uriNormalizedPattern == null ? httpRequest.getRequestURI() : uriNormalizedPattern),
                     getClientIp(httpRequest),
                     userId != null ? userId : "Anonymous");
 
