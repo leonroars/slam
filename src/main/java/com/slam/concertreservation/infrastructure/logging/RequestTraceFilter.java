@@ -44,17 +44,12 @@ public class RequestTraceFilter implements Filter {
         httpResponse.setHeader("X-Trace-Id", traceId);
 
         try {
+            // 6. 요청 시작 로그
+            log.info("[{}] REQ START", traceId);
+
             // 7. 실제 요청 처리
             chain.doFilter(request, response);
 
-            // 정규화된 URI 패턴 추출 (예: /api/users/{userId}) -> Loki 에서 Labelling 시 High Cardinality 문제 완화 목적
-            String uriNormalizedPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-            // 6. 요청 시작 로그
-            log.info("Incoming Request - Method: {}, URI: {}, ClientIP: {}, UserID: {}",
-                    httpRequest.getMethod(),
-                    (uriNormalizedPattern == null ? httpRequest.getRequestURI() : uriNormalizedPattern),
-                    getClientIp(httpRequest),
-                    userId != null ? userId : "Anonymous");
         } finally {
             // 8. 처리 시간 계산
             long duration = System.currentTimeMillis() - startTime;
@@ -62,12 +57,10 @@ public class RequestTraceFilter implements Filter {
             MDC.put("status", String.valueOf(httpResponse.getStatus()));
 
             // 요청 완료 로그
-            if(httpResponse.getStatus() < 400){
-                log.info("Completed Request - trace_id: {}, Status: {}, Duration: {} ms",
-                        MDC.get("traceId"),
-                        httpResponse.getStatus(),
-                        duration);
-            }
+            log.info("[{}] REQ END & RES RETURNED : {}, Duration: {} ms",
+                    MDC.get("traceId"),
+                    httpResponse.getStatus(),
+                    duration);
 
             // 9. MDC 정리 (ThreadLocal 내부에 적재된 내용을 정리하여 Memory Leak 방지)
             MDC.clear();
