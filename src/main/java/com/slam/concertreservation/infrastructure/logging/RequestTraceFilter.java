@@ -33,7 +33,7 @@ public class RequestTraceFilter implements Filter {
         // 3. MDC에 컨텍스트 정보 추가 (모든 로그에 자동 포함됨)
         MDC.put("traceId", traceId);
         MDC.put("method", httpRequest.getMethod());
-        MDC.put("uri", httpRequest.getRequestURI());
+        MDC.put("uri", normalizeUri(httpRequest.getRequestURI()));
         MDC.put("clientIp", getClientIp(httpRequest));
 
         // 4. 헤더에서 userId 추출 (있는 경우만)
@@ -65,6 +65,23 @@ public class RequestTraceFilter implements Filter {
             // 9. MDC 정리 (ThreadLocal 내부에 적재된 내용을 정리하여 Memory Leak 방지)
             MDC.clear();
         }
+    }
+
+    /**
+     * URI 정규화 (Loki Cardinality 최소화)
+     * - UUID 패턴 제거: /api/users/c5bb2d20-3f97-400f-9157-9f64558253aa → /api/users/{id}
+     * - 숫자 ID 제거: /api/concerts/12345 → /api/concerts/{id}
+     */
+    private String normalizeUri(String uri) {
+        if (uri == null) return null;
+
+        // UUID 패턴: 8-4-4-4-12 형식의 hex 문자열
+        uri = uri.replaceAll("/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "/{id}");
+
+        // 숫자 ID 패턴: 연속된 숫자
+        uri = uri.replaceAll("/\\d+", "/{id}");
+
+        return uri;
     }
 
     /**
