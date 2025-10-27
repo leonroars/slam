@@ -31,6 +31,6 @@ app:
   queue:
     provider: "DB"
     policy:
-      max-concurrent-user: 50
+      max-concurrent-user: 100
       waiting-token-duration: 6
       active-token-duration: 3
