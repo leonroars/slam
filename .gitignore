@@ -45,6 +45,7 @@ out/
 .DS_Store
 ./k6-tests
 ./k6-tests/*
-
+k6-tests
+k6-tests/*
 ./mock-data
 ./mock-data/*
