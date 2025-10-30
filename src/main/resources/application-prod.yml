@@ -11,8 +11,8 @@ spring:
     password: ${DB_PASSWORD}
     hikari:
       auto-commit: false
-      maximum-pool-size: 10
-      minimum-idle: 5
+      maximum-pool-size: 5
+      minimum-idle: 3
 
   jpa:
     hibernate:
@@ -26,6 +26,16 @@ spring:
 
 server:
   port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, swagger-ui
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 app:
   queue:
