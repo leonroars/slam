@@ -26,12 +26,15 @@ spring:
 
 server:
   port: 8080
+  tomcat:
+    mbeanregistry:
+      enabled: true
 
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics, prometheus, swagger-ui
+        include: health, info, metrics, prometheus, swagger-ui, threaddump
   prometheus:
     metrics:
       export:
