@@ -11,7 +11,7 @@ spring:
     password: ${DB_PASSWORD}
     hikari:
       auto-commit: false
-      maximum-pool-size: 1
+      maximum-pool-size: 3
       minimum-idle: 1
 
   jpa:
