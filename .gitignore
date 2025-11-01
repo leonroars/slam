@@ -47,5 +47,9 @@ out/
 ./k6-tests/*
 k6-tests
 k6-tests/*
+
+frontend
+frontend/*
+
 ./mock-data
 ./mock-data/*
