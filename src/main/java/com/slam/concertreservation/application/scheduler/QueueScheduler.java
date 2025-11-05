@@ -22,7 +22,7 @@ public class QueueScheduler {
     private static final int ACTIVATION_BATCH_SIZE = 10;
 
     // QueuePolicy 내에 저장된 Token을 만료시키고 만료시킨 토큰 수만큼 활성화 시켜준다.
-    @Scheduled(fixedDelay = 10000) // 10초 간격 순회하며 작업.
+    @Scheduled(fixedDelay = 5000) // 5초 간격 순회하며 작업.
     public void expireAndActivateToken() {
 
         // 현재 예약 진행 중인 공연 전체 조회 : 캐싱 적용하여 해당 데이터 캐시에 존재할 경우, Redis 캐시로부터 가져옵니다!

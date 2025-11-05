@@ -44,6 +44,6 @@ app:
   queue:
     provider: "REDIS"
     policy:
-      max-concurrent-user: 100
+      max-concurrent-user: 200
       waiting-token-duration: 6
       active-token-duration: 3

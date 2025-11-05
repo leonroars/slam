@@ -91,6 +91,19 @@ public class UserPointBalance {
         return balance;
     }
 
+    // Getters for Jackson serialization!!
+    public String getId() {
+        return id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public Point getBalance() {
+        return balance;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == this) {
