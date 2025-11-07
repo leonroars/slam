@@ -264,7 +264,6 @@ public class ConcertService {
      * @param presentDateTime
      * @return
      */
-    @Cacheable(value = "ongoingConcertSchedules", key = "'list'")
     public List<ConcertSchedule> getOngoingConcertSchedules(LocalDateTime presentDateTime) {
         return concertScheduleRepository.findAllOngoingConcertSchedules(presentDateTime);
     }
