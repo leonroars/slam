@@ -47,3 +47,4 @@ app:
       max-concurrent-user: 200
       waiting-token-duration: 6
       active-token-duration: 3
+      max-concurrent-user-threshold: 1.0
