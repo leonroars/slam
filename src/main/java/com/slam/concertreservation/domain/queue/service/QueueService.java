@@ -69,11 +69,13 @@ public class QueueService {
         }
 
         // 대기 중인 토큰 중 K 개 활성화
-        List<Token> activated = tokenRepository.findNextKTokensToBeActivated(concertScheduleId, k)
-                .stream()
-                .map(token -> token.activate(queuePolicy.getActiveTokenDuration()))
-                .toList();
-        if(activated.isEmpty()){throw new UnavailableRequestException(ErrorCode.TOKEN_NOT_FOUND, "대기 중인 토큰이 존재하지 않습니다.");}
+        List<Token> activated = tokenRepository.findNextKTokensToBeActivated(concertScheduleId, k);
+
+        if(!activated.isEmpty()){
+            activated = activated.stream()
+                    .map(token -> token.activate(queuePolicy.getActiveTokenDuration()))
+                    .toList();
+        }
 
         List<Token> saved = tokenRepository.saveAll(activated);
 
