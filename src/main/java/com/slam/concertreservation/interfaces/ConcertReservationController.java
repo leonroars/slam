@@ -169,6 +169,14 @@ public class ConcertReservationController {
         return ResponseEntity.ok(reservationApp.getReservation(reservationId));
     }
 
+    /**
+     * 사용자의 모든 예약 조회
+     */
+    @GetMapping("/users/{userId}/reservations")
+    public ResponseEntity<List<Reservation>> getUserReservations(@PathVariable String userId) {
+        return ResponseEntity.ok(reservationApp.getUserReservations(userId));
+    }
+
     /* ========== Queue ========== */
 
     /**

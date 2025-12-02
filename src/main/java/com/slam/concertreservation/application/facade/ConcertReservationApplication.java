@@ -218,6 +218,15 @@ public class ConcertReservationApplication {
     }
 
     /**
+     * 사용자의 모든 예약 조회
+     * @param userId
+     * @return
+     */
+    public List<Reservation> getUserReservations(String userId) {
+        return reservationService.getUserReservation(userId);
+    }
+
+    /**
      * 대기열 진입 사용자에 대해 토큰 발급.
      * @param userId
      * @param concertScheduleId

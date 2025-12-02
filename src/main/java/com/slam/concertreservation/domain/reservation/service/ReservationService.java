@@ -77,11 +77,7 @@ public class ReservationService {
      * @return
      */
     public List<Reservation> getUserReservation(String userId) {
-        List<Reservation> reservations =  reservationRepository.findByUserId(userId);
-        if(reservations.isEmpty()){
-            throw new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND, "해당 사용자의 예약이 존재하지 않습니다.");
-        }
-        return reservations;
+        return reservationRepository.findByUserId(userId);
     }
 
     /**
