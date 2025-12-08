@@ -8,4 +8,4 @@ RUN gradle clean build -x test
 FROM eclipse-temurin:17-jdk-jammy
 COPY --from=builder /app/build/libs/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java","-Xms256m","-Xmx512m","-XX:NativeMemoryTracking=summary","-XX:+UnlockDiagnosticVMOptions","-Dspring.profiles.active=prod","-jar","/app.jar"]
+ENTRYPOINT ["java", "-Xms256m", "-Xmx512m", "-XX:NativeMemoryTracking=summary", "-Xlog:gc*:file=/var/log/app/gc_%t.log:time,uptime,level,tags:filecount=5,filesize=10m", "-Dspring.profiles.active=prod", "-jar", "/app.jar"]
