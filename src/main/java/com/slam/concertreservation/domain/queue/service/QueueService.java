@@ -64,8 +64,10 @@ public class QueueService {
     public List<Token> activateTokens(String concertScheduleId, int k){
         // 현재 동시 예약 서비스 이용 중인 사용자 수 확인
         int activeTokenCount = tokenRepository.countCurrentlyActiveTokens(concertScheduleId);
+
+        // 현재 동시 예약 서비스 이용 중인 사용자 수 < 정책 한계 -> 빈 리스트 반환(토큰 0개 활성화)
         if(activeTokenCount >= queuePolicy.getMaxConcurrentUser()){
-            throw new UnavailableRequestException(ErrorCode.TOO_MANY_REQUESTS, "최대 동시 예약 가능한 사용자 수를 초과했습니다.");
+            return List.of();
         }
 
         // 대기 중인 토큰 중 K 개 활성화

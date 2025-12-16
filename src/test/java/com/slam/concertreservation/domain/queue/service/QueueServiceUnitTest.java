@@ -116,23 +116,6 @@ class QueueServiceUnitTest {
     }
 
     @Test
-    @DisplayName("실패 : 동시 예약 가능한 사용자 수가 0일 때 토큰 발급 시도할 경우 UnavailableRequestException이 발생한다.")
-    void shouldThrowsUnavailableRequestException_WhenReachesMaxConcurrentUsers() {
-        // given
-        int activeCount = 40; // MAX_CONCURRENT_USER (40)
-
-        when(tokenRepository.countCurrentlyActiveTokens(concertScheduleId))
-                .thenReturn(activeCount);
-
-
-        // when & then
-        assertThatThrownBy(() -> queueService.activateTokens(concertScheduleId, 1))
-                .isInstanceOf(UnavailableRequestException.class)
-                .hasMessage("최대 동시 예약 가능한 사용자 수를 초과했습니다.");
-    }
-
-
-    @Test
     @DisplayName("성공 : 토큰의 상태가 WAIT인 경우 토큰 만료가 성공한다.")
     void shouldSuccessfullyExpiresToken_WhenTokenExistsAndItsStatusIsWAIT() {
         // given
