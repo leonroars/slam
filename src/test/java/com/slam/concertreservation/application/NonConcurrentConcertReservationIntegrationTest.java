@@ -76,9 +76,9 @@ public class NonConcurrentConcertReservationIntegrationTest {
     String userName = "userName";
     String concertName = "concertName";
     String artistName = "oasis";
-    LocalDateTime concertDateTime = LocalDateTime.of(2025, 12, 31, 23, 50, 50);
-    LocalDateTime reservationStartAt = LocalDateTime.now();
-    LocalDateTime reservationEndAt = LocalDateTime.of(2025, 11, 30, 23, 59, 59);
+    LocalDateTime concertDateTime = LocalDateTime.now().plusDays(15);  // Concert in 15 days
+    LocalDateTime reservationStartAt = LocalDateTime.now();             // Reservation starts now
+    LocalDateTime reservationEndAt = LocalDateTime.now().plusDays(14);  // Reservation ends 1 day before concert
     ConcertSchedule concertSchedule = ConcertSchedule.create("1", concertDateTime, reservationStartAt, reservationEndAt);
 
 

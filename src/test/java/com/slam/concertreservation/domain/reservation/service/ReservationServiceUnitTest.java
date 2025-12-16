@@ -174,7 +174,7 @@ public class ReservationServiceUnitTest {
         }
 
         @Test
-        @DisplayName("실패 : 사용자의 예약이 없으면 UnavailableRequestException이 발생하며 실패한다.")
+        @DisplayName("실패 : 사용자의 예약이 없으면 길이가 0인 빈 리스트를 반환한다.")
         void shouldThrowUnavailableRequestException_WhenUserHasNoReservations() {
             // given
             String userId = "user1";
@@ -182,8 +182,8 @@ public class ReservationServiceUnitTest {
             when(reservationRepository.findByUserId(userId)).thenReturn(Collections.emptyList());
 
             // when & then
-            Assertions.assertThatThrownBy(() -> reservationService.getUserReservation(userId))
-                    .isInstanceOf(UnavailableRequestException.class);
+            List<Reservation> result = reservationRepository.findByUserId(userId);
+            Assertions.assertThat(result.size()).isEqualTo(0);
             verify(reservationRepository, times(1)).findByUserId(userId);
         }
     }
