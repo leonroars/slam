@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.HashOperations;
@@ -94,6 +95,21 @@ public class TokenRepositoryRedisImpl implements TokenRepository {
      */
     private String getTokenActivatedSetName(String concertScheduleId) {
         return TOKEN_ACTIVATED_SET_NAME + ":" + concertScheduleId;
+    }
+
+    /**
+     * 특정 공연 일정의 대기열 토큰을 저장하는 세 가지 자료구조의 TTL 설정하는 메서드.
+     * <br></br>
+     * QueueService 에서 호출하여, 새로운 토큰 발급 시 해당 메서드 호출 -> 공연 예약 가능 일정이 지날 경우 토큰 발급이 불가하기 때문에 마지막 TTL 시점에 자연스럽게 소멸되도록 함.
+     * <br></br>
+     * @param concertScheduleId
+     * @param ttlSeconds
+     */
+    @Override
+    public void setQueueExpiration(String concertScheduleId, long ttlSeconds){
+        stringRedisTemplate.expire(getTokenHashStorageName(concertScheduleId), ttlSeconds, TimeUnit.SECONDS);
+        stringRedisTemplate.expire(getTokenRankSortedSetName(concertScheduleId), ttlSeconds, TimeUnit.SECONDS);
+        stringRedisTemplate.expire(getTokenActivatedSetName(concertScheduleId), ttlSeconds, TimeUnit.SECONDS);
     }
 
     @Override

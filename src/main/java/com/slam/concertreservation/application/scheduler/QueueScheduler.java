@@ -41,17 +41,4 @@ public class QueueScheduler {
             }
         }
     }
-
-    // 예약이 끝난 공연일정의 대기열 초기화 : 해당 공연 일정에 대한 예약 종료 후(매일 자정 00:00 시 이후)에 해당 토큰을 삭제한다.
-    @Scheduled(cron = "0 0 0 * * *")
-    public void clearQueue(){
-        deleteByPattern("tokenHashStorage:*");
-        deleteByPattern("tokenRankSortedSet:*");
-        deleteByPattern("tokenActivatedSet:*");
-
-    }
-
-    private void deleteByPattern(String pattern) {
-        redisTemplate.keys(pattern);
-    }
 }

@@ -34,4 +34,6 @@ public interface TokenRepository {
 
     // 공연 일정 ID로 대기 중 토큰 수 집계.
     int countCurrentlyWaitingTokens(String concertScheduleId);
+
+    void setQueueExpiration(String concertScheduleId, long ttlSeconds);
 }

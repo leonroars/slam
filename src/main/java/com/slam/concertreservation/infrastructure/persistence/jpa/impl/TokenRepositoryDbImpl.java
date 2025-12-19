@@ -83,4 +83,7 @@ public class TokenRepositoryDbImpl implements TokenRepository {
     public int countCurrentlyWaitingTokens(String concertScheduleId) {
         return tokenJpaRepository.countTokensByConcertScheduleIdAndStatus(concertScheduleId, TokenStatus.WAIT.name());
     }
+
+    @Override
+    public void setQueueExpiration(String concertScheduleId, long ttlSeconds) {}
 }

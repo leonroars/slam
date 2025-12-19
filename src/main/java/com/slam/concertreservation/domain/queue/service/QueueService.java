@@ -5,6 +5,7 @@ import com.slam.concertreservation.domain.queue.model.QueuePolicy;
 import com.slam.concertreservation.domain.queue.model.Token;
 import com.slam.concertreservation.domain.queue.repository.TokenRepository;
 import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
+import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,9 @@ public class QueueService {
 
         // 발급된 토큰 저장.
         Token saved = tokenRepository.save(token);
+
+        // Redis 내 토큰 보관 자료구조 TTL 설정
+        tokenRepository.setQueueExpiration(concertScheduleId, Duration.ofHours(12).getSeconds());
 
         // 로그 기록
         log.info("토큰 발급 완료 - tokenId: {}, userId: {}, status: {}, activeUsers: {}, waitingUsers: {}",
