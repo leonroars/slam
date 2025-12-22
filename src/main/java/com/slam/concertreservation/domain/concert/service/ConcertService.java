@@ -1,8 +1,6 @@
 package com.slam.concertreservation.domain.concert.service;
 
 import com.slam.concertreservation.common.error.ErrorCode;
-import com.slam.concertreservation.domain.concert.event.SeatAssignedEvent;
-import com.slam.concertreservation.domain.concert.event.SeatUnassignedEvent;
 import com.slam.concertreservation.domain.concert.model.Concert;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
 import com.slam.concertreservation.domain.concert.model.Seat;
@@ -15,7 +13,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -143,9 +140,6 @@ public class ConcertService {
         log.info("좌석 선점 완료 - seatId: {}, userId: {}, concertScheduleId: {}, price: {}",
                 seatId, userId, concertScheduleId, assignedSeat.getPrice());
 
-        // 이벤트 발행
-        applicationEventPublisher.publishEvent(SeatAssignedEvent.fromDomain(assignedSeat, userId));
-
         return assignedSeat;
     }
 
@@ -171,11 +165,6 @@ public class ConcertService {
 
         log.warn("좌석 선점 해제 - seatId: {}, concertScheduleId: {}",
                 seatId, concertScheduleId);
-
-        // 좌석 선점 해제를 알리는 이벤트 발행
-        applicationEventPublisher.publishEvent(
-                SeatUnassignedEvent.fromDomain(unasignedSeat)
-        );
 
         return unasignedSeat;
     }
