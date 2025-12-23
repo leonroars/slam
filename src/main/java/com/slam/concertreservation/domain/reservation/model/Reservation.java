@@ -34,7 +34,7 @@ public class Reservation {
      * @return
      */
     public Reservation expire(){
-        if(this.status != ReservationStatus.BOOKED){
+        if(this.status != ReservationStatus.PREEMPTED){
             throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "만료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
         }
         this.status = ReservationStatus.EXPIRED;
@@ -48,7 +48,7 @@ public class Reservation {
      * @return
      */
     public Reservation cancel() {
-        if (this.status != ReservationStatus.PAID) {
+        if (this.status != ReservationStatus.CONFIRMED) {
             throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "취소 처리는 오직 PAID 상태의 예약에 대해서만 가능합니다.");
         }
         this.status = ReservationStatus.CANCELLED;
@@ -62,10 +62,10 @@ public class Reservation {
      * @return
      */
     public Reservation reserve() {
-        if (this.status != ReservationStatus.BOOKED) {
+        if (this.status != ReservationStatus.PREEMPTED) {
             throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
         }
-        this.status = ReservationStatus.PAID;
+        this.status = ReservationStatus.CONFIRMED;
         return this;
     }
 
@@ -74,7 +74,7 @@ public class Reservation {
      * @return
      */
     public Reservation rollbackCancel(){
-        this.status = ReservationStatus.PAID;
+        this.status = ReservationStatus.CONFIRMED;
         return this;
     }
 
@@ -83,7 +83,7 @@ public class Reservation {
      * @return
      */
     public Reservation rollbackReserve(){
-        this.status = ReservationStatus.BOOKED;
+        this.status = ReservationStatus.PREEMPTED;
         return this;
     }
 
@@ -92,7 +92,7 @@ public class Reservation {
      * @return
      */
     public Reservation rollbackExpire(){
-        this.status = ReservationStatus.BOOKED;
+        this.status = ReservationStatus.PREEMPTED;
         return this;
     }
 
@@ -150,7 +150,7 @@ public class Reservation {
 
     // 정적 팩토리 메서드 2 : status 미포함 (초기화 용도.)
     public static Reservation create(String id, String userId, String seatId, String concertScheduleId, Integer price, LocalDateTime expiredAt, LocalDateTime createdAt){
-        return create(id, userId, seatId, concertScheduleId, ReservationStatus.BOOKED, price, expiredAt, createdAt, null);
+        return create(id, userId, seatId, concertScheduleId, ReservationStatus.PREEMPTED, price, expiredAt, createdAt, null);
     }
 
     // 정적 팩토리 메서드 2 : ID, 만료시간 미포함

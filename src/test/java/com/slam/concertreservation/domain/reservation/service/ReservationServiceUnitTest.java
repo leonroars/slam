@@ -83,7 +83,7 @@ public class ReservationServiceUnitTest {
             verify(reservationRepository, times(1)).findByConcertScheduleIdAndSeatId(concertScheduleId, seatId);
             verify(reservationRepository, times(2)).save(any(Reservation.class));
             assertEquals(reservation.getId(), result.getId());
-            assertEquals(ReservationStatus.BOOKED, result.getStatus());
+            assertEquals(ReservationStatus.PREEMPTED, result.getStatus());
         }
 
         @Test
@@ -129,7 +129,7 @@ public class ReservationServiceUnitTest {
             // then
             verify(reservationRepository, times(1)).findById(reservationId);
             assertEquals(reservationId, result.getId());
-            assertEquals(ReservationStatus.BOOKED, result.getStatus());
+            assertEquals(ReservationStatus.PREEMPTED, result.getStatus());
         }
 
         @Test
@@ -254,7 +254,7 @@ public class ReservationServiceUnitTest {
 
             // then
             verify(reservationRepository, times(1)).save(reservation);
-            assertEquals(ReservationStatus.PAID, result.getStatus());
+            assertEquals(ReservationStatus.CONFIRMED, result.getStatus());
         }
 
         @Test

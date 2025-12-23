@@ -224,7 +224,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
             // then
             Assertions.assertEquals(updatedUserPointBalance.balance().getAmount(), 1000);
             Assertions.assertEquals(SeatStatus.UNAVAILABLE, reservedSeat.getStatus());
-            Assertions.assertEquals(ReservationStatus.PAID, confirmedReservation.getStatus());
+            Assertions.assertEquals(ReservationStatus.CONFIRMED, confirmedReservation.getStatus());
             Assertions.assertEquals(1000, updatedUserPointBalance.balance().getAmount());
         }
     }
