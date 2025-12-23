@@ -70,6 +70,20 @@ public class Reservation {
     }
 
     /**
+     * 서비스로 진입한 결제 요청에 따라, Reservation 의 상태를 PREEMPTED->PAYMENT_PENDING으로 변경.
+     * <br></br>
+     * 이와 같은 도메인 모델 상태 전의 규칙 정의를 통해, `NON-FIFO` MQ 활용 시 발생 가능한 메세지 순서 역전 방어를 위한 안전 장치를 마련.
+     * @return
+     */
+    public Reservation beginPayment() {
+        if(this.status != ReservationStatus.PREEMPTED){
+            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "결제 요청은 PREEMPTED 상태의 예약에 대해서만 가능합니다.");
+        }
+        this.status = ReservationStatus.PAYMENT_PENDING;
+        return this;
+    }
+
+    /**
      * 예약 취소 롤백. 좌석 선점 해제 실패 시 호출.
      * @return
      */

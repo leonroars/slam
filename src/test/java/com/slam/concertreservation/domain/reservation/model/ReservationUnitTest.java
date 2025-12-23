@@ -94,4 +94,17 @@ public class ReservationUnitTest {
         assertThatThrownBy(reservation::cancel)
                 .isInstanceOf(BusinessRuleViolationException.class);
     }
+
+    @Test
+    @DisplayName("성공 : PREEMPTED 상태의 예약에 대한 결제 요청 진입 시, 예약을 PAYMENT_PENDING 으로 변경 가능하다.")
+    void shouldChangeStatusToPaymentPending_WhenStatusIsPreempted(){
+        // given
+        Reservation reservation = Reservation.create("1", "1", "1", 1);
+
+        // when
+        reservation.beginPayment();
+
+        // then
+        Assertions.assertEquals(ReservationStatus.PAYMENT_PENDING, reservation.getStatus());
+    }
 }
