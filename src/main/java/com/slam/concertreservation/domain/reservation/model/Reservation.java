@@ -61,7 +61,7 @@ public class Reservation {
      * 완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다. 이외엔 {@code BusinessRuleViolationException} 발생합니다.
      * @return
      */
-    public Reservation reserve() {
+    public Reservation confirm() {
         if (this.status != ReservationStatus.PREEMPTED) {
             throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
         }

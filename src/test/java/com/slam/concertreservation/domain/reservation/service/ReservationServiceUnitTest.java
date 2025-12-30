@@ -96,7 +96,7 @@ public class ReservationServiceUnitTest {
             int price = 1000;
 
             Reservation existingReservation = Reservation.create("1", "user2", seatId, concertScheduleId, price);
-            existingReservation.reserve(); // Status PAID
+            existingReservation.confirm(); // Status PAID
 
             when(reservationRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId))
                     .thenReturn(Optional.of(existingReservation));
@@ -199,7 +199,7 @@ public class ReservationServiceUnitTest {
             String reservationId = "1";
             int price = 1000;
             Reservation reservation = Reservation.create(reservationId, "user1", "seat1", "schedule1", price);
-            reservation.reserve(); // Status PAID
+            reservation.confirm(); // Status PAID
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
             when(reservationRepository.save(reservation)).thenReturn(reservation);
@@ -264,7 +264,7 @@ public class ReservationServiceUnitTest {
             String reservationId = "1";
             int price = 1000;
             Reservation reservation = Reservation.create(reservationId, "user1", "seat1", "schedule1", price);
-            reservation.reserve(); // Status PAID
+            reservation.confirm(); // Status PAID
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
             when(reservationRepository.save(reservation)).thenReturn(reservation);

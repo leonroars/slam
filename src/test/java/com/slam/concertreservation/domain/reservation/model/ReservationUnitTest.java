@@ -27,7 +27,7 @@ public class ReservationUnitTest {
         Reservation reservation = Reservation.create("1", "1", "1", 1);
 
         // when
-        reservation.reserve();
+        reservation.confirm();
 
         // when & then
         Assertions.assertEquals(ReservationStatus.CONFIRMED, reservation.getStatus());
@@ -38,10 +38,10 @@ public class ReservationUnitTest {
     void shouldThrowBusinessRuleViolationException_WhenTryToChangeStatusToConfirmed_WhenStatusIsNotPreempted(){
         // given
         Reservation reservation = Reservation.create("1", "1", "1", 1);
-        reservation.reserve();
+        reservation.confirm();
 
         // when & then
-        assertThatThrownBy(reservation::reserve)
+        assertThatThrownBy(reservation::confirm)
                 .isInstanceOf(BusinessRuleViolationException.class);
     }
 
@@ -63,7 +63,7 @@ public class ReservationUnitTest {
     void shouldThrowBusinessRuleViolationException_WhenTryToChangeStatusToExpired_WhenStatusIsNotPREEMPTED(){
         // given
         Reservation reservation = Reservation.create("1", "1", "1", 1);
-        reservation.reserve();
+        reservation.confirm();
 
         // when & then
         assertThatThrownBy(reservation::expire)
@@ -75,7 +75,7 @@ public class ReservationUnitTest {
     void shouldChangeStatusToCancelled_WhenStatusIsConfirmed(){
         // given
         Reservation reservation = Reservation.create("1", "1", "1",1);
-        reservation.reserve();
+        reservation.confirm();
 
         // when
         reservation.cancel();

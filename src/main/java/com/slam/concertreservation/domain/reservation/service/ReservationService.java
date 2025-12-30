@@ -2,7 +2,6 @@ package com.slam.concertreservation.domain.reservation.service;
 
 import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.reservation.event.ReservationCancellationEvent;
-import com.slam.concertreservation.domain.reservation.event.ReservationConfirmationEvent;
 import com.slam.concertreservation.domain.reservation.event.ReservationCreationEvent;
 import com.slam.concertreservation.domain.reservation.event.ReservationExpirationEvent;
 import com.slam.concertreservation.domain.reservation.model.Reservation;
@@ -14,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -106,7 +104,7 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND, "해당 가예약이 존재하지 않습니다.")); // 해당 가예약 조회.
 
-        reservation.reserve(); // 가예약 -> 예약 확정. 조회한 예약이 이미 확정되어있을 경우 예외 발생.
+        reservation.confirm(); // 가예약 -> 예약 확정. 조회한 예약이 이미 확정되어있을 경우 예외 발생.
         Reservation confirmed = reservationRepository.save(reservation); // 예약 확정 저장
 
         log.info("예약 확정 완료 - reservationId: {}, userId: {}, status: PAID",
