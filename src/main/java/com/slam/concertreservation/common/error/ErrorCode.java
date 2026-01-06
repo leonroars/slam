@@ -83,6 +83,7 @@ public enum ErrorCode {
 
     // 예약 충돌 (409)
     RESERVATION_ALREADY_EXISTS("R409", "해당 좌석은 이미 선점되었습니다.", 409, LogLevel.INFO),
+    RESERVATION_CREATION_IN_PROGRESS("R409", "현재 해당 예약 생성 요청이 처리 중입니다. 잠시 후 다시 시도해주세요.", 409, LogLevel.INFO),
 
     // 예약 만료
     RESERVATION_EXPIRED("R410", "예약 유효 시간이 만료되었습니다. 다시 예약을 시도해주시기 바랍니다.", 410, LogLevel.INFO),
