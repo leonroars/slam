@@ -11,9 +11,13 @@ import java.util.concurrent.TimeUnit;
 public @interface Idempotent {
 
     /**
-     * 메서드 매개변수나 기타 컨텍스트에서 Idempotency Key 를 동적으로 생성하는 데 사용됩니다.
+     * 어노테이션을 사용하고자 하는 API Endpoint 가 표현하는 자원 및 행위 식별자
+     * <br></br>
+     * ex. reservation.create, payment.request
+     * <br></br>
+     * 이후 Redis Key 생성 시 활용됨. (ex. IDEMPOTENCY:RESULT:{operationKey}:{idempotencyKey})
      */
-    String key();
+    String operationKey();
 
     /**
      * 응답 캐시 지속 시간 단위 및 지속 시간 정의
