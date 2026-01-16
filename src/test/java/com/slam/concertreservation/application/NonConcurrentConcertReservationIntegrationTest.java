@@ -197,7 +197,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
 
         @Test
         @DisplayName("성공 : 특정 공연 일정의 특정 좌석을 예약하고 결제한다. 예약 후 해당 좌석 조회 시 상태는 UNAVAILABLE 이다. 또한 예약 상태는 PAID 이다. 잔액은 차감된다.")
-        void shouldSuccessfullyReserveAndPaySeat() throws InterruptedException {
+        void shouldSuccessfullyConfirmAndPaySeat() throws InterruptedException {
             // given
             User user = userApplication.registerUser(userName);
             concertReservationApplication.chargeUserPoint(user.getId(), 2000);
@@ -224,7 +224,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
             // then
             Assertions.assertEquals(updatedUserPointBalance.balance().getAmount(), 1000);
             Assertions.assertEquals(SeatStatus.UNAVAILABLE, reservedSeat.getStatus());
-            Assertions.assertEquals(ReservationStatus.PAID, confirmedReservation.getStatus());
+            Assertions.assertEquals(ReservationStatus.CONFIRMED, confirmedReservation.getStatus());
             Assertions.assertEquals(1000, updatedUserPointBalance.balance().getAmount());
         }
     }

@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.slam.concertreservation.component.idempotency.IdempotencyRecord;
+import com.slam.concertreservation.component.idempotency.IdempotencyRecordStatus;
 import com.slam.concertreservation.domain.queue.model.Token;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +17,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -89,5 +92,28 @@ public class RedisConfig {
         StringRedisTemplate tpl = new StringRedisTemplate(factory);
         tpl.afterPropertiesSet();
         return tpl;
+    }
+
+    @Bean
+    public RedisTemplate<String, IdempotencyRecord> idempotencyRecordRedisTemplate(RedisConnectionFactory factory){
+        RedisTemplate<String, IdempotencyRecord> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+
+        template.setKeySerializer(new StringRedisSerializer());
+
+        // Jackson ObjectMapper 설정 - 타입 정보 없이 단순 JSON 직렬화
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        // Jackson2JsonRedisSerializer 사용 (타입 정보 없이 순수 JSON)
+        Jackson2JsonRedisSerializer<IdempotencyRecord> valueSerializer =
+                new Jackson2JsonRedisSerializer<>(mapper, IdempotencyRecord.class);
+
+        template.setValueSerializer(valueSerializer);
+        template.afterPropertiesSet();
+
+        return template;
     }
 }

@@ -83,7 +83,7 @@ public class ReservationServiceUnitTest {
             verify(reservationRepository, times(1)).findByConcertScheduleIdAndSeatId(concertScheduleId, seatId);
             verify(reservationRepository, times(2)).save(any(Reservation.class));
             assertEquals(reservation.getId(), result.getId());
-            assertEquals(ReservationStatus.BOOKED, result.getStatus());
+            assertEquals(ReservationStatus.PREEMPTED, result.getStatus());
         }
 
         @Test
@@ -96,7 +96,7 @@ public class ReservationServiceUnitTest {
             int price = 1000;
 
             Reservation existingReservation = Reservation.create("1", "user2", seatId, concertScheduleId, price);
-            existingReservation.reserve(); // Status PAID
+            existingReservation.confirm(); // Status PAID
 
             when(reservationRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId))
                     .thenReturn(Optional.of(existingReservation));
@@ -129,7 +129,7 @@ public class ReservationServiceUnitTest {
             // then
             verify(reservationRepository, times(1)).findById(reservationId);
             assertEquals(reservationId, result.getId());
-            assertEquals(ReservationStatus.BOOKED, result.getStatus());
+            assertEquals(ReservationStatus.PREEMPTED, result.getStatus());
         }
 
         @Test
@@ -199,7 +199,7 @@ public class ReservationServiceUnitTest {
             String reservationId = "1";
             int price = 1000;
             Reservation reservation = Reservation.create(reservationId, "user1", "seat1", "schedule1", price);
-            reservation.reserve(); // Status PAID
+            reservation.confirm(); // Status PAID
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
             when(reservationRepository.save(reservation)).thenReturn(reservation);
@@ -254,7 +254,7 @@ public class ReservationServiceUnitTest {
 
             // then
             verify(reservationRepository, times(1)).save(reservation);
-            assertEquals(ReservationStatus.PAID, result.getStatus());
+            assertEquals(ReservationStatus.CONFIRMED, result.getStatus());
         }
 
         @Test
@@ -264,7 +264,7 @@ public class ReservationServiceUnitTest {
             String reservationId = "1";
             int price = 1000;
             Reservation reservation = Reservation.create(reservationId, "user1", "seat1", "schedule1", price);
-            reservation.reserve(); // Status PAID
+            reservation.confirm(); // Status PAID
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
             when(reservationRepository.save(reservation)).thenReturn(reservation);

@@ -11,43 +11,43 @@ import org.junit.jupiter.api.Test;
 public class ReservationUnitTest {
 
     @Test
-    @DisplayName("성공 : 예약 생성 및 초기화 시 해당 예약의 상태는 BOOKED로 초기화된다.")
-    void shouldInitializeReservationStatusAsBooked_WhenReservationCreated(){
+    @DisplayName("성공 : 예약 생성 및 초기화 시 해당 예약의 상태는 PREEMTED로 초기화된다.")
+    void shouldInitializeReservationStatusAsPreempted_WhenReservationCreated(){
         // given
         Reservation reservation = Reservation.create("1", "1", "1", 1);
 
         // when & then
-        Assertions.assertEquals(ReservationStatus.BOOKED, reservation.getStatus());
+        Assertions.assertEquals(ReservationStatus.PREEMPTED, reservation.getStatus());
     }
 
     @Test
-    @DisplayName("성공 : 예약 상태가 BOOKED일 때만 PAID로 변경 가능하다.")
-    void shouldChangeStatusToPaid_WhenStatusIsBooked(){
+    @DisplayName("성공 : 예약 상태가 PREEMTED일 때만 CONFIRMED로 변경 가능하다.")
+    void shouldChangeStatusToPaid_WhenStatusIsPreempted(){
         // given
         Reservation reservation = Reservation.create("1", "1", "1", 1);
 
         // when
-        reservation.reserve();
+        reservation.confirm();
 
         // when & then
-        Assertions.assertEquals(ReservationStatus.PAID, reservation.getStatus());
+        Assertions.assertEquals(ReservationStatus.CONFIRMED, reservation.getStatus());
     }
 
     @Test
-    @DisplayName("실패 : BOOKED 가 아닌 다른 상태의 예약을 PAID로 변경하려고 시도할 경우 BusinessRuleViolationException 발생")
-    void shouldThrowBusinessRuleViolationException_WhenTryToChangeStatusToPaid_WhenStatusIsNotBooked(){
+    @DisplayName("실패 : PREEMPTED 가 아닌 다른 상태의 예약을 CONFIRMED로 변경하려고 시도할 경우 BusinessRuleViolationException 발생")
+    void shouldThrowBusinessRuleViolationException_WhenTryToChangeStatusToConfirmed_WhenStatusIsNotPreempted(){
         // given
         Reservation reservation = Reservation.create("1", "1", "1", 1);
-        reservation.reserve();
+        reservation.confirm();
 
         // when & then
-        assertThatThrownBy(reservation::reserve)
+        assertThatThrownBy(reservation::confirm)
                 .isInstanceOf(BusinessRuleViolationException.class);
     }
 
     @Test
-    @DisplayName("성공 : 예약 상태가 BOOKED일 때만 EXPIRED로 변경 가능하다.")
-    void shouldChangeStatusToExpired_WhenStatusIsBooked(){
+    @DisplayName("성공 : 예약 상태가 PREEMPTED일 때만 EXPIRED로 변경 가능하다.")
+    void shouldChangeStatusToExpired_WhenStatusIsPreempted(){
         // given
         Reservation reservation = Reservation.create("1", "1", "1", 1);
 
@@ -59,11 +59,11 @@ public class ReservationUnitTest {
     }
 
     @Test
-    @DisplayName("실패 : BOOKED 가 아닌 다른 상태의 예약을 EXPIRED로 변경하려고 시도할 경우 BusinessRuleViolationException 발생")
-    void shouldThrowBusinessRuleViolationException_WhenTryToChangeStatusToExpired_WhenStatusIsNotBooked(){
+    @DisplayName("실패 : PREEMPTED 가 아닌 다른 상태의 예약을 EXPIRED로 변경하려고 시도할 경우 BusinessRuleViolationException 발생")
+    void shouldThrowBusinessRuleViolationException_WhenTryToChangeStatusToExpired_WhenStatusIsNotPREEMPTED(){
         // given
         Reservation reservation = Reservation.create("1", "1", "1", 1);
-        reservation.reserve();
+        reservation.confirm();
 
         // when & then
         assertThatThrownBy(reservation::expire)
@@ -71,11 +71,11 @@ public class ReservationUnitTest {
     }
 
     @Test
-    @DisplayName("성공 : 예약 상태가 PAID일 때만 CANCELLED로 변경 가능하다.")
-    void shouldChangeStatusToCancelled_WhenStatusIsPaid(){
+    @DisplayName("성공 : 예약 상태가 CONFIRMED일 때만 CANCELLED로 변경 가능하다.")
+    void shouldChangeStatusToCancelled_WhenStatusIsConfirmed(){
         // given
         Reservation reservation = Reservation.create("1", "1", "1",1);
-        reservation.reserve();
+        reservation.confirm();
 
         // when
         reservation.cancel();
@@ -85,13 +85,26 @@ public class ReservationUnitTest {
     }
 
     @Test
-    @DisplayName("실패 : PAID 가 아닌 다른 상태의 예약을 CANCELLED로 변경하려고 시도할 경우 BusinessRuleViolationException 발생")
-    void shouldThrowBusinessRuleViolationException_WhenTryToChangeStatusToCancelled_WhenStatusIsNotPaid(){
+    @DisplayName("실패 : CONFIRMED 가 아닌 다른 상태의 예약을 CANCELLED로 변경하려고 시도할 경우 BusinessRuleViolationException 발생")
+    void shouldThrowBusinessRuleViolationException_WhenTryToChangeStatusToCancelled_WhenStatusIsNotConfirmed(){
         // given
         Reservation reservation = Reservation.create("1", "1", "1", 1);
 
         // when & then
         assertThatThrownBy(reservation::cancel)
                 .isInstanceOf(BusinessRuleViolationException.class);
+    }
+
+    @Test
+    @DisplayName("성공 : PREEMPTED 상태의 예약에 대한 결제 요청 진입 시, 예약을 PAYMENT_PENDING 으로 변경 가능하다.")
+    void shouldChangeStatusToPaymentPending_WhenStatusIsPreempted(){
+        // given
+        Reservation reservation = Reservation.create("1", "1", "1", 1);
+
+        // when
+        reservation.beginPayment();
+
+        // then
+        Assertions.assertEquals(ReservationStatus.PAYMENT_PENDING, reservation.getStatus());
     }
 }

@@ -34,7 +34,7 @@ public class Reservation {
      * @return
      */
     public Reservation expire(){
-        if(this.status != ReservationStatus.BOOKED){
+        if(this.status != ReservationStatus.PREEMPTED){
             throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "만료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
         }
         this.status = ReservationStatus.EXPIRED;
@@ -48,7 +48,7 @@ public class Reservation {
      * @return
      */
     public Reservation cancel() {
-        if (this.status != ReservationStatus.PAID) {
+        if (this.status != ReservationStatus.CONFIRMED) {
             throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "취소 처리는 오직 PAID 상태의 예약에 대해서만 가능합니다.");
         }
         this.status = ReservationStatus.CANCELLED;
@@ -61,11 +61,25 @@ public class Reservation {
      * 완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다. 이외엔 {@code BusinessRuleViolationException} 발생합니다.
      * @return
      */
-    public Reservation reserve() {
-        if (this.status != ReservationStatus.BOOKED) {
+    public Reservation confirm() {
+        if (this.status != ReservationStatus.PREEMPTED) {
             throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
         }
-        this.status = ReservationStatus.PAID;
+        this.status = ReservationStatus.CONFIRMED;
+        return this;
+    }
+
+    /**
+     * 서비스로 진입한 결제 요청에 따라, Reservation 의 상태를 PREEMPTED->PAYMENT_PENDING으로 변경.
+     * <br></br>
+     * 이와 같은 도메인 모델 상태 전의 규칙 정의를 통해, `NON-FIFO` MQ 활용 시 발생 가능한 메세지 순서 역전 방어를 위한 안전 장치를 마련.
+     * @return
+     */
+    public Reservation beginPayment() {
+        if(this.status != ReservationStatus.PREEMPTED){
+            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "결제 요청은 PREEMPTED 상태의 예약에 대해서만 가능합니다.");
+        }
+        this.status = ReservationStatus.PAYMENT_PENDING;
         return this;
     }
 
@@ -74,7 +88,7 @@ public class Reservation {
      * @return
      */
     public Reservation rollbackCancel(){
-        this.status = ReservationStatus.PAID;
+        this.status = ReservationStatus.CONFIRMED;
         return this;
     }
 
@@ -83,7 +97,7 @@ public class Reservation {
      * @return
      */
     public Reservation rollbackReserve(){
-        this.status = ReservationStatus.BOOKED;
+        this.status = ReservationStatus.PREEMPTED;
         return this;
     }
 
@@ -92,7 +106,7 @@ public class Reservation {
      * @return
      */
     public Reservation rollbackExpire(){
-        this.status = ReservationStatus.BOOKED;
+        this.status = ReservationStatus.PREEMPTED;
         return this;
     }
 
@@ -150,7 +164,7 @@ public class Reservation {
 
     // 정적 팩토리 메서드 2 : status 미포함 (초기화 용도.)
     public static Reservation create(String id, String userId, String seatId, String concertScheduleId, Integer price, LocalDateTime expiredAt, LocalDateTime createdAt){
-        return create(id, userId, seatId, concertScheduleId, ReservationStatus.BOOKED, price, expiredAt, createdAt, null);
+        return create(id, userId, seatId, concertScheduleId, ReservationStatus.PREEMPTED, price, expiredAt, createdAt, null);
     }
 
     // 정적 팩토리 메서드 2 : ID, 만료시간 미포함
