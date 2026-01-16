@@ -1,15 +1,12 @@
 package com.slam.concertreservation.component.idempotency;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Instant;
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
 
 @Builder
 @Data
@@ -32,7 +29,8 @@ public class IdempotencyRecord {
 
     public boolean isCompleted() {return this.status == IdempotencyRecordStatus.COMPLETED;}
 
-    public HttpStatusCode getHttpStatusCode() {
+    @JsonIgnore
+    public HttpStatusCode getHttpStatusCodeAsObject() {
         return HttpStatusCode.valueOf(this.httpStatusCode);
     }
 
