@@ -12,8 +12,10 @@ import static org.mockito.Mockito.when;
 
 import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.lang.reflect.Method;
 import java.util.Optional;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -43,7 +45,7 @@ class IdempotencyAspectUnitTest {
     private ProceedingJoinPoint pjp;
 
     @Mock
-    private Idempotent idempotent;
+    private MethodSignature methodSignature;
 
     @Mock
     private RLock lock;
@@ -53,13 +55,27 @@ class IdempotencyAspectUnitTest {
     // 테스트용 DTO
     record SampleDto(String id, String name) {}
 
+    // 테스트용 메서드 (어노테이션 추출용)
+    @Idempotent(operationKey = "test.operation")
+    public void testMethod() {}
+
+    @Idempotent(operationKey = "reservation.create")
+    public void reservationCreateMethod() {}
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws NoSuchMethodException {
         MockitoAnnotations.openMocks(this);
         aspect = new IdempotencyAspect(idempotencyStorageService, httpServletRequest, redissonClient, codec);
 
-        // 공통 Mock 설정
-        when(idempotent.operationKey()).thenReturn("test.operation");
+        // 공통 Mock 설정 - MethodSignature를 통해 어노테이션 추출
+        Method testMethod = this.getClass().getMethod("testMethod");
+        when(pjp.getSignature()).thenReturn(methodSignature);
+        when(methodSignature.getMethod()).thenReturn(testMethod);
+    }
+
+    private void setupMethodSignature(String methodName) throws NoSuchMethodException {
+        Method method = this.getClass().getMethod(methodName);
+        when(methodSignature.getMethod()).thenReturn(method);
     }
 
     @Nested
@@ -73,7 +89,7 @@ class IdempotencyAspectUnitTest {
             when(httpServletRequest.getHeader("Idempotency-Key")).thenReturn(null);
 
             // when & then
-            assertThatThrownBy(() -> aspect.handle(pjp, idempotent))
+            assertThatThrownBy(() -> aspect.handle(pjp))
                     .isInstanceOf(UnavailableRequestException.class)
                     .hasMessageContaining("Idempotency-Key");
         }
@@ -85,7 +101,7 @@ class IdempotencyAspectUnitTest {
             when(httpServletRequest.getHeader("Idempotency-Key")).thenReturn("   ");
 
             // when & then
-            assertThatThrownBy(() -> aspect.handle(pjp, idempotent))
+            assertThatThrownBy(() -> aspect.handle(pjp))
                     .isInstanceOf(UnavailableRequestException.class)
                     .hasMessageContaining("Idempotency-Key");
         }
@@ -104,7 +120,7 @@ class IdempotencyAspectUnitTest {
             when(codec.encode(any())).thenReturn(IdempotencyRecord.builder().build());
 
             // when
-            aspect.handle(pjp, idempotent);
+            aspect.handle(pjp);
 
             // then - cache key에 trimmed 값이 사용되었는지 확인
             verify(idempotencyStorageService).getIdempotencyRecord("IDEMPOTENCY:RESULT:test.operation:test-key-123");
@@ -136,7 +152,7 @@ class IdempotencyAspectUnitTest {
             doReturn(decodedResponse).when(codec).decode(cachedRecord);
 
             // when
-            Object result = aspect.handle(pjp, idempotent);
+            Object result = aspect.handle(pjp);
 
             // then
             assertThat(result).isEqualTo(decodedResponse);
@@ -165,7 +181,7 @@ class IdempotencyAspectUnitTest {
             when(lock.tryLock()).thenReturn(false);
 
             // when
-            Object result = aspect.handle(pjp, idempotent);
+            Object result = aspect.handle(pjp);
 
             // then
             assertThat(result).isInstanceOf(ResponseEntity.class);
@@ -211,7 +227,7 @@ class IdempotencyAspectUnitTest {
             when(codec.encode(businessResponse)).thenReturn(encodedRecord);
 
             // when
-            Object result = aspect.handle(pjp, idempotent);
+            Object result = aspect.handle(pjp);
 
             // then
             assertThat(result).isEqualTo(businessResponse);
@@ -228,7 +244,7 @@ class IdempotencyAspectUnitTest {
             when(pjp.proceed()).thenThrow(new RuntimeException("Business logic failed"));
 
             // when & then
-            assertThatThrownBy(() -> aspect.handle(pjp, idempotent))
+            assertThatThrownBy(() -> aspect.handle(pjp))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessage("Business logic failed");
 
@@ -243,7 +259,7 @@ class IdempotencyAspectUnitTest {
             when(pjp.proceed()).thenReturn("plain string result");
 
             // when
-            Object result = aspect.handle(pjp, idempotent);
+            Object result = aspect.handle(pjp);
 
             // then
             assertThat(result).isEqualTo("plain string result");
@@ -259,7 +275,7 @@ class IdempotencyAspectUnitTest {
             when(pjp.proceed()).thenReturn(null);
 
             // when
-            Object result = aspect.handle(pjp, idempotent);
+            Object result = aspect.handle(pjp);
 
             // then
             assertThat(result).isNull();
@@ -278,14 +294,14 @@ class IdempotencyAspectUnitTest {
         void shouldGenerateLockKeyWithCorrectFormat() throws Throwable {
             // given
             when(httpServletRequest.getHeader("Idempotency-Key")).thenReturn("my-key");
-            when(idempotent.operationKey()).thenReturn("reservation.create");
+            setupMethodSignature("reservationCreateMethod");
             when(idempotencyStorageService.getIdempotencyRecord(anyString()))
                     .thenReturn(Optional.empty());
             when(redissonClient.getLock(anyString())).thenReturn(lock);
             when(lock.tryLock()).thenReturn(false);
 
             // when
-            aspect.handle(pjp, idempotent);
+            aspect.handle(pjp);
 
             // then
             verify(redissonClient).getLock("IDEMPOTENCY:LOCK:reservation.create:my-key");
@@ -296,14 +312,14 @@ class IdempotencyAspectUnitTest {
         void shouldGenerateCacheKeyWithCorrectFormat() throws Throwable {
             // given
             when(httpServletRequest.getHeader("Idempotency-Key")).thenReturn("my-key");
-            when(idempotent.operationKey()).thenReturn("reservation.create");
+            setupMethodSignature("reservationCreateMethod");
             when(idempotencyStorageService.getIdempotencyRecord(anyString()))
                     .thenReturn(Optional.empty());
             when(redissonClient.getLock(anyString())).thenReturn(lock);
             when(lock.tryLock()).thenReturn(false);
 
             // when
-            aspect.handle(pjp, idempotent);
+            aspect.handle(pjp);
 
             // then
             verify(idempotencyStorageService).getIdempotencyRecord("IDEMPOTENCY:RESULT:reservation.create:my-key");
@@ -332,7 +348,7 @@ class IdempotencyAspectUnitTest {
             when(codec.encode(any())).thenReturn(IdempotencyRecord.builder().build());
 
             // when
-            aspect.handle(pjp, idempotent);
+            aspect.handle(pjp);
 
             // then
             verify(lock, never()).unlock();
@@ -347,7 +363,7 @@ class IdempotencyAspectUnitTest {
             when(codec.encode(any())).thenReturn(IdempotencyRecord.builder().build());
 
             // when
-            aspect.handle(pjp, idempotent);
+            aspect.handle(pjp);
 
             // then
             verify(lock).unlock();

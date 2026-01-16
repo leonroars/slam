@@ -42,7 +42,7 @@ class ResponseIdempotencyCodecUnitTest {
 
             // then
             assertThat(record).isNotNull();
-            assertThat(record.getHttpStatusCode().value()).isEqualTo(200);
+            assertThat(record.getHttpStatusCode()).isEqualTo(200);
             assertThat(record.getBody()).isNotNull();
             assertThat(record.getBody()).contains("\"id\":\"1\"");
             assertThat(record.getBody()).contains("\"name\":\"test\"");
@@ -61,7 +61,7 @@ class ResponseIdempotencyCodecUnitTest {
 
             // then
             assertThat(record).isNotNull();
-            assertThat(record.getHttpStatusCode().value()).isEqualTo(204);
+            assertThat(record.getHttpStatusCode()).isEqualTo(204);
             assertThat(record.getBody()).isNull();
             assertThat(record.getBodyType()).isNull();
         }
@@ -75,12 +75,12 @@ class ResponseIdempotencyCodecUnitTest {
             // when & then - 201 Created
             ResponseEntity<SampleDto> created = ResponseEntity.status(HttpStatus.CREATED).body(body);
             IdempotencyRecord createdRecord = codec.encode(created);
-            assertThat(createdRecord.getHttpStatusCode().value()).isEqualTo(201);
+            assertThat(createdRecord.getHttpStatusCode()).isEqualTo(201);
 
             // when & then - 202 Accepted
             ResponseEntity<SampleDto> accepted = ResponseEntity.status(HttpStatus.ACCEPTED).body(body);
             IdempotencyRecord acceptedRecord = codec.encode(accepted);
-            assertThat(acceptedRecord.getHttpStatusCode().value()).isEqualTo(202);
+            assertThat(acceptedRecord.getHttpStatusCode()).isEqualTo(202);
         }
 
         @Test
@@ -94,7 +94,7 @@ class ResponseIdempotencyCodecUnitTest {
 
             // then
             assertThat(record).isNotNull();
-            assertThat(record.getHttpStatusCode().value()).isEqualTo(200);
+            assertThat(record.getHttpStatusCode()).isEqualTo(200);
             assertThat(record.getBody()).isNull();
             assertThat(record.getBodyType()).isNull();
         }
