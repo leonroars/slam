@@ -101,17 +101,18 @@ public class RedisConfig {
 
         template.setKeySerializer(new StringRedisSerializer());
 
-        // Jackson ObjectMapper 설정 - 알 수 없는 프로퍼티 무시
+        // Jackson ObjectMapper 설정 - 타입 정보 없이 단순 JSON 직렬화
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
-
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
+        // Jackson2JsonRedisSerializer 사용 (타입 정보 없이 순수 JSON)
         Jackson2JsonRedisSerializer<IdempotencyRecord> valueSerializer =
                 new Jackson2JsonRedisSerializer<>(mapper, IdempotencyRecord.class);
 
         template.setValueSerializer(valueSerializer);
+        template.afterPropertiesSet();
 
         return template;
     }
