@@ -3,12 +3,14 @@ package com.slam.concertreservation.component.idempotency;
 import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.common.exceptions.UnavailableRequestException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.lang.reflect.Method;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.core.Ordered;
@@ -30,8 +32,13 @@ public class IdempotencyAspect {
     private final RedissonClient redissonClient;
     private final ResponseIdempotencyCodec codec;
 
-    @Around("@annotation(idempotent)")
-    public Object handle(ProceedingJoinPoint pjp, Idempotent idempotent) throws Throwable {
+    @Around("@annotation(com.slam.concertreservation.component.idempotency.Idempotent)")
+    public Object handle(ProceedingJoinPoint pjp) throws Throwable {
+        // 0. 어노테이션 추출
+        MethodSignature signature = (MethodSignature) pjp.getSignature();
+        Method method = signature.getMethod();
+        Idempotent idempotent = method.getAnnotation(Idempotent.class);
+
         // 1. idempotency key 추출
         String idempotencyKey = resolveIdempotencyKeyFromRequestHeader();
 
