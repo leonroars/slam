@@ -43,10 +43,8 @@ out/
 
 ### ETC ###
 .DS_Store
-./k6-tests
-./k6-tests/*
-k6-tests
-k6-tests/*
+k6-tests/
+
 
 frontend
 frontend/*

@@ -2,6 +2,7 @@ package com.slam.concertreservation.interfaces;
 
 import com.slam.concertreservation.application.facade.ConcertReservationApplication;
 import com.slam.concertreservation.application.facade.UserApplication;
+import com.slam.concertreservation.component.idempotency.Idempotent;
 import com.slam.concertreservation.domain.concert.model.Concert;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
 import com.slam.concertreservation.domain.concert.model.Seat;
@@ -134,6 +135,7 @@ public class ConcertReservationController {
      * 가예약 생성
      */
     @PostMapping("/reservations")
+    @Idempotent(operationKey = "reservation.create")
     public ResponseEntity<Reservation> createTemporaryReservation(
             @RequestParam String userId,
             @RequestParam String scheduleId,
