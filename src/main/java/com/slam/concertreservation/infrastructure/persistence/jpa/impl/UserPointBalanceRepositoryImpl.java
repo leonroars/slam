@@ -17,7 +17,7 @@ public class UserPointBalanceRepositoryImpl implements UserPointBalanceRepositor
     private final UserPointBalanceJpaRepository userPointBalanceJpaRepository;
 
     @Override
-    public Optional<UserPointBalance> getBalanceByUserId(String userId) {
+    public Optional<UserPointBalance> getBalanceByUserId(Long userId) {
         return userPointBalanceJpaRepository.findByUserId(userId)
                 .map(UserPointBalanceJpaEntity::toDomain);
     }
@@ -25,10 +25,11 @@ public class UserPointBalanceRepositoryImpl implements UserPointBalanceRepositor
     @Override
     public UserPointBalance save(UserPointBalance userPointBalance) {
         // 1) domain.id()가 존재하면, DB에서 엔티티를 조회 후 update
-        if (userPointBalance.id() != null && !userPointBalance.id().isBlank()) {
+        if (userPointBalance.id() != null) {
             UserPointBalanceJpaEntity existingEntity = userPointBalanceJpaRepository
                     .findById(userPointBalance.id())
-                    .orElseThrow(() -> new BusinessRuleViolationException(ErrorCode.INTERNAL_SERVER_ERROR, "존재하지 않는 PointBalance ID입니다."));
+                    .orElseThrow(() -> new BusinessRuleViolationException(ErrorCode.INTERNAL_SERVER_ERROR,
+                            "존재하지 않는 PointBalance ID입니다."));
 
             // 기존 엔티티의 version, id 유지, point 등만 갱신
             existingEntity = existingEntity.updateFromDomain(userPointBalance);

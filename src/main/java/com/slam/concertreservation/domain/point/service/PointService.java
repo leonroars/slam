@@ -27,7 +27,7 @@ public class PointService {
 
     @Transactional
     @Deprecated
-    public UserPointBalance processPaymentForReservation(String userId, int price, String reservationId){
+    public UserPointBalance processPaymentForReservation(Long userId, int price, Long reservationId) {
         UserPointBalance processedUserPointBalance = decreaseUserPointBalance(userId, price);
 
         applicationEventPublisher.publishEvent(new PaymentEvent(userId, price, reservationId));
@@ -36,24 +36,26 @@ public class PointService {
 
     /**
      * 특정 사용자의 포인트 잔액을 감액한 후 변동된 잔액을 저장하고 이를 반환한다.
-     * <br></br>
+     * <br>
+     * </br>
      * 또한, 이에 대한 내역을 생성하여 저장한다.
      *
-     * @param userId 사용자 ID
+     * @param userId         사용자 ID
      * @param decreaseAmount 감액량
      * @return 변동된 사용자의 잔액
      */
     @Transactional
-    public UserPointBalance decreaseUserPointBalance(String userId, int decreaseAmount){
+    public UserPointBalance decreaseUserPointBalance(Long userId, int decreaseAmount) {
 
         UserPointBalance userPointBalance = userPointBalanceRepository.getBalanceByUserId(userId)
-                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND, "해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));;
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND,
+                        "해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));
+        ;
         UserPointBalance updatedUserPointBalance = userPointBalance.decrease(decreaseAmount);
         PointHistory pointHistory = PointHistory.create(
                 userId,
                 PointTransactionType.USE,
-                decreaseAmount
-        );
+                decreaseAmount);
         // 포인트 내역 저장
         pointHistoryRepository.save(pointHistory);
 
@@ -69,23 +71,24 @@ public class PointService {
 
     /**
      * 특정 사용자의 포인트 잔액을 증액한 후 변동된 잔액을 저장하고 이를 반환한다.
-     * <br></br>
+     * <br>
+     * </br>
      * 또한, 이에 대한 내역을 생성하여 저장한다.
      *
-     * @param userId 사용자 ID
+     * @param userId         사용자 ID
      * @param increaseAmount 증액량
      * @return 변동된 사용자의 잔액
      */
     @Transactional
-    public UserPointBalance increaseUserPointBalance(String userId, int increaseAmount){
+    public UserPointBalance increaseUserPointBalance(Long userId, int increaseAmount) {
         UserPointBalance userPointBalance = userPointBalanceRepository.getBalanceByUserId(userId)
-                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND, "해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND,
+                        "해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));
         UserPointBalance updatedUserPointBalance = userPointBalance.increase(increaseAmount);
         PointHistory pointHistory = PointHistory.create(
                 userId,
                 PointTransactionType.CHARGE,
-                increaseAmount
-        );
+                increaseAmount);
         pointHistoryRepository.save(pointHistory);
         UserPointBalance updated = userPointBalanceRepository.save(updatedUserPointBalance);
 
@@ -98,15 +101,18 @@ public class PointService {
 
     /**
      * 신규 사용자의 포인트 잔액과 이에 대한 내역을 생성 및 저장합니다.
-     * <br></br>
+     * <br>
+     * </br>
      * 잔액 0인 UserPointBalance를 반환합니다.
-     * <br></br>
+     * <br>
+     * </br>
      * 해당 사용자 존재하지 않을 경우 {@code BusinessRuleViolationException} 예외가 발생합니다.
+     * 
      * @param userId 사용자 ID
      * @return 잔액 0인 사용자 잔액
-     * */
+     */
     @Transactional
-    public UserPointBalance createUserPointBalance(String userId){
+    public UserPointBalance createUserPointBalance(Long userId) {
         UserPointBalance userPointBalance = UserPointBalance.create(userId, Point.create(0));
         pointHistoryRepository.save(PointHistory.create(userId, PointTransactionType.INIT, 0));
         return userPointBalanceRepository.save(userPointBalance);
@@ -114,26 +120,33 @@ public class PointService {
 
     /**
      * 특정 사용자의 잔액 조회
-     * <br></br>
+     * <br>
+     * </br>
      * 해당 사용자 존재하지 않을 경우 {@code BusinessRuleViolationException} 예외가 발생합니다.
+     * 
      * @param userId 사용자 ID
      * @return 해당 사용자의 포인트 잔액
      */
-    public UserPointBalance getUserPointBalance(String userId){
+    public UserPointBalance getUserPointBalance(Long userId) {
         return userPointBalanceRepository.getBalanceByUserId(userId)
-                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND, "해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND,
+                        "해당 회원이 존재하지 않으므로 잔액 조회가 불가합니다."));
     }
 
     /**
      * 특정 사용자의 포인트 내역 전체 조회.
-     * <br></br>
+     * <br>
+     * </br>
      * 해당 사용자 존재하지 않을 경우 {@code BusinessRuleViolationException} 예외가 발생합니다.
+     * 
      * @param userId
      * @return
      */
-    public List<PointHistory> getUserPointHistories(String userId){
+    public List<PointHistory> getUserPointHistories(Long userId) {
         List<PointHistory> pointHistories = pointHistoryRepository.findByUserId(userId);
-        if(pointHistories.isEmpty()){throw new UnavailableRequestException(ErrorCode.USER_NOT_FOUND, "해당 회원이 존재하지 않으므로 포인트 내역 조회가 불가합니다.");}
+        if (pointHistories.isEmpty()) {
+            throw new UnavailableRequestException(ErrorCode.USER_NOT_FOUND, "해당 회원이 존재하지 않으므로 포인트 내역 조회가 불가합니다.");
+        }
         return pointHistories;
     }
 }

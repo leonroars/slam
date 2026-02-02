@@ -4,7 +4,7 @@ import com.slam.concertreservation.infrastructure.persistence.jpa.entities.Point
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PointHistoryJpaRepository extends JpaRepository<PointHistoryJpaEntity, String> {
+public interface PointHistoryJpaRepository extends JpaRepository<PointHistoryJpaEntity, Long> {
 
-    List<PointHistoryJpaEntity> findByUserId(String userId);
+    List<PointHistoryJpaEntity> findByUserId(Long userId);
 }

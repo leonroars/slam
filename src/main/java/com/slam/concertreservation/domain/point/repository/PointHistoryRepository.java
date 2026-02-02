@@ -9,5 +9,5 @@ public interface PointHistoryRepository {
     PointHistory save(PointHistory pointHistory);
 
     // 특정 사용자의 전체 포인트 내역 가져오기
-    List<PointHistory> findByUserId(String userId);
+    List<PointHistory> findByUserId(Long userId);
 }

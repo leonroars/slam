@@ -14,12 +14,13 @@ import lombok.Getter;
 @Entity
 @Getter
 @Table(name = "`POINTBALANCE`")
-public class UserPointBalanceJpaEntity extends BaseJpaEntity{
+public class UserPointBalanceJpaEntity extends BaseJpaEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "point_balance_id")
     private Long id;
-    private String userId;
+    private Long userId;
     private int point;
 
     @Version
@@ -28,18 +29,17 @@ public class UserPointBalanceJpaEntity extends BaseJpaEntity{
     // UserPointModel(Domain Model) -> UserPointBalanceJpaEntity(JPA entity model)
     public static UserPointBalanceJpaEntity fromDomain(UserPointBalance domainModel) {
         UserPointBalanceJpaEntity entity = new UserPointBalanceJpaEntity();
-        if(domainModel.id() != null && !domainModel.id().isBlank()){
-            entity.id = Long.valueOf(domainModel.id());
+        if (domainModel.id() != null) {
+            entity.id = domainModel.id();
         }
         entity.userId = domainModel.userId();
         entity.point = domainModel.balance().getAmount();
         return entity;
     }
 
-
     // UserPointBalanceJpaEntity(JPA entity model) -> UserPointModel(Domain Model)
     public UserPointBalance toDomain() {
-        return UserPointBalance.create(String.valueOf(this.id), this.userId, Point.create(this.point));
+        return UserPointBalance.create(this.id, this.userId, Point.create(this.point));
     }
 
     // UserPointBalanceJpaEntity 내에 updateFromDomain 구현 예시
