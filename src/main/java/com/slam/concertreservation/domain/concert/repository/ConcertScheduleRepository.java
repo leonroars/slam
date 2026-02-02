@@ -1,6 +1,5 @@
 package com.slam.concertreservation.domain.concert.repository;
 
-
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,7 +11,7 @@ public interface ConcertScheduleRepository {
     ConcertSchedule save(ConcertSchedule concertSchedule);
 
     // 콘서트 일정 조회
-    Optional<ConcertSchedule> findById(String concertScheduleId);
+    Optional<ConcertSchedule> findById(Long concertScheduleId);
 
     // 예약 가능한 콘서트 목록 조회(일정 상 예약 가능함과 동시에 예약 가능 좌석도 존재하는 공연 일정 목록 조회)
     List<ConcertSchedule> findAllAvailable(LocalDateTime presentDateTime);

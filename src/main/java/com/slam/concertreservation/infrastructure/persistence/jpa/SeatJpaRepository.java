@@ -6,13 +6,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface SeatJpaRepository extends JpaRepository<SeatJpaEntity, String> {
+public interface SeatJpaRepository extends JpaRepository<SeatJpaEntity, Long> {
 
-    List<SeatJpaEntity> findAllByConcertScheduleId(String concertScheduleId);
+    List<SeatJpaEntity> findAllByConcertScheduleId(Long concertScheduleId);
 
     @Query("SELECT s FROM SeatJpaEntity s WHERE s.concertScheduleId = :concertScheduleId AND s.status = 'AVAILABLE'")
-    List<SeatJpaEntity> findAllAvailableSeatsByConcertScheduleId(String concertScheduleId);
+    List<SeatJpaEntity> findAllAvailableSeatsByConcertScheduleId(Long concertScheduleId);
 
     @Query("SELECT COUNT(s) FROM SeatJpaEntity s WHERE s.concertScheduleId = :concertScheduleId AND s.status = 'UNAVAILABLE'")
-    int findOccupiedSeatsCount(@Param("concertScheduleId") String concertScheduleId);
+    int findOccupiedSeatsCount(@Param("concertScheduleId") Long concertScheduleId);
 }

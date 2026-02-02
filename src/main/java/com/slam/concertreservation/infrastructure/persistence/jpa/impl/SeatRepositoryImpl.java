@@ -16,7 +16,7 @@ public class SeatRepositoryImpl implements SeatRepository {
     private final SeatJpaRepository seatJpaRepository;
 
     @Override
-    public Seat save(Seat seat){
+    public Seat save(Seat seat) {
         return seatJpaRepository.findById(seat.getId())
                 .map(seatJpaEntity -> {
                     seatJpaEntity.updateFromDomain(seat);
@@ -34,13 +34,13 @@ public class SeatRepositoryImpl implements SeatRepository {
     }
 
     @Override
-    public Optional<Seat> findById(String seatId) {
+    public Optional<Seat> findById(Long seatId) {
         return seatJpaRepository.findById(seatId)
                 .map(SeatJpaEntity::toDomain);
     }
 
     @Override
-    public List<Seat> findAllByConcertScheduleId(String concertScheduleId) {
+    public List<Seat> findAllByConcertScheduleId(Long concertScheduleId) {
         return seatJpaRepository.findAllByConcertScheduleId(concertScheduleId)
                 .stream()
                 .map(SeatJpaEntity::toDomain)
@@ -48,7 +48,7 @@ public class SeatRepositoryImpl implements SeatRepository {
     }
 
     @Override
-    public List<Seat> findAllAvailableSeatsByConcertScheduleId(String concertScheduleId) {
+    public List<Seat> findAllAvailableSeatsByConcertScheduleId(Long concertScheduleId) {
         return seatJpaRepository.findAllAvailableSeatsByConcertScheduleId(concertScheduleId)
                 .stream()
                 .map(SeatJpaEntity::toDomain)
@@ -56,7 +56,7 @@ public class SeatRepositoryImpl implements SeatRepository {
     }
 
     @Override
-    public int findOccupiedSeatsCount(String concertScheduleId) {
+    public int findOccupiedSeatsCount(Long concertScheduleId) {
         return seatJpaRepository.findOccupiedSeatsCount(concertScheduleId);
     }
 }

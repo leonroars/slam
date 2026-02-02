@@ -44,7 +44,7 @@ public class ConcertService {
      * @param concertId
      * @return
      */
-    public Concert getConcert(String concertId) {
+    public Concert getConcert(Long concertId) {
         return concertRepository.findById(concertId)
                 .orElseThrow(() -> new UnavailableRequestException(ErrorCode.CONCERT_SCHEDULE_NOT_FOUND,
                         "해당 공연이 존재하지 않아 조회에 실패했습니다."));
@@ -63,7 +63,8 @@ public class ConcertService {
         ConcertSchedule registeredConcertSchedule = concertScheduleRepository.save(concertSchedule);
 
         // 새롭게 등록된 공연 일정에 배정된 Seat.MAX_SEAT_NUMBER 개의 좌석 생성.
-        List<Seat> initialSeats = Seat.createSeatsForNewConcertSchedule(registeredConcertSchedule.getId(), price,
+        List<Seat> initialSeats = Seat.createSeatsForNewConcertSchedule(
+                registeredConcertSchedule.getId(), price,
                 Seat.MAX_SEAT_NUMBER);
 
         // Seat.MAX_SEAT_NUMBER 개 한 번에 저장.
@@ -78,7 +79,7 @@ public class ConcertService {
      * @param concertScheduleId
      * @return
      */
-    public ConcertSchedule getConcertSchedule(String concertScheduleId) {
+    public ConcertSchedule getConcertSchedule(Long concertScheduleId) {
         return concertScheduleRepository.findById(concertScheduleId)
                 .orElseThrow(() -> new UnavailableRequestException(ErrorCode.CONCERT_SCHEDULE_NOT_FOUND,
                         "해당 공연 일정이 존재하지 않습니다."));
@@ -99,7 +100,8 @@ public class ConcertService {
         ConcertSchedule registeredConcertSchedule = concertScheduleRepository.save(concertSchedule);
 
         // 새롭게 등록된 공연 일정에 배정된 지정한 개수의 좌석 생성.
-        List<Seat> initialSeats = Seat.createSeatsForNewConcertSchedule(registeredConcertSchedule.getId(), price,
+        List<Seat> initialSeats = Seat.createSeatsForNewConcertSchedule(
+                registeredConcertSchedule.getId(), price,
                 numOfSeats);
 
         // 생성된 좌석 한 번에 저장.
@@ -114,7 +116,7 @@ public class ConcertService {
      * @param concertScheduleId
      * @return
      */
-    public int getOccupiedSeatsCount(String concertScheduleId) {
+    public int getOccupiedSeatsCount(Long concertScheduleId) {
         return seatRepository.findOccupiedSeatsCount(concertScheduleId);
     }
 
@@ -124,7 +126,7 @@ public class ConcertService {
      * @param concertScheduleId
      * @return
      */
-    public int getRemainingSeatsCount(String concertScheduleId) {
+    public int getRemainingSeatsCount(Long concertScheduleId) {
         return ConcertSchedule.MAX_AVAILABLE_SEATS - getOccupiedSeatsCount(concertScheduleId);
     }
 
@@ -137,7 +139,7 @@ public class ConcertService {
      */
     @Transactional
     @RedissonDistributedLock(key = "seatId")
-    public Seat assignSeatOfConcertSchedule(String concertScheduleId, String seatId, Long userId) {
+    public Seat assignSeatOfConcertSchedule(Long concertScheduleId, Long seatId, Long userId) {
 
         // 배정될 좌석 조회
         Seat targetSeat = seatRepository.findById(seatId)
@@ -164,7 +166,7 @@ public class ConcertService {
      */
     @Transactional
     @RedissonDistributedLock(key = "seatId")
-    public Seat unassignSeatOfConcertSchedule(String concertScheduleId, String seatId) {
+    public Seat unassignSeatOfConcertSchedule(Long concertScheduleId, Long seatId) {
 
         // 배정될 좌석 조회
         Seat targetSeat = seatRepository.findById(seatId)
@@ -192,7 +194,7 @@ public class ConcertService {
      * @return
      */
     @Transactional
-    public ConcertSchedule makeConcertScheduleAvailable(String concertScheduleId) {
+    public ConcertSchedule makeConcertScheduleAvailable(Long concertScheduleId) {
         ConcertSchedule concertSchedule = concertScheduleRepository.findById(concertScheduleId)
                 .orElseThrow(() -> new UnavailableRequestException(ErrorCode.CONCERT_SCHEDULE_NOT_FOUND,
                         "해당 공연 일정이 존재하지 않습니다."));
@@ -211,7 +213,7 @@ public class ConcertService {
      * @return
      */
     @Transactional
-    public ConcertSchedule makeConcertScheduleSoldOut(String concertScheduleId) {
+    public ConcertSchedule makeConcertScheduleSoldOut(Long concertScheduleId) {
         ConcertSchedule concertSchedule = concertScheduleRepository.findById(concertScheduleId)
                 .orElseThrow(() -> new UnavailableRequestException(ErrorCode.CONCERT_SCHEDULE_NOT_FOUND,
                         "해당 공연 일정이 존재하지 않습니다."));
@@ -233,7 +235,7 @@ public class ConcertService {
      * @param concertScheduleId
      * @return
      */
-    public List<Seat> getSeatsOfConcertSchedule(String concertScheduleId) {
+    public List<Seat> getSeatsOfConcertSchedule(Long concertScheduleId) {
         return seatRepository.findAllByConcertScheduleId(concertScheduleId);
     }
 
@@ -243,7 +245,7 @@ public class ConcertService {
      * @param seatId
      * @return
      */
-    public Seat getSeat(String seatId) {
+    public Seat getSeat(Long seatId) {
         return seatRepository.findById(seatId)
                 .orElseThrow(() -> new UnavailableRequestException(ErrorCode.SEAT_NOT_FOUND, "해당 좌석이 존재하지 않습니다."));
     }
@@ -254,8 +256,9 @@ public class ConcertService {
      * @param concertScheduleId
      * @return
      */
-    public List<Seat> getAvailableSeatsOfConcertSchedule(String concertScheduleId) {
-        List<Seat> availableSeats = seatRepository.findAllAvailableSeatsByConcertScheduleId(concertScheduleId);
+    public List<Seat> getAvailableSeatsOfConcertSchedule(Long concertScheduleId) {
+        List<Seat> availableSeats = seatRepository
+                .findAllAvailableSeatsByConcertScheduleId(concertScheduleId);
         if (availableSeats.isEmpty()) {
             throw new UnavailableRequestException(ErrorCode.NO_AVAILABLE_SEATS, "예약 가능한 좌석이 존재하지 않습니다.");
         }

@@ -116,7 +116,7 @@ class ConcertServiceUnitTest {
                 @DisplayName("성공 : 정상적인 ConcertSchedule을 등록하면 해당 ConcertSchedule이 생성되고 조회가 가능하다.")
                 void shouldRegisterConcertSchedule_WhenValidConcertScheduleHasGiven() {
                         // given
-                        ConcertSchedule expected = ConcertSchedule.create("1", third, first, second);
+                        ConcertSchedule expected = ConcertSchedule.create(1L, third, first, second);
 
                         when(concertScheduleRepository.save(any(ConcertSchedule.class)))
                                         .thenReturn(expected);
@@ -133,7 +133,7 @@ class ConcertServiceUnitTest {
                 @DisplayName("실패 : ConcertSchedule 저장 시 예외가 발생하면 좌석이 생성되지 않고 실패한다.")
                 void shouldFailToRegisterConcertSchedule_WhenConcertScheduleSaveFails() {
                         // given
-                        ConcertSchedule expected = ConcertSchedule.create("1", third, first, second);
+                        ConcertSchedule expected = ConcertSchedule.create(1L, third, first, second);
 
                         when(concertScheduleRepository.save(any(ConcertSchedule.class)))
                                         .thenThrow(new BusinessRuleViolationException(ErrorCode.INTERNAL_SERVER_ERROR,
@@ -161,8 +161,8 @@ class ConcertServiceUnitTest {
                 void shouldAssignSeatAndDecrementAvailableSeats_WhenValidSeatAndSchedule() {
                         // given
                         Long userId = 1L;
-                        ConcertSchedule concertSchedule = ConcertSchedule.create("1", "1", third, first, second);
-                        Seat seat = Seat.create("1", 1, 1000, SeatStatus.AVAILABLE);
+                        ConcertSchedule concertSchedule = ConcertSchedule.create(1L, 1L, third, first, second);
+                        Seat seat = Seat.create(1L, 1, 1000, SeatStatus.AVAILABLE);
 
                         when(concertScheduleRepository.findById(concertSchedule.getId()))
                                         .thenReturn(Optional.of(concertSchedule));
@@ -186,8 +186,8 @@ class ConcertServiceUnitTest {
                 void shouldThrowUnavailableRequestException_WhenSeatNotFoundDuringAssignment() {
                         // given
                         Long userId = 1L;
-                        ConcertSchedule concertSchedule = ConcertSchedule.create("1", "1", third, first, second);
-                        String seatId = "1";
+                        ConcertSchedule concertSchedule = ConcertSchedule.create(1L, 1L, third, first, second);
+                        Long seatId = 1L;
 
                         when(concertScheduleRepository.findById(concertSchedule.getId()))
                                         .thenReturn(Optional.of(concertSchedule));
@@ -206,8 +206,8 @@ class ConcertServiceUnitTest {
                 @DisplayName("실패 : 존재하지 않는 ConcertSchedule에 좌석을 배정하려 하면 UnavailableRequestException이 발생하며 실패한다.")
                 void shouldThrowUnavailableRequestException_WhenConcertScheduleNotFoundDuringAssignment() {
                         // given
-                        String concertScheduleId = "1";
-                        String seatId = "1";
+                        Long concertScheduleId = 1L;
+                        Long seatId = 1L;
                         Long userId = 1L;
 
                         when(concertScheduleRepository.findById(concertScheduleId))
@@ -225,8 +225,8 @@ class ConcertServiceUnitTest {
                 void shouldThrowIllegalStateException_WhenSeatAlreadyAssigned() {
                         // given
                         Long userId = 1L;
-                        ConcertSchedule concertSchedule = ConcertSchedule.create("1", "1", third, first, second);
-                        Seat seat = Seat.create("1", 1, 1000, SeatStatus.UNAVAILABLE);
+                        ConcertSchedule concertSchedule = ConcertSchedule.create(1L, 1L, third, first, second);
+                        Seat seat = Seat.create(1L, 1, 1000, SeatStatus.UNAVAILABLE);
 
                         when(concertScheduleRepository.findById(concertSchedule.getId()))
                                         .thenReturn(Optional.of(concertSchedule));
@@ -247,8 +247,8 @@ class ConcertServiceUnitTest {
                 @DisplayName("성공 : 특정 ConcertSchedule의 특정 좌석을 배정 해제하면 좌석 상태가 변경된다.")
                 void shouldUnassignSeatAndIncrementAvailableSeats_WhenValidSeatAndSchedule() {
                         // given
-                        ConcertSchedule concertSchedule = ConcertSchedule.create("1", third, first, second);
-                        Seat seat = Seat.create("1", 1, 1000, SeatStatus.UNAVAILABLE);
+                        ConcertSchedule concertSchedule = ConcertSchedule.create(1L, third, first, second);
+                        Seat seat = Seat.create(1L, 1, 1000, SeatStatus.UNAVAILABLE);
 
                         when(concertScheduleRepository.findById(concertSchedule.getId()))
                                         .thenReturn(Optional.of(concertSchedule));
@@ -271,8 +271,8 @@ class ConcertServiceUnitTest {
                 @DisplayName("실패 : 존재하지 않는 Seat를 배정 해제하려 하면 UnavailableRequestException 이 발생하며 실패한다.")
                 void shouldThrowUnavailableRequestException_WhenSeatNotFoundDuringUnassignment() {
                         // given
-                        ConcertSchedule concertSchedule = ConcertSchedule.create("1", "1", third, first, second);
-                        String seatId = "1";
+                        ConcertSchedule concertSchedule = ConcertSchedule.create(1L, 1L, third, first, second);
+                        Long seatId = 1L;
 
                         when(concertScheduleRepository.findById(concertSchedule.getId()))
                                         .thenReturn(Optional.of(concertSchedule));
@@ -290,8 +290,8 @@ class ConcertServiceUnitTest {
                 @DisplayName("실패 : 존재하지 않는 ConcertSchedule에 좌석을 배정 해제하려 하면 UnavailableRequestException이 발생하며 실패한다.")
                 void shouldThrowUnavailableRequestException_WhenConcertScheduleNotFoundDuringUnassignment() {
                         // given
-                        String concertScheduleId = "1";
-                        String seatId = "1";
+                        Long concertScheduleId = 1L;
+                        Long seatId = 1L;
 
                         when(concertScheduleRepository.findById(concertScheduleId))
                                         .thenReturn(Optional.empty());
@@ -306,8 +306,8 @@ class ConcertServiceUnitTest {
                 @DisplayName("실패 : 이미 배정 해제된 좌석을 다시 배정 해제하려 하면 BusinessRuleViolation 발생하며 실패한다.")
                 void shouldThrowIllegalStateException_WhenSeatAlreadyUnassigned() {
                         // given
-                        ConcertSchedule concertSchedule = ConcertSchedule.create("1", "1", third, first, second);
-                        Seat seat = Seat.create("1", 1, 1000, SeatStatus.AVAILABLE);
+                        ConcertSchedule concertSchedule = ConcertSchedule.create(1L, 1L, third, first, second);
+                        Seat seat = Seat.create(1L, 1, 1000, SeatStatus.AVAILABLE);
 
                         when(concertScheduleRepository.findById(concertSchedule.getId()))
                                         .thenReturn(Optional.of(concertSchedule));
