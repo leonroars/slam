@@ -41,7 +41,7 @@ public class QueueService {
      * @param concertScheduleId
      * @return
      */
-    public Token issueToken(Long userId, String concertScheduleId) {
+    public Token issueToken(Long userId, Long concertScheduleId) {
         // 토큰 생성
         Token token = Token.create(userId, concertScheduleId, queuePolicy.getWaitingTokenDuration());
 
@@ -73,7 +73,7 @@ public class QueueService {
      * @param concertScheduleId
      * @return
      */
-    public List<Token> activateTokens(String concertScheduleId, int k) {
+    public List<Token> activateTokens(Long concertScheduleId, int k) {
         // 현재 동시 예약 서비스 이용 중인 사용자 수 확인
         int activeTokenCount = tokenRepository.countCurrentlyActiveTokens(concertScheduleId);
 
@@ -99,7 +99,7 @@ public class QueueService {
         return saved;
     }
 
-    public Token expireToken(String concertScheduleId, String tokenId) {
+    public Token expireToken(Long concertScheduleId, String tokenId) {
         Token token = tokenRepository.findTokenWithIdAndConcertScheduleId(concertScheduleId, tokenId)
                 .orElseThrow(() -> new UnavailableRequestException(ErrorCode.TOKEN_NOT_FOUND, "해당 토큰이 존재하지 않습니다."));
         token.expire();
@@ -107,7 +107,7 @@ public class QueueService {
         return tokenRepository.save(token);
     }
 
-    public List<Token> expireToken(String concertScheduleId, List<Token> tokens) {
+    public List<Token> expireToken(Long concertScheduleId, List<Token> tokens) {
         List<Token> expiredTokens = tokenRepository.saveAll(
                 tokens.stream()
                         .map(Token::expire)
@@ -119,7 +119,7 @@ public class QueueService {
         return expiredTokens;
     }
 
-    public int getRemainingTokenCount(String concertScheduleId, String tokenId) {
+    public int getRemainingTokenCount(Long concertScheduleId, String tokenId) {
         return tokenRepository.countRemaining(concertScheduleId, tokenId);
     }
 
@@ -129,7 +129,7 @@ public class QueueService {
      * @param tokenId
      * @return
      */
-    public boolean validateToken(String concertScheduleId, String tokenId) {
+    public boolean validateToken(Long concertScheduleId, String tokenId) {
         return tokenRepository.findTokenWithIdAndConcertScheduleId(concertScheduleId, tokenId)
                 .map(token -> {
                     if (token.isExpired()) {
@@ -148,7 +148,7 @@ public class QueueService {
      * 
      * @return
      */
-    public List<Token> getActivatedTokensToBeExpired(String concertScheduleId) {
+    public List<Token> getActivatedTokensToBeExpired(Long concertScheduleId) {
         return tokenRepository.findActivatedTokensToBeExpired(concertScheduleId);
     }
 
@@ -167,7 +167,7 @@ public class QueueService {
      * @param concertScheduleId
      * @return
      */
-    public List<Token> getAllTokensByConcertScheduleId(String concertScheduleId) {
+    public List<Token> getAllTokensByConcertScheduleId(Long concertScheduleId) {
         return tokenRepository.findByConcertScheduleId(concertScheduleId);
     }
 }

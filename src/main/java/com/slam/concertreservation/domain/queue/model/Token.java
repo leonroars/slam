@@ -10,7 +10,7 @@ import lombok.Getter;
 public class Token {
     private String id;
     private Long userId;
-    private String concertScheduleId;
+    private Long concertScheduleId;
     private TokenStatus status; // WAIT, ACTIVE, EXPIRED
 
     // Domain Model 상에서는 Nullable 한 필드
@@ -20,7 +20,7 @@ public class Token {
     private Token() {
     }
 
-    public static Token create(String id, Long userId, String concertScheduleId, LocalDateTime createdAt,
+    public static Token create(String id, Long userId, Long concertScheduleId, LocalDateTime createdAt,
             LocalDateTime expiredAt) {
         Token token = new Token();
         token.id = id;
@@ -33,7 +33,7 @@ public class Token {
         return token;
     }
 
-    public static Token create(String id, Long userId, String concertScheduleId, String status, LocalDateTime createdAt,
+    public static Token create(String id, Long userId, Long concertScheduleId, String status, LocalDateTime createdAt,
             LocalDateTime expiredAt) {
         Token token = new Token();
         token.id = id;
@@ -53,7 +53,7 @@ public class Token {
      * @param concertScheduleId
      * @return
      */
-    public static Token create(Long userId, String concertScheduleId, int waitingTokenDurationInHours) {
+    public static Token create(Long userId, Long concertScheduleId, int waitingTokenDurationInHours) {
         if (waitingTokenDurationInHours <= 0) {
             throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "대기 토큰의 유효 시간은 0시간보다 커야 합니다.");
         }

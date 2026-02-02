@@ -13,7 +13,7 @@ public class TokenUnitTest {
     @DisplayName("성공 : 토큰 최초 생성 시의 상태는 WAIT이다.")
     void shouldBeWaiting_WhenTokenIsCreated() {
         // given
-        Token token = Token.create(1L, "concertScheduleId", 1);
+        Token token = Token.create(1L, 1L, 1);
 
         // when & then
         Assertions.assertEquals(TokenStatus.WAIT, token.getStatus());
@@ -23,7 +23,7 @@ public class TokenUnitTest {
     @DisplayName("성공 : 토큰 만료 시간 설정이 정상적으로 이루어진다.")
     void shouldBeSetExpiredAt_WhenTokenIsInitiated() {
         // given
-        Token token = Token.create(1L, "concertScheduleId", 1);
+        Token token = Token.create(1L, 1L, 1);
         token.activate(1);
         LocalDateTime expiration = LocalDateTime.now();
 

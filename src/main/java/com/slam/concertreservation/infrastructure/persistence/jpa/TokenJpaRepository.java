@@ -12,24 +12,24 @@ public interface TokenJpaRepository extends JpaRepository<TokenJpaEntity, Long> 
 
         @Query("SELECT t FROM TokenJpaEntity t WHERE t.concertScheduleId = :concertScheduleId AND t.id = :tokenId")
         Optional<TokenJpaEntity> findTokenJpaEntityByConcertScheduleIdAndId(
-                        @Param("concertScheduleId") String concertScheduleId,
+                        @Param("concertScheduleId") Long concertScheduleId,
                         @Param("tokenId") Long tokenId);
 
-        List<TokenJpaEntity> findByConcertScheduleId(String concertScheduleId);
+        List<TokenJpaEntity> findByConcertScheduleId(Long concertScheduleId);
 
         @Query("SELECT t FROM TokenJpaEntity t WHERE t.concertScheduleId = :concertScheduleId "
                         + "AND t.status = :status "
                         + "ORDER BY t.id"
                         + " ASC LIMIT :k")
-        List<TokenJpaEntity> findTopKByConcertScheduleIdAndStatus(@Param("concertScheduleId") String concertScheduleId,
+        List<TokenJpaEntity> findTopKByConcertScheduleIdAndStatus(@Param("concertScheduleId") Long concertScheduleId,
                         @Param("status") String status, @Param("k") int k);
 
         @Query("SELECT COUNT(t) FROM TokenJpaEntity t WHERE t.concertScheduleId = :concertScheduleId AND t.status = :status")
-        int countTokensByConcertScheduleIdAndStatus(@Param("concertScheduleId") String concertScheduleId,
+        int countTokensByConcertScheduleIdAndStatus(@Param("concertScheduleId") Long concertScheduleId,
                         @Param("status") String status);
 
         @Query("SELECT COUNT(t) FROM TokenJpaEntity t WHERE t.concertScheduleId = :concertScheduleId AND t.id < :tokenId AND t.status = 'WAIT' ORDER BY t.id ASC")
-        int countRemainingByConcertScheduleIdAndTokenId(@Param("concertScheduleId") String concertScheduleId,
+        int countRemainingByConcertScheduleIdAndTokenId(@Param("concertScheduleId") Long concertScheduleId,
                         @Param("tokenId") Long tokenId);
 
         @Query("SELECT t FROM TokenJpaEntity t WHERE t.expiredAt < :now AND t.status = 'ACTIVE'")
@@ -39,5 +39,5 @@ public interface TokenJpaRepository extends JpaRepository<TokenJpaEntity, Long> 
         List<TokenJpaEntity> findWaitingTokensToBeExpired(@Param("now") LocalDateTime now);
 
         @Query("SELECT COUNT(t) FROM TokenJpaEntity t WHERE t.concertScheduleId = :concertScheduleId AND t.status = 'WAIT'")
-        int countCurrentlyWaitingTokens(@Param("concertScheduleId") String concertScheduleId);
+        int countCurrentlyWaitingTokens(@Param("concertScheduleId") Long concertScheduleId);
 }

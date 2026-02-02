@@ -30,7 +30,7 @@ class QueueServiceUnitTest {
         private QueuePolicy queuePolicy;
 
         private final Long userId = 1L;
-        private final String concertScheduleId = "concert1";
+        private final Long concertScheduleId = 1L;
 
         @BeforeEach
         void setUp() {
@@ -121,22 +121,22 @@ class QueueServiceUnitTest {
                 when(queuePolicy.getActiveTokenDuration()).thenReturn(1);
 
                 String tokenId = "token1";
-                Token existingToken = Token.create(1L, "concertScheduleId", queuePolicy.getActiveTokenDuration());
+                Token existingToken = Token.create(1L, 1L, queuePolicy.getActiveTokenDuration());
 
-                when(tokenRepository.findTokenWithIdAndConcertScheduleId("concertScheduleId", tokenId))
+                when(tokenRepository.findTokenWithIdAndConcertScheduleId(1L, tokenId))
                                 .thenReturn(Optional.of(existingToken));
 
-                Token expiredToken = Token.create(1L, "concertScheduleId", queuePolicy.getActiveTokenDuration())
+                Token expiredToken = Token.create(1L, 1L, queuePolicy.getActiveTokenDuration())
                                 .expire();
                 when(tokenRepository.save(existingToken))
                                 .thenReturn(expiredToken);
 
                 // when
-                Token result = queueService.expireToken("concertScheduleId", tokenId);
+                Token result = queueService.expireToken(1L, tokenId);
 
                 // then
                 assertThat(result.getStatus()).isEqualTo(TokenStatus.EXPIRED);
-                verify(tokenRepository, times(1)).findTokenWithIdAndConcertScheduleId("concertScheduleId", tokenId);
+                verify(tokenRepository, times(1)).findTokenWithIdAndConcertScheduleId(1L, tokenId);
                 verify(tokenRepository, times(1)).save(existingToken);
         }
 
@@ -146,7 +146,7 @@ class QueueServiceUnitTest {
                 // given
                 String userId = "user123";
                 String tokenId = "token123";
-                String concertScheduleId = "concert1";
+                Long concertScheduleId = 1L;
                 int expectedCount = 5;
 
                 when(tokenRepository.countRemaining(concertScheduleId, tokenId))

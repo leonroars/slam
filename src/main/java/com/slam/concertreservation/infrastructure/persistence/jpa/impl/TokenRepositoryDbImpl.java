@@ -33,13 +33,13 @@ public class TokenRepositoryDbImpl implements TokenRepository {
     }
 
     @Override
-    public Optional<Token> findTokenWithIdAndConcertScheduleId(String concertScheduleId, String tokenId) {
+    public Optional<Token> findTokenWithIdAndConcertScheduleId(Long concertScheduleId, String tokenId) {
         return tokenJpaRepository.findTokenJpaEntityByConcertScheduleIdAndId(concertScheduleId, Long.parseLong(tokenId))
                 .map(TokenJpaEntity::toDomain);
     }
 
     @Override
-    public List<Token> findByConcertScheduleId(String concertScheduleId) {
+    public List<Token> findByConcertScheduleId(Long concertScheduleId) {
         return tokenJpaRepository.findByConcertScheduleId(concertScheduleId)
                 .stream()
                 .map(TokenJpaEntity::toDomain)
@@ -47,7 +47,7 @@ public class TokenRepositoryDbImpl implements TokenRepository {
     }
 
     @Override
-    public List<Token> findNextKTokensToBeActivated(String concertScheduleId, int k) {
+    public List<Token> findNextKTokensToBeActivated(Long concertScheduleId, int k) {
         return tokenJpaRepository.findTopKByConcertScheduleIdAndStatus(concertScheduleId, TokenStatus.WAIT.name(), k)
                 .stream()
                 .map(TokenJpaEntity::toDomain)
@@ -55,18 +55,18 @@ public class TokenRepositoryDbImpl implements TokenRepository {
     }
 
     @Override
-    public int countCurrentlyActiveTokens(String concertScheduleId) {
+    public int countCurrentlyActiveTokens(Long concertScheduleId) {
         return tokenJpaRepository.countTokensByConcertScheduleIdAndStatus(concertScheduleId, TokenStatus.ACTIVE.name());
     }
 
     @Override
-    public int countRemaining(String concertScheduleId, String tokenId) {
+    public int countRemaining(Long concertScheduleId, String tokenId) {
         return tokenJpaRepository.countRemainingByConcertScheduleIdAndTokenId(concertScheduleId,
                 Long.parseLong(tokenId));
     }
 
     @Override
-    public List<Token> findActivatedTokensToBeExpired(String concertScheduleId) {
+    public List<Token> findActivatedTokensToBeExpired(Long concertScheduleId) {
         return tokenJpaRepository.findActivatedTokensToBeExpired(LocalDateTime.now())
                 .stream()
                 .map(TokenJpaEntity::toDomain)
@@ -82,11 +82,11 @@ public class TokenRepositoryDbImpl implements TokenRepository {
     }
 
     @Override
-    public int countCurrentlyWaitingTokens(String concertScheduleId) {
+    public int countCurrentlyWaitingTokens(Long concertScheduleId) {
         return tokenJpaRepository.countTokensByConcertScheduleIdAndStatus(concertScheduleId, TokenStatus.WAIT.name());
     }
 
     @Override
-    public void setQueueExpiration(String concertScheduleId, long ttlSeconds) {
+    public void setQueueExpiration(Long concertScheduleId, long ttlSeconds) {
     }
 }

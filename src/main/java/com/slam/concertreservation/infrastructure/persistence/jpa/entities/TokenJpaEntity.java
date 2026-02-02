@@ -24,7 +24,7 @@ public class TokenJpaEntity extends BaseJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String concertScheduleId;
+    private Long concertScheduleId;
     private Long userId;
     private String status; // WAIT, ACTIVE, EXPIRED
     private LocalDateTime expiredAt;
