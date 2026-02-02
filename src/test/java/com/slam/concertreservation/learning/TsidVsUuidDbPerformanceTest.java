@@ -104,13 +104,8 @@ public class TsidVsUuidDbPerformanceTest {
     private long measureUuidSelectTime() {
         long startTime = System.currentTimeMillis();
 
-        // 전체 조회 (ORDER BY PK)
-        jdbcTemplate.queryForList("SELECT * FROM test_uuid ORDER BY id LIMIT 1000");
-
-        // 범위 조회 시뮬레이션
-        for (int i = 0; i < 100; i++) {
-            jdbcTemplate.queryForList("SELECT * FROM test_uuid WHERE name LIKE 'test_1%' LIMIT 100");
-        }
+        // ORDER BY PK 전체 정렬 조회 (PK 인덱스 스캔 성능 측정)
+        jdbcTemplate.queryForList("SELECT * FROM test_uuid ORDER BY id");
 
         return System.currentTimeMillis() - startTime;
     }
@@ -118,13 +113,8 @@ public class TsidVsUuidDbPerformanceTest {
     private long measureTsidSelectTime() {
         long startTime = System.currentTimeMillis();
 
-        // 전체 조회 (ORDER BY PK)
-        jdbcTemplate.queryForList("SELECT * FROM test_tsid ORDER BY id LIMIT 1000");
-
-        // 범위 조회 시뮬레이션
-        for (int i = 0; i < 100; i++) {
-            jdbcTemplate.queryForList("SELECT * FROM test_tsid WHERE name LIKE 'test_1%' LIMIT 100");
-        }
+        // ORDER BY PK 전체 정렬 조회 (PK 인덱스 스캔 성능 측정)
+        jdbcTemplate.queryForList("SELECT * FROM test_tsid ORDER BY id");
 
         return System.currentTimeMillis() - startTime;
     }
