@@ -15,6 +15,7 @@ public class UserApplication {
 
     /**
      * 회원 가입.
+     * 
      * @return
      */
     @Transactional
@@ -26,10 +27,11 @@ public class UserApplication {
 
     /**
      * 회원 조회.
+     * 
      * @param userId
      * @return
      */
-    public User getUser(String userId) {
+    public User getUser(Long userId) {
         return userService.findUserByUserId(userId);
     }
 }
