@@ -9,10 +9,10 @@ import lombok.Getter;
 @Entity
 @Table(name = "`CONCERT`")
 @Getter
-public class ConcertJpaEntity extends BaseJpaEntity{
+public class ConcertJpaEntity extends BaseJpaEntity {
 
     @Id
-    private String concertId;
+    private Long concertId;
     private String name;
     private String artist;
 
@@ -25,7 +25,7 @@ public class ConcertJpaEntity extends BaseJpaEntity{
         return entity;
     }
 
-    public Concert toDomain(){
+    public Concert toDomain() {
         return Concert.create(
                 this.concertId,
                 this.name,

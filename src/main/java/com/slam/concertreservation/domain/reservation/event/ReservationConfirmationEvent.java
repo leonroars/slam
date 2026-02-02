@@ -4,22 +4,20 @@ import com.slam.concertreservation.domain.reservation.model.Reservation;
 import java.time.LocalDateTime;
 
 public record ReservationConfirmationEvent(
-        String reservationId,
-        String concertScheduleId,
-        String userId,
-        String seatId,
+        Long reservationId,
+        Long concertScheduleId,
+        Long userId,
+        Long seatId,
         int price,
-        LocalDateTime updatedAt
-) {
+        LocalDateTime updatedAt) {
 
-    public static ReservationConfirmationEvent fromDomain(Reservation reservation){
+    public static ReservationConfirmationEvent fromDomain(Reservation reservation) {
         return new ReservationConfirmationEvent(
                 reservation.getId(),
                 reservation.getConcertScheduleId(),
                 reservation.getUserId(),
                 reservation.getSeatId(),
                 reservation.getPrice(),
-                reservation.getUpdatedAt()
-        );
+                reservation.getUpdatedAt());
     }
 }

@@ -4,13 +4,13 @@ import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import io.hypersistence.tsid.TSID;
 import lombok.Getter;
 
 @Getter
 public class Seat {
-    private String id;
-    private String concertScheduleId;
+    private Long id;
+    private Long concertScheduleId;
     private int number; // 50번까지만 존재하도록 제약 필요.
     private int price;
     private SeatStatus status;
@@ -18,24 +18,26 @@ public class Seat {
     public static final int MAX_SEAT_NUMBER = 50;
     public static final int MIN_SEAT_NUMBER = 1;
 
-    private Seat(){}
+    private Seat() {
+    }
 
     /**
      * 좌석 정보 생성하는 정적 팩토리 메서드
+     * 
      * @param concertScheduleId
      * @param number
      * @param price
      * @param status
      * @return
      */
-    public static Seat create(String concertScheduleId, int number, int price, SeatStatus status){
+    public static Seat create(Long concertScheduleId, int number, int price, SeatStatus status) {
         // 비즈니스 정책 검증
-        if(number < MIN_SEAT_NUMBER || number > MAX_SEAT_NUMBER){
+        if (number < MIN_SEAT_NUMBER || number > MAX_SEAT_NUMBER) {
             throw new BusinessRuleViolationException(ErrorCode.INVALID_SEAT_NUMBER, "존재할 수 없는 좌석 번호입니다.");
         }
 
         Seat seat = new Seat();
-        seat.id = UUID.randomUUID().toString();
+        seat.id = TSID.fast().toLong();
         seat.concertScheduleId = concertScheduleId;
         seat.number = number;
         seat.price = price;
@@ -46,6 +48,7 @@ public class Seat {
 
     /**
      * SEAT ID 를 포함한 정적 팩토리 메소드.
+     * 
      * @param seatId
      * @param concertScheduleId
      * @param number
@@ -53,7 +56,7 @@ public class Seat {
      * @param status
      * @return
      */
-    public static Seat create(String seatId, String concertScheduleId, int number, int price, SeatStatus status){
+    public static Seat create(Long seatId, Long concertScheduleId, int number, int price, SeatStatus status) {
         Seat seat = new Seat();
         seat.id = seatId;
         seat.concertScheduleId = concertScheduleId;
@@ -65,37 +68,38 @@ public class Seat {
 
     /**
      * 새롭게 생성된 공연 일정을 위해 해당 공연에 할당 가능한 최대 좌석 수만큼 생성하기.
+     * 
      * @param concertScheduleId
      * @param price
      * @param numOfSeats
      * @return
      */
-    public static List<Seat> createSeatsForNewConcertSchedule(String concertScheduleId, int price, int numOfSeats){
+    public static List<Seat> createSeatsForNewConcertSchedule(Long concertScheduleId, int price, int numOfSeats) {
         List<Seat> seats = new ArrayList<>();
-        for(int i = MIN_SEAT_NUMBER; i < numOfSeats + 1; i++){
+        for (int i = MIN_SEAT_NUMBER; i < numOfSeats + 1; i++) {
             seats.add(create(concertScheduleId, i, price, SeatStatus.AVAILABLE));
         }
         return seats;
     }
 
     // 도메인 로직 : 좌석 상태를 예약 불가 상태로 변경한다.
-    public void makeUnavailable(){
-        if(this.status == SeatStatus.UNAVAILABLE){
+    public void makeUnavailable() {
+        if (this.status == SeatStatus.UNAVAILABLE) {
             throw new BusinessRuleViolationException(ErrorCode.SEAT_ALREADY_OCCUPIED, "이미 선점되었거나 이용 불가한 좌석입니다.");
         }
         this.status = SeatStatus.UNAVAILABLE;
     }
 
     // 도메인 로직 : 좌석 상태를 예약 가능하도록 변경한다.
-    public void makeAvailable(){
-        if(this.status == SeatStatus.AVAILABLE){
+    public void makeAvailable() {
+        if (this.status == SeatStatus.AVAILABLE) {
             throw new BusinessRuleViolationException(ErrorCode.SEAT_ALREADY_OCCUPIED, "이미 예약 가능 상태인 좌석입니다.");
         }
         this.status = SeatStatus.AVAILABLE;
     }
 
     // 해당 좌석 예약 가능한지
-    public boolean isAvailable(){
+    public boolean isAvailable() {
         return this.status == SeatStatus.AVAILABLE;
     }
 }

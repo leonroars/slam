@@ -4,6 +4,7 @@ import com.slam.concertreservation.domain.reservation.model.Reservation;
 import com.slam.concertreservation.domain.reservation.repository.ReservationRepository;
 import com.slam.concertreservation.infrastructure.persistence.jpa.ReservationJpaRepository;
 import com.slam.concertreservation.infrastructure.persistence.jpa.entities.ReservationJpaEntity;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -29,32 +30,32 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     }
 
     @Override
-    public Optional<Reservation> findById(String reservationId) {
+    public Optional<Reservation> findById(Long reservationId) {
         return reservationJpaRepository.findById(reservationId)
                 .map(ReservationJpaEntity::toDomain);
     }
 
     @Override
-    public List<Reservation> findByUserId(String userId) {
+    public List<Reservation> findByUserId(Long userId) {
         return reservationJpaRepository.findByUserId(userId).stream()
                 .map(ReservationJpaEntity::toDomain)
                 .toList();
     }
 
     @Override
-    public Optional<Reservation> findByConcertScheduleIdAndSeatId(String concertScheduleId, String seatId) {
+    public Optional<Reservation> findByConcertScheduleIdAndSeatId(Long concertScheduleId, Long seatId) {
         return reservationJpaRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId)
                 .map(ReservationJpaEntity::toDomain);
     }
 
     @Override
-    public Optional<Reservation> findByConcertScheduleIdAndUserId(String concertScheduleId, String userId) {
+    public Optional<Reservation> findByConcertScheduleIdAndUserId(Long concertScheduleId, Long userId) {
         return reservationJpaRepository.findByConcertScheduleIdAndUserId(concertScheduleId, userId)
                 .map(ReservationJpaEntity::toDomain);
     }
 
     @Override
-    public List<Reservation> findByConcertScheduleId(String concertScheduleId) {
+    public List<Reservation> findByConcertScheduleId(Long concertScheduleId) {
         return reservationJpaRepository.findByConcertScheduleId(concertScheduleId).stream()
                 .map(ReservationJpaEntity::toDomain)
                 .toList();
@@ -62,13 +63,13 @@ public class ReservationRepositoryImpl implements ReservationRepository {
 
     @Override
     public List<Reservation> findAllByExpirationCriteria() {
-        return reservationJpaRepository.findAllByExpirationCriteria().stream()
+        return reservationJpaRepository.findAllByExpirationCriteria(LocalDateTime.now()).stream()
                 .map(ReservationJpaEntity::toDomain)
                 .toList();
     }
 
     @Override
-    public Optional<Reservation> findPendingReservationByUserId(String userId) {
+    public Optional<Reservation> findPendingReservationByUserId(Long userId) {
         return reservationJpaRepository.findPendingReservationByUserId(userId)
                 .map(ReservationJpaEntity::toDomain);
     }

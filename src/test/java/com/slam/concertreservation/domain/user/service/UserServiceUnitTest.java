@@ -34,25 +34,24 @@ public class UserServiceUnitTest {
 
     @Test
     @DisplayName("실패 : 존재하지 않는 회원 조회 시 UnavailableRequestException 발생하며 실패한다.")
-    void shouldThrowUnavailableRequestException_WhenUserNotFound(){
+    void shouldThrowUnavailableRequestException_WhenUserNotFound() {
         // given
-        String userId = "1";
+        Long userId = 1L;
 
         // when & then
         Mockito.when(userRepository.findUserByUserId(userId))
                 .thenReturn(Optional.empty());
 
         Assertions.assertThatThrownBy(() -> {
-                    userService.findUserByUserId(userId);
-                })
+            userService.findUserByUserId(userId);
+        })
                 .isInstanceOf(UnavailableRequestException.class);
     }
 
     @Test
     @DisplayName("성공 : 회원 가입 시 회원이 성공적으로 생성되어 저장된다.")
-    void shouldCreateAndSaveUser_WhenNewUserJoins(){
+    void shouldCreateAndSaveUser_WhenNewUserJoins() {
         // given
-        String userId = "1";
         String userName = "우도균";
         User expectedUser = User.create("우도균");
 
@@ -67,9 +66,9 @@ public class UserServiceUnitTest {
 
     @Test
     @DisplayName("성공 : 이미 가입한 회원의 ID로 회원 조회 시 해당 회원이 성공적으로 조회된다.")
-    void shouldReturnExistingUser_WhenThatUserIdExist(){
+    void shouldReturnExistingUser_WhenThatUserIdExist() {
         // given
-        String userId = "1";
+        Long userId = 1L;
         String userName = "김선빈";
         User expectedUser = User.create(userId, userName);
 

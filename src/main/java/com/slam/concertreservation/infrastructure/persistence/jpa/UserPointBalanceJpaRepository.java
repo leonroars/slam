@@ -4,7 +4,7 @@ import com.slam.concertreservation.infrastructure.persistence.jpa.entities.UserP
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserPointBalanceJpaRepository extends JpaRepository<UserPointBalanceJpaEntity, String> {
+public interface UserPointBalanceJpaRepository extends JpaRepository<UserPointBalanceJpaEntity, Long> {
 
-    Optional<UserPointBalanceJpaEntity> findByUserId(String userId);
+    Optional<UserPointBalanceJpaEntity> findByUserId(Long userId);
 }

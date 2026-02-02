@@ -21,7 +21,7 @@ public class ConcertRepositoryImpl implements ConcertRepository {
     }
 
     @Override
-    public Optional<Concert> findById(String concertId) {
+    public Optional<Concert> findById(Long concertId) {
         return concertJpaRepository.findById(concertId)
                 .map(ConcertJpaEntity::toDomain);
     }

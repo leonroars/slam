@@ -20,14 +20,11 @@ public class ReservationExpireEventListener {
 
         // 가예약 만료 트랜잭션 정상 처리 시 해당 가예약이 선점하던 좌석 해제.
         concertService.unassignSeatOfConcertSchedule(
-                reservationExpirationEvent.concertScheduleId()
-                , reservationExpirationEvent.seatId()
-        );
+                reservationExpirationEvent.concertScheduleId(), reservationExpirationEvent.seatId());
 
         log.warn("가예약 만료로 인한 좌석 선점 해제 완료: concertScheduleId: {}, seatId: {}",
                 reservationExpirationEvent.concertScheduleId(),
                 reservationExpirationEvent.seatId());
     }
-
 
 }

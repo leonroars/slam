@@ -17,12 +17,11 @@ public class PointHistoryRepositoryImpl implements PointHistoryRepository {
     public PointHistory save(PointHistory pointHistory) {
         return PointHistoryJpaEntity.toDomain(
                 pointHistoryJpaRepository
-                        .save(PointHistoryJpaEntity.fromDomain(pointHistory))
-        );
+                        .save(PointHistoryJpaEntity.fromDomain(pointHistory)));
     }
 
     @Override
-    public List<PointHistory> findByUserId(String userId) {
+    public List<PointHistory> findByUserId(Long userId) {
         return pointHistoryJpaRepository
                 .findByUserId(userId)
                 .stream()

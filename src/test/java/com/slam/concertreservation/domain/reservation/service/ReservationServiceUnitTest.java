@@ -64,12 +64,14 @@ public class ReservationServiceUnitTest {
         @DisplayName("성공 : 중복이 아닌 예약을 생성하여 저장할 경우 저장된 예약을 반환한다.")
         void shouldReturnSavedReservation_WhenCreateReservation() {
             // given
-            String userId = "user1";
-            String concertScheduleId = "schedule1";
-            String seatId = "seat1";
+            Long userId = 1L;
+            Long concertScheduleId = 1L;
+            Long seatId = 2L;
             int price = 1000;
 
-            Reservation reservation = Reservation.create(String.valueOf(1L), userId, seatId, concertScheduleId, price, LocalDateTime.now().plusMinutes(6), LocalDateTime.now());
+            Reservation reservation = Reservation.create(1L, userId, seatId, concertScheduleId,
+                    ReservationStatus.PREEMPTED, price,
+                    LocalDateTime.now().plusMinutes(6), LocalDateTime.now(), LocalDateTime.now());
 
             when(reservationRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId))
                     .thenReturn(Optional.empty());
@@ -90,25 +92,28 @@ public class ReservationServiceUnitTest {
         @DisplayName("실패 : 이미 예약 확정되었거나 가예약 진행 중인 좌석을 예약하려 하면 UnavailableRequestException 이 발생하며 실패한다.")
         void shouldThrowUnavailableRequestException_WhenSeatAlreadyReserved() {
             // given
-            String userId = "user1";
-            String concertScheduleId = "schedule1";
-            String seatId = "seat1";
+            Long userId = 1L;
+            Long concertScheduleId = 1L;
+            Long seatId = 2L;
             int price = 1000;
 
-            Reservation existingReservation = Reservation.create("1", "user2", seatId, concertScheduleId, price);
+            Reservation existingReservation = Reservation.create(1L, 2L, seatId, concertScheduleId, price);
             existingReservation.confirm(); // Status PAID
 
             when(reservationRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId))
                     .thenReturn(Optional.of(existingReservation));
 
             // when & then
-            Assertions.assertThatThrownBy(() -> reservationService.createReservation(userId, concertScheduleId, seatId, price))
+            Assertions
+                    .assertThatThrownBy(
+                            () -> reservationService.createReservation(userId, concertScheduleId, seatId, price))
                     .isInstanceOf(UnavailableRequestException.class);
 
             verify(reservationRepository, times(1)).findByConcertScheduleIdAndSeatId(concertScheduleId, seatId);
             verify(reservationRepository, never()).save(any(Reservation.class));
         }
     }
+
     @Nested
     @DisplayName("getReservation 메서드 테스트")
     class GetReservationTests {
@@ -117,9 +122,9 @@ public class ReservationServiceUnitTest {
         @DisplayName("성공 : 존재하는 예약 ID로 조회하면 해당 예약을 반환한다.")
         void shouldReturnReservation_WhenReservationExists() {
             // given
-            String reservationId = "1";
+            Long reservationId = 1L;
             int price = 1000;
-            Reservation reservation = Reservation.create(reservationId, "user1", "seat1", "schedule1", price);
+            Reservation reservation = Reservation.create(reservationId, 1L, 2L, 1L, price);
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
 
@@ -136,13 +141,13 @@ public class ReservationServiceUnitTest {
         @DisplayName("실패 : 존재하지 않는 예약 ID로 조회하려 하면 UnavailableRequestException이 발생하며 실패한다.")
         void shouldThrowUnavailableRequestException_WhenReservationNotFound() {
             // given
-            String reservationId = "unknown";
+            Long reservationId = 999L;
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.empty());
 
             // when & then
-            UnavailableRequestException exception = assertThrows(UnavailableRequestException.class, () ->
-                    reservationService.getReservation(reservationId));
+            UnavailableRequestException exception = assertThrows(UnavailableRequestException.class,
+                    () -> reservationService.getReservation(reservationId));
 
             verify(reservationRepository, times(1)).findById(reservationId);
         }
@@ -155,10 +160,10 @@ public class ReservationServiceUnitTest {
         @DisplayName("성공 : 존재하는 사용자의 예약을 조회하면 예약 목록을 반환한다.")
         void shouldReturnReservations_WhenUserHasReservations() {
             // given
-            String userId = "user1";
+            Long userId = 1L;
             int price = 1000;
-            Reservation reservation1 = Reservation.create("1", userId, "seat1", "schedule1", price);
-            Reservation reservation2 = Reservation.create("2", userId, "seat2", "schedule1", price);
+            Reservation reservation1 = Reservation.create(1L, userId, 1L, 1L, price);
+            Reservation reservation2 = Reservation.create(2L, userId, 2L, 1L, price);
             List<Reservation> reservations = Arrays.asList(reservation1, reservation2);
 
             when(reservationRepository.findByUserId(userId)).thenReturn(reservations);
@@ -169,15 +174,15 @@ public class ReservationServiceUnitTest {
             // then
             verify(reservationRepository, times(1)).findByUserId(userId);
             assertEquals(2, result.size());
-            assertEquals("1", result.get(0).getId());
-            assertEquals("2", result.get(1).getId());
+            assertEquals(1L, result.get(0).getId());
+            assertEquals(2L, result.get(1).getId());
         }
 
         @Test
         @DisplayName("실패 : 사용자의 예약이 없으면 길이가 0인 빈 리스트를 반환한다.")
         void shouldThrowUnavailableRequestException_WhenUserHasNoReservations() {
             // given
-            String userId = "user1";
+            Long userId = 1L;
 
             when(reservationRepository.findByUserId(userId)).thenReturn(Collections.emptyList());
 
@@ -196,9 +201,9 @@ public class ReservationServiceUnitTest {
         @DisplayName("성공 : 유효한 예약을 취소하면 상태가 CANCELLED로 변경된 예약을 반환한다.")
         void shouldCancelReservation_WhenValidReservation() {
             // given
-            String reservationId = "1";
+            Long reservationId = 1L;
             int price = 1000;
-            Reservation reservation = Reservation.create(reservationId, "user1", "seat1", "schedule1", price);
+            Reservation reservation = Reservation.create(reservationId, 1L, 2L, 1L, price);
             reservation.confirm(); // Status PAID
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
@@ -217,16 +222,16 @@ public class ReservationServiceUnitTest {
         @DisplayName("실패 : 예약 상태가 PAID가 아니면 BusinessRuleViolationException이 발생하며 실패한다.")
         void shouldThrowBusinessRuleViolationException_WhenReservationNotPaid() {
             // given
-            String reservationId = "1";
+            Long reservationId = 1L;
             int price = 1000;
-            Reservation reservation = Reservation.create(reservationId, "user1", "seat1", "schedule1", price);
+            Reservation reservation = Reservation.create(reservationId, 1L, 2L, 1L, price);
             // Status BOOKED
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
 
             // when & then
-            BusinessRuleViolationException exception = assertThrows(BusinessRuleViolationException.class, () ->
-                    reservationService.cancelReservation(reservationId));
+            BusinessRuleViolationException exception = assertThrows(BusinessRuleViolationException.class,
+                    () -> reservationService.cancelReservation(reservationId));
 
             verify(reservationRepository, times(1)).findById(reservationId);
             verify(reservationRepository, never()).save(any(Reservation.class));
@@ -241,9 +246,9 @@ public class ReservationServiceUnitTest {
         @DisplayName("성공 : 유효한 예약을 확정하면 상태가 PAID로 변경된 예약을 반환한다.")
         void shouldConfirmReservation_WhenValidReservation() {
             // given
-            String reservationId = "1";
+            Long reservationId = 1L;
             int price = 1000;
-            Reservation reservation = Reservation.create(reservationId, "user1", "seat1", "schedule1", price);
+            Reservation reservation = Reservation.create(reservationId, 1L, 2L, 1L, price);
             // Status BOOKED
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
@@ -261,9 +266,9 @@ public class ReservationServiceUnitTest {
         @DisplayName("실패 : 예약 상태가 BOOKED가 아니면 BusinessRuleViolationException이 발생하며 실패한다.")
         void shouldThrowBusinessRuleViolationException_WhenReservationNotBooked() {
             // given
-            String reservationId = "1";
+            Long reservationId = 1L;
             int price = 1000;
-            Reservation reservation = Reservation.create(reservationId, "user1", "seat1", "schedule1", price);
+            Reservation reservation = Reservation.create(reservationId, 1L, 2L, 1L, price);
             reservation.confirm(); // Status PAID
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
@@ -286,8 +291,8 @@ public class ReservationServiceUnitTest {
         void shouldReturnReservationsToBeExpired_WhenReservationsExist() {
             // given
             int price = 1000;
-            Reservation reservation1 = Reservation.create("1", "user1", "seat1", "schedule1", price);
-            Reservation reservation2 = Reservation.create("2", "user2", "seat2", "schedule1", price);
+            Reservation reservation1 = Reservation.create(1L, 1L, 2L, 1L, price);
+            Reservation reservation2 = Reservation.create(2L, 2L, 3L, 1L, price);
 
             // 두 예약 만료 처리. 상태는 여전히 BOOKED
             reservation1.initiateExpiredAt(LocalDateTime.now());

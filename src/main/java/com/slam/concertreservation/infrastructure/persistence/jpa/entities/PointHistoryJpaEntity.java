@@ -16,13 +16,12 @@ public class PointHistoryJpaEntity {
 
     @Id
     @Column(name = "point_history_id")
-    private String id;
-    private String userId;
+    private Long id;
+    private Long userId;
     private int point;
     private String transactionType;
     private String description;
     private LocalDateTime transactionDate;
-
 
     public static PointHistory toDomain(PointHistoryJpaEntity entity) {
         return new PointHistory(
@@ -30,8 +29,7 @@ public class PointHistoryJpaEntity {
                 entity.getUserId(),
                 PointTransactionType.valueOf(entity.getTransactionType()),
                 entity.getPoint(),
-                entity.getTransactionDate()
-        );
+                entity.getTransactionDate());
     }
 
     public static PointHistoryJpaEntity fromDomain(PointHistory pointHistory) {

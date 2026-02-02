@@ -15,7 +15,7 @@ public class ConcertScheduleUnitTest {
 
     @Test
     @DisplayName("실패 : 예약 시작 시점 이전에 공연이 시작하는 공연일정 생성 시도 시 BusinessRuleViolationException 발생하며 실패한다.")
-    void shouldThrowBusinessRuleViolationException_WhenCocnertStartsBeforeItsReservationStarts(){
+    void shouldThrowBusinessRuleViolationException_WhenCocnertStartsBeforeItsReservationStarts() {
         // given
         LocalDateTime dateTime = FIRST; // 공연 시작 일자
         LocalDateTime reservationStartAt = SECOND;
@@ -23,13 +23,13 @@ public class ConcertScheduleUnitTest {
 
         // when & then
         Assertions.assertThatThrownBy(
-                () -> ConcertSchedule.create("1", dateTime, reservationStartAt, reservationEndAt)
-        ).isInstanceOf(BusinessRuleViolationException.class);
+                () -> ConcertSchedule.create(1L, dateTime, reservationStartAt, reservationEndAt))
+                .isInstanceOf(BusinessRuleViolationException.class);
     }
 
     @Test
     @DisplayName("실패 : 예약 종료 시점 이전에 공연이 시작하는 공연 일정 생성 시도 시 BusinessRuleViolationException 발생하며 실패한다.")
-    void shouldThrowBusinessRuleViolationException_WhenCocnertStartsBeforeItsReservationEnds(){
+    void shouldThrowBusinessRuleViolationException_WhenCocnertStartsBeforeItsReservationEnds() {
         // given
         LocalDateTime dateTime = FIRST; // 공연 시작 일자
         LocalDateTime reservationStartAt = SECOND;
@@ -37,13 +37,13 @@ public class ConcertScheduleUnitTest {
 
         // when & then
         Assertions.assertThatThrownBy(
-                () -> ConcertSchedule.create("1", dateTime, reservationStartAt, reservationEndAt)
-        ).isInstanceOf(BusinessRuleViolationException.class);
+                () -> ConcertSchedule.create(1L, dateTime, reservationStartAt, reservationEndAt))
+                .isInstanceOf(BusinessRuleViolationException.class);
     }
 
     @Test
     @DisplayName("성공 : 적법한 공연 일정 생성은 성공한다.")
-    void shouldSuccessfullyCreateConcertSchedule_WhenItIsLegal(){
+    void shouldSuccessfullyCreateConcertSchedule_WhenItIsLegal() {
         // given
         LocalDateTime dateTime = THIRD; // 공연 시작 일자
         LocalDateTime reservationStartAt = FIRST;
@@ -51,8 +51,8 @@ public class ConcertScheduleUnitTest {
 
         // when & then
         Assertions.assertThatCode(
-                () -> ConcertSchedule.create("1", dateTime, reservationStartAt, reservationEndAt)
-        ).doesNotThrowAnyException();
+                () -> ConcertSchedule.create(1L, dateTime, reservationStartAt, reservationEndAt))
+                .doesNotThrowAnyException();
 
     }
 }

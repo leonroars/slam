@@ -10,25 +10,24 @@ public interface ReservationRepository {
     Reservation save(Reservation reservation);
 
     // 예약 ID로 예약 조회
-    Optional<Reservation> findById(String reservationId);
+    Optional<Reservation> findById(Long reservationId);
 
     // 사용자 ID로 예약 조회
-    List<Reservation> findByUserId(String userId);
+    List<Reservation> findByUserId(Long userId);
 
     // 공연 일정 ID와 좌석 ID로 예약 조회. 단 건 조회인 대신 Service.register() 시 중복 여부 검증을 수행한다.
-    Optional<Reservation> findByConcertScheduleIdAndSeatId(String concertScheduleId, String seatId);
+    Optional<Reservation> findByConcertScheduleIdAndSeatId(Long concertScheduleId, Long seatId);
 
     // 공연 일정 ID와 사용자 ID로 예약 조회.
-    Optional<Reservation> findByConcertScheduleIdAndUserId(String concertScheduleId, String userId);
+    Optional<Reservation> findByConcertScheduleIdAndUserId(Long concertScheduleId, Long userId);
 
     // 공연 일정 ID로 예약 조회
-    List<Reservation> findByConcertScheduleId(String concertScheduleId);
+    List<Reservation> findByConcertScheduleId(Long concertScheduleId);
 
     // 만료 대상인 예약 전체 조회.
     List<Reservation> findAllByExpirationCriteria();
 
     // 특정 유저의 가예약 조회.
-    Optional<Reservation> findPendingReservationByUserId(String userId);
-
+    Optional<Reservation> findPendingReservationByUserId(Long userId);
 
 }

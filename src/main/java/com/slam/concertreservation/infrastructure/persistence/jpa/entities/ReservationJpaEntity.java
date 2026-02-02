@@ -12,19 +12,19 @@ import lombok.Getter;
 @Entity
 @Getter
 @Table(name = "`RESERVATION`")
-public class ReservationJpaEntity extends BaseJpaEntity{
+public class ReservationJpaEntity extends BaseJpaEntity {
 
     @Id
     @Column(name = "reservation_id")
-    private String id;
-    private String userId;
-    private String concertScheduleId;
-    private String seatId;
+    private Long id;
+    private Long userId;
+    private Long concertScheduleId;
+    private Long seatId;
     private Integer price;
     private String status;
     private LocalDateTime expiredAt;
 
-    public Reservation toDomain(){
+    public Reservation toDomain() {
         return Reservation.create(
                 this.getId(),
                 this.getUserId(),
@@ -34,11 +34,10 @@ public class ReservationJpaEntity extends BaseJpaEntity{
                 this.getPrice(),
                 this.getExpiredAt(),
                 this.getCreated_at(),
-                this.getUpdated_at()
-        );
+                this.getUpdated_at());
     }
 
-    public static ReservationJpaEntity fromDomain(Reservation reservation){
+    public static ReservationJpaEntity fromDomain(Reservation reservation) {
         ReservationJpaEntity entity = new ReservationJpaEntity();
         entity.id = reservation.getId();
         entity.userId = reservation.getUserId();

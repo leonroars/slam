@@ -1,15 +1,13 @@
 package com.slam.concertreservation.domain.point.event;
 
 public record PaymentEvent(
-        String userId,
+        Long userId,
         Integer point,
-        String reservationId
-) {
-    public static PaymentEvent fromDomain(String userId, Integer point, String reservationId){
+        Long reservationId) {
+    public static PaymentEvent fromDomain(Long userId, Integer point, Long reservationId) {
         return new PaymentEvent(
                 userId,
                 point,
-                reservationId
-        );
+                reservationId);
     }
 }

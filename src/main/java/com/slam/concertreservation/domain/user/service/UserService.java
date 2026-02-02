@@ -18,8 +18,9 @@ public class UserService {
     }
 
     // 회원 조회
-    public User findUserByUserId(String userId) {
+    public User findUserByUserId(Long userId) {
         return userRepository.findUserByUserId(userId)
-                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND, "해당 사용자가 존재하지 않으므로 조회가 불가합니다."));
+                .orElseThrow(() -> new UnavailableRequestException(ErrorCode.USER_NOT_FOUND,
+                        "해당 사용자가 존재하지 않으므로 조회가 불가합니다."));
     }
 }

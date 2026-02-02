@@ -15,10 +15,10 @@ import lombok.Getter;
         @Index(name = "IDX_SEAT_CONCERT_SCHEDULE_ID", columnList = "concertScheduleId")
 })
 @Getter
-public class SeatJpaEntity extends BaseJpaEntity{
+public class SeatJpaEntity extends BaseJpaEntity {
     @Id
-    private String seatId;
-    private String concertScheduleId;
+    private Long seatId;
+    private Long concertScheduleId;
     private int number;
     private int price;
     private String status;
@@ -50,6 +50,7 @@ public class SeatJpaEntity extends BaseJpaEntity{
 
     /**
      * {@code List<Seat>} -> {@code List<SeatJpaEntity>}
+     * 
      * @param seats
      * @return
      */

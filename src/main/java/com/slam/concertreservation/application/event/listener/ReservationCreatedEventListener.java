@@ -17,6 +17,7 @@ public class ReservationCreatedEventListener {
 
     /**
      * 예약 생성 로직 처리 중 롤백 발생 시 -> 좌석 선점 해제
+     * 
      * @param reservationCreationEvent
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
@@ -24,12 +25,10 @@ public class ReservationCreatedEventListener {
 
         concertService.unassignSeatOfConcertSchedule(
                 reservationCreationEvent.concertScheduleId(),
-                reservationCreationEvent.seatId()
-        );
+                reservationCreationEvent.seatId());
         log.warn("예약 생성 롤백으로 인한 좌석 선점 해제 완료: concertScheduleId: {}, seatId: {}",
                 reservationCreationEvent.concertScheduleId(),
                 reservationCreationEvent.seatId());
     }
 
 }
-

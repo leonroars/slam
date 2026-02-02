@@ -7,5 +7,5 @@ public interface ConcertRepository {
 
     Concert save(Concert concert);
 
-    Optional<Concert> findById(String id);
+    Optional<Concert> findById(Long id);
 }

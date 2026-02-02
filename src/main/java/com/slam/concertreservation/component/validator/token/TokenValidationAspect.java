@@ -16,10 +16,11 @@ public class TokenValidationAspect {
     private final QueueService queueService;
 
     @Pointcut("@annotation(com.slam.concertreservation.component.validator.token.RequiresTokenValidation)")
-    public void tokenValidationPointcut() {}
+    public void tokenValidationPointcut() {
+    }
 
     @Before("tokenValidationPointcut() && args(concertScheduleId, tokenId,..)")
-    public void validateToken(JoinPoint joinPoint, String concertScheduleId, String tokenId) {
+    public void validateToken(JoinPoint joinPoint, Long concertScheduleId, String tokenId) {
 
         boolean isValid = queueService.validateToken(concertScheduleId, tokenId);
         if (!isValid) {
@@ -27,4 +28,3 @@ public class TokenValidationAspect {
         }
     }
 }
-

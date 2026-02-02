@@ -11,15 +11,14 @@ import java.time.LocalDateTime;
 import lombok.Getter;
 
 @Entity
-@Table(name = "`CONCERTSCHEDULE`"
-        , indexes = @Index(name = "IDX_RESERVATION_AVAILABLE_PERIOD", columnList = "reservationStartAt, reservationEndAt"))
+@Table(name = "`CONCERTSCHEDULE`", indexes = @Index(name = "IDX_RESERVATION_AVAILABLE_PERIOD", columnList = "reservationStartAt, reservationEndAt"))
 @Getter
-public class ConcertScheduleJpaEntity extends BaseJpaEntity{
+public class ConcertScheduleJpaEntity extends BaseJpaEntity {
 
     @Id
     @Column(name = "concert_schedule_id")
-    private String concertScheduleId;
-    private String concertId;
+    private Long concertScheduleId;
+    private Long concertId;
     private String availability;
     private LocalDateTime datetime;
     private LocalDateTime reservationStartAt;
@@ -37,7 +36,7 @@ public class ConcertScheduleJpaEntity extends BaseJpaEntity{
         return entity;
     }
 
-    public ConcertSchedule toDomain(){
+    public ConcertSchedule toDomain() {
         return ConcertSchedule.create(
                 this.concertScheduleId,
                 this.concertId,

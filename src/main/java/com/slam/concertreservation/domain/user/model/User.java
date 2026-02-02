@@ -1,30 +1,27 @@
 package com.slam.concertreservation.domain.user.model;
 
-import java.util.UUID;
+import io.hypersistence.tsid.TSID;
 import lombok.Getter;
 
 @Getter
 public class User {
-    private final String id;
+    private final Long id;
     private final String name;
 
     // 기본 생성자. : Private
-    private User(String id, String name) {
+    private User(Long id, String name) {
         this.id = id;
         this.name = name;
     }
 
-
-    public static User create(String id, String name){
+    public static User create(Long id, String name) {
         return new User(id, name);
     }
 
     // 실제 생성 시에는 사용자의 이름만 받아 생성하게 되므로 다음과 같은 팩토리 메서드를 정의한다.
-    public static User create(String name){
+    public static User create(String name) {
         return new User(
-                String.valueOf(UUID.randomUUID())
-                , name
-        );
+                TSID.fast().toLong(), name);
     }
 
     // Domain Model Entity 간 비교를 위해 equals() 구현.

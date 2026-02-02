@@ -2,16 +2,16 @@ package com.slam.concertreservation.domain.reservation.model;
 
 import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
+import io.hypersistence.tsid.TSID;
 import java.time.LocalDateTime;
-import java.util.UUID;
 import lombok.Getter;
 
 @Getter
 public class Reservation {
-    private String id;
-    private String userId;
-    private String seatId;
-    private String concertScheduleId;
+    private Long id;
+    private Long userId;
+    private Long seatId;
+    private Long concertScheduleId;
     private ReservationStatus status; // 최초 생성 시 BOOKED 상태
     private Integer price; // 결제 금액
 
@@ -25,17 +25,22 @@ public class Reservation {
 
     public static final int VALID_FOR_MINUTES = 5;
 
-    private Reservation(){}
+    private Reservation() {
+    }
 
     /**
      * BOOKED 상태의 예약에 대한 만료 처리를 수행합니다.
-     * <br></br>
-     * 만료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다. 이외엔 {@code BusinessRuleViolationException} 발생합니다.
+     * <br>
+     * </br>
+     * 만료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다. 이외엔
+     * {@code BusinessRuleViolationException} 발생합니다.
+     * 
      * @return
      */
-    public Reservation expire(){
-        if(this.status != ReservationStatus.PREEMPTED){
-            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "만료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
+    public Reservation expire() {
+        if (this.status != ReservationStatus.PREEMPTED) {
+            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION,
+                    "만료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
         }
         this.status = ReservationStatus.EXPIRED;
         return this;
@@ -43,13 +48,17 @@ public class Reservation {
 
     /**
      * 예약을 취소합니다.
-     * <br></br>
-     * 취소 처리는 오직 PAID 상태의 예약에 대해서만 가능합니다. 이외엔 {@code BusinessRuleViolationException} 발생합니다.
+     * <br>
+     * </br>
+     * 취소 처리는 오직 PAID 상태의 예약에 대해서만 가능합니다. 이외엔 {@code BusinessRuleViolationException}
+     * 발생합니다.
+     * 
      * @return
      */
     public Reservation cancel() {
         if (this.status != ReservationStatus.CONFIRMED) {
-            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "취소 처리는 오직 PAID 상태의 예약에 대해서만 가능합니다.");
+            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION,
+                    "취소 처리는 오직 PAID 상태의 예약에 대해서만 가능합니다.");
         }
         this.status = ReservationStatus.CANCELLED;
         return this;
@@ -57,13 +66,17 @@ public class Reservation {
 
     /**
      * 결제를 통해 예약을 완료합니다.
-     * <br></br>
-     * 완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다. 이외엔 {@code BusinessRuleViolationException} 발생합니다.
+     * <br>
+     * </br>
+     * 완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다. 이외엔
+     * {@code BusinessRuleViolationException} 발생합니다.
+     * 
      * @return
      */
     public Reservation confirm() {
         if (this.status != ReservationStatus.PREEMPTED) {
-            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
+            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION,
+                    "완료 처리는 오직 BOOKED 상태의 예약에 대해서만 가능합니다.");
         }
         this.status = ReservationStatus.CONFIRMED;
         return this;
@@ -71,13 +84,17 @@ public class Reservation {
 
     /**
      * 서비스로 진입한 결제 요청에 따라, Reservation 의 상태를 PREEMPTED->PAYMENT_PENDING으로 변경.
-     * <br></br>
-     * 이와 같은 도메인 모델 상태 전의 규칙 정의를 통해, `NON-FIFO` MQ 활용 시 발생 가능한 메세지 순서 역전 방어를 위한 안전 장치를 마련.
+     * <br>
+     * </br>
+     * 이와 같은 도메인 모델 상태 전의 규칙 정의를 통해, `NON-FIFO` MQ 활용 시 발생 가능한 메세지 순서 역전 방어를 위한 안전
+     * 장치를 마련.
+     * 
      * @return
      */
     public Reservation beginPayment() {
-        if(this.status != ReservationStatus.PREEMPTED){
-            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION, "결제 요청은 PREEMPTED 상태의 예약에 대해서만 가능합니다.");
+        if (this.status != ReservationStatus.PREEMPTED) {
+            throw new BusinessRuleViolationException(ErrorCode.DOMAIN_RULE_VIOLATION,
+                    "결제 요청은 PREEMPTED 상태의 예약에 대해서만 가능합니다.");
         }
         this.status = ReservationStatus.PAYMENT_PENDING;
         return this;
@@ -85,69 +102,76 @@ public class Reservation {
 
     /**
      * 예약 취소 롤백. 좌석 선점 해제 실패 시 호출.
+     * 
      * @return
      */
-    public Reservation rollbackCancel(){
+    public Reservation rollbackCancel() {
         this.status = ReservationStatus.CONFIRMED;
         return this;
     }
 
     /**
      * 예약 확정 롤백. 결제 실패 시 호출.
+     * 
      * @return
      */
-    public Reservation rollbackReserve(){
+    public Reservation rollbackReserve() {
         this.status = ReservationStatus.PREEMPTED;
         return this;
     }
 
     /**
      * 예약 만료 롤백. 만료 처리 실패 시 호출.
+     * 
      * @return
      */
-    public Reservation rollbackExpire(){
+    public Reservation rollbackExpire() {
         this.status = ReservationStatus.PREEMPTED;
         return this;
     }
 
     /**
      * 현재 과제 요구사항 상 예약이 확정되지 않았을 때 만료시키기 위해 '만료 시점'을 명시하는 필드를 추가하였습니다.
-     * <br></br>
+     * <br>
+     * </br>
      * 하지만 이를 도메인 로직 상에서 처리할 경우 실제 해당 객체의 persist가 이루어지기까지 시간 차가 발생할 수 있고,
      * <br>
      * 정확한 비즈니스 요구사항 시행이 불가하다고 판단했습니다.
-     * <br></br>
+     * <br>
+     * </br>
      * 또한 Infrastructure level 에서 @PostPersist 와 같은 방식을 사용해보려 했으나,
      * <br>
      * 해당 방식은 비즈니스 로직이 Infrastructure level에 의존하게 되는 문제가 있다고 생각했습니다.
-     * <br></br>
+     * <br>
+     * </br>
      * 따라서 '만료 시간 정의'를 도메인 로직으로 보고, 해당 로직을 도메인 모델 내부에 구현하여 해당 필드 수정이 가능하도록 하였습니다.
-     * <br></br>
+     * <br>
+     * </br>
      * 이후 만료 시간이 갱신된 도메인 모델을 서비스 로직에서 한 번 더 명시적으로 저장하도록 구현할 예정입니다.
-     * <br></br>
-     * 이렇게 했을 때 확보할 수 있는 서비스 로직의 명료함/정확함이 두 번의 삽입 연산으로부터 발생할 수 있는 오버헤드보다 유익하다고 생각했기 때문입니다.
+     * <br>
+     * </br>
+     * 이렇게 했을 때 확보할 수 있는 서비스 로직의 명료함/정확함이 두 번의 삽입 연산으로부터 발생할 수 있는 오버헤드보다 유익하다고 생각했기
+     * 때문입니다.
+     * 
      * @return
      */
-    public void initiateExpiredAt(){
+    public void initiateExpiredAt() {
         this.expiredAt = this.createdAt.plusMinutes(VALID_FOR_MINUTES);
     }
 
     /**
      * 테스트 가능성을 위해, 임의의 만료 시간을 설정할 수 있는 메서드를 추가하였습니다.
+     * 
      * @param intendedTime
      */
-    public void initiateExpiredAt(LocalDateTime intendedTime){
+    public void initiateExpiredAt(LocalDateTime intendedTime) {
         this.expiredAt = intendedTime;
     }
 
     // 정적 팩토리 메서드 1 : 전체 필드 활용 생성
-    public static Reservation create(String id
-            , String userId
-            , String seatId
-            , String concertScheduleId
-            , ReservationStatus status
-            , Integer price
-            , LocalDateTime expiredAt, LocalDateTime createdAt, LocalDateTime updatedAt){
+    public static Reservation create(Long id, Long userId, Long seatId, Long concertScheduleId,
+            ReservationStatus status, Integer price, LocalDateTime expiredAt, LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
         Reservation reservation = new Reservation();
         reservation.id = id;
         reservation.userId = userId;
@@ -163,22 +187,25 @@ public class Reservation {
     }
 
     // 정적 팩토리 메서드 2 : status 미포함 (초기화 용도.)
-    public static Reservation create(String id, String userId, String seatId, String concertScheduleId, Integer price, LocalDateTime expiredAt, LocalDateTime createdAt){
-        return create(id, userId, seatId, concertScheduleId, ReservationStatus.PREEMPTED, price, expiredAt, createdAt, null);
+    public static Reservation create(Long id, Long userId, Long seatId, Long concertScheduleId, Integer price,
+            LocalDateTime expiredAt, LocalDateTime createdAt) {
+        return create(id, userId, seatId, concertScheduleId, ReservationStatus.PREEMPTED, price, expiredAt, createdAt,
+                null);
     }
 
     // 정적 팩토리 메서드 2 : ID, 만료시간 미포함
-    public static Reservation create(String userId, String seatId, String concertScheduleId, Integer price){
-        return create(UUID.randomUUID().toString(), userId, seatId, concertScheduleId, price, null, null);
+    public static Reservation create(Long userId, Long seatId, Long concertScheduleId, Integer price) {
+        return create(TSID.fast().toLong(), userId, seatId, concertScheduleId, price, null, null);
     }
 
     // 정적 팩토리 메서드 3 : ID 미포함, 만료시간 포함
-    public static Reservation create(String userId, String seatId, String concertScheduleId, Integer price, LocalDateTime expiredAt){
-        return create(UUID.randomUUID().toString(), userId, seatId, concertScheduleId, price, expiredAt, null);
+    public static Reservation create(Long userId, Long seatId, Long concertScheduleId, Integer price,
+            LocalDateTime expiredAt) {
+        return create(TSID.fast().toLong(), userId, seatId, concertScheduleId, price, expiredAt, null);
     }
 
     // 정적 팩토리 메서드 4: ID 포함, 만료시간 미포함
-    public static Reservation create(String id, String userId, String seatId, String concertScheduleId, Integer price){
+    public static Reservation create(Long id, Long userId, Long seatId, Long concertScheduleId, Integer price) {
         return create(id, userId, seatId, concertScheduleId, price, null, null);
     }
 }

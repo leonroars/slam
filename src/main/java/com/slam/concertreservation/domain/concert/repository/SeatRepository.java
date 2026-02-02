@@ -12,14 +12,14 @@ public interface SeatRepository {
     List<Seat> saveAll(List<Seat> seats);
 
     // 좌석 조회
-    Optional<Seat> findById(String seatId);
+    Optional<Seat> findById(Long seatId);
 
     // 특정 공연 일정의 전체 좌석 목록 조회
-    List<Seat> findAllByConcertScheduleId(String concertScheduleId);
+    List<Seat> findAllByConcertScheduleId(Long concertScheduleId);
 
     // 특정 공연 일정의 예약 가능 좌석 목록 조회
-    List<Seat> findAllAvailableSeatsByConcertScheduleId(String concertScheduleId);
+    List<Seat> findAllAvailableSeatsByConcertScheduleId(Long concertScheduleId);
 
     // 특정 공연 일정의 선점 좌석 수 집계
-    int findOccupiedSeatsCount(String concertScheduleId);
+    int findOccupiedSeatsCount(Long concertScheduleId);
 }
