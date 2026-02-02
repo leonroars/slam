@@ -13,8 +13,8 @@ import org.springframework.test.context.ActiveProfiles;
  * UUID vs TSID 데이터베이스 삽입 성능 비교 테스트
  * 
  * 테스트 목적:
- * - 대량 삽입 시 UUID(String PK) vs TSID(Long PK) 성능 차이 측정
- * - B-Tree 인덱스 성능 특성 비교
+ * - 10,000건 삽입 시 UUID(String PK) vs TSID(Long PK) 성능 차이 측정
+ * 
  */
 @SpringBootTest
 @ActiveProfiles("test")
