@@ -65,8 +65,8 @@ public class ReservationServiceUnitTest {
         void shouldReturnSavedReservation_WhenCreateReservation() {
             // given
             Long userId = 1L;
-            String concertScheduleId = "schedule1";
-            String seatId = "seat1";
+            Long concertScheduleId = 1L;
+            Long seatId = 2L;
             int price = 1000;
 
             Reservation reservation = Reservation.create(1L, userId, seatId, concertScheduleId,
@@ -93,8 +93,8 @@ public class ReservationServiceUnitTest {
         void shouldThrowUnavailableRequestException_WhenSeatAlreadyReserved() {
             // given
             Long userId = 1L;
-            String concertScheduleId = "schedule1";
-            String seatId = "seat1";
+            Long concertScheduleId = 1L;
+            Long seatId = 2L;
             int price = 1000;
 
             Reservation existingReservation = Reservation.create(1L, 2L, seatId, concertScheduleId, price);
@@ -124,7 +124,7 @@ public class ReservationServiceUnitTest {
             // given
             Long reservationId = 1L;
             int price = 1000;
-            Reservation reservation = Reservation.create(reservationId, 1L, "seat1", "schedule1", price);
+            Reservation reservation = Reservation.create(reservationId, 1L, 2L, 1L, price);
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
 
@@ -162,8 +162,8 @@ public class ReservationServiceUnitTest {
             // given
             Long userId = 1L;
             int price = 1000;
-            Reservation reservation1 = Reservation.create(1L, userId, "seat1", "schedule1", price);
-            Reservation reservation2 = Reservation.create(2L, userId, "seat2", "schedule1", price);
+            Reservation reservation1 = Reservation.create(1L, userId, 1L, 1L, price);
+            Reservation reservation2 = Reservation.create(2L, userId, 2L, 1L, price);
             List<Reservation> reservations = Arrays.asList(reservation1, reservation2);
 
             when(reservationRepository.findByUserId(userId)).thenReturn(reservations);
@@ -203,7 +203,7 @@ public class ReservationServiceUnitTest {
             // given
             Long reservationId = 1L;
             int price = 1000;
-            Reservation reservation = Reservation.create(reservationId, 1L, "seat1", "schedule1", price);
+            Reservation reservation = Reservation.create(reservationId, 1L, 2L, 1L, price);
             reservation.confirm(); // Status PAID
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
@@ -224,7 +224,7 @@ public class ReservationServiceUnitTest {
             // given
             Long reservationId = 1L;
             int price = 1000;
-            Reservation reservation = Reservation.create(reservationId, 1L, "seat1", "schedule1", price);
+            Reservation reservation = Reservation.create(reservationId, 1L, 2L, 1L, price);
             // Status BOOKED
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
@@ -248,7 +248,7 @@ public class ReservationServiceUnitTest {
             // given
             Long reservationId = 1L;
             int price = 1000;
-            Reservation reservation = Reservation.create(reservationId, 1L, "seat1", "schedule1", price);
+            Reservation reservation = Reservation.create(reservationId, 1L, 2L, 1L, price);
             // Status BOOKED
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
@@ -268,7 +268,7 @@ public class ReservationServiceUnitTest {
             // given
             Long reservationId = 1L;
             int price = 1000;
-            Reservation reservation = Reservation.create(reservationId, 1L, "seat1", "schedule1", price);
+            Reservation reservation = Reservation.create(reservationId, 1L, 2L, 1L, price);
             reservation.confirm(); // Status PAID
 
             when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
@@ -291,8 +291,8 @@ public class ReservationServiceUnitTest {
         void shouldReturnReservationsToBeExpired_WhenReservationsExist() {
             // given
             int price = 1000;
-            Reservation reservation1 = Reservation.create(1L, 1L, "seat1", "schedule1", price);
-            Reservation reservation2 = Reservation.create(2L, 2L, "seat2", "schedule1", price);
+            Reservation reservation1 = Reservation.create(1L, 1L, 2L, 1L, price);
+            Reservation reservation2 = Reservation.create(2L, 2L, 3L, 1L, price);
 
             // 두 예약 만료 처리. 상태는 여전히 BOOKED
             reservation1.initiateExpiredAt(LocalDateTime.now());

@@ -18,8 +18,8 @@ public class ReservationJpaEntity extends BaseJpaEntity {
     @Column(name = "reservation_id")
     private Long id;
     private Long userId;
-    private String concertScheduleId;
-    private String seatId;
+    private Long concertScheduleId;
+    private Long seatId;
     private Integer price;
     private String status;
     private LocalDateTime expiredAt;

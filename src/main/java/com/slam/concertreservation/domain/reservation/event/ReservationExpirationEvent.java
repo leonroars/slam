@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
  */
 public record ReservationExpirationEvent(
         Long reservationId,
-        String concertScheduleId,
+        Long concertScheduleId,
         Long userId,
-        String seatId,
+        Long seatId,
         Integer price,
         LocalDateTime expiredAt) {
 

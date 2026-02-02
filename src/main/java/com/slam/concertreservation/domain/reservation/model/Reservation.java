@@ -10,8 +10,8 @@ import lombok.Getter;
 public class Reservation {
     private Long id;
     private Long userId;
-    private String seatId;
-    private String concertScheduleId;
+    private Long seatId;
+    private Long concertScheduleId;
     private ReservationStatus status; // 최초 생성 시 BOOKED 상태
     private Integer price; // 결제 금액
 
@@ -169,7 +169,7 @@ public class Reservation {
     }
 
     // 정적 팩토리 메서드 1 : 전체 필드 활용 생성
-    public static Reservation create(Long id, Long userId, String seatId, String concertScheduleId,
+    public static Reservation create(Long id, Long userId, Long seatId, Long concertScheduleId,
             ReservationStatus status, Integer price, LocalDateTime expiredAt, LocalDateTime createdAt,
             LocalDateTime updatedAt) {
         Reservation reservation = new Reservation();
@@ -187,25 +187,25 @@ public class Reservation {
     }
 
     // 정적 팩토리 메서드 2 : status 미포함 (초기화 용도.)
-    public static Reservation create(Long id, Long userId, String seatId, String concertScheduleId, Integer price,
+    public static Reservation create(Long id, Long userId, Long seatId, Long concertScheduleId, Integer price,
             LocalDateTime expiredAt, LocalDateTime createdAt) {
         return create(id, userId, seatId, concertScheduleId, ReservationStatus.PREEMPTED, price, expiredAt, createdAt,
                 null);
     }
 
     // 정적 팩토리 메서드 2 : ID, 만료시간 미포함
-    public static Reservation create(Long userId, String seatId, String concertScheduleId, Integer price) {
+    public static Reservation create(Long userId, Long seatId, Long concertScheduleId, Integer price) {
         return create(TSID.fast().toLong(), userId, seatId, concertScheduleId, price, null, null);
     }
 
     // 정적 팩토리 메서드 3 : ID 미포함, 만료시간 포함
-    public static Reservation create(Long userId, String seatId, String concertScheduleId, Integer price,
+    public static Reservation create(Long userId, Long seatId, Long concertScheduleId, Integer price,
             LocalDateTime expiredAt) {
         return create(TSID.fast().toLong(), userId, seatId, concertScheduleId, price, expiredAt, null);
     }
 
     // 정적 팩토리 메서드 4: ID 포함, 만료시간 미포함
-    public static Reservation create(Long id, Long userId, String seatId, String concertScheduleId, Integer price) {
+    public static Reservation create(Long id, Long userId, Long seatId, Long concertScheduleId, Integer price) {
         return create(id, userId, seatId, concertScheduleId, price, null, null);
     }
 }

@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 
 public record ReservationCancellationEvent(
         Long reservationId,
-        String concertScheduleId,
+        Long concertScheduleId,
         Long userId,
-        String seatId,
+        Long seatId,
         Integer price,
         LocalDateTime cancelledAt) {
 

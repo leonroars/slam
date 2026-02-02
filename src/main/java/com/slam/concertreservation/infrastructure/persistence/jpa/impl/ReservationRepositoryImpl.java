@@ -43,19 +43,19 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     }
 
     @Override
-    public Optional<Reservation> findByConcertScheduleIdAndSeatId(String concertScheduleId, String seatId) {
+    public Optional<Reservation> findByConcertScheduleIdAndSeatId(Long concertScheduleId, Long seatId) {
         return reservationJpaRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId)
                 .map(ReservationJpaEntity::toDomain);
     }
 
     @Override
-    public Optional<Reservation> findByConcertScheduleIdAndUserId(String concertScheduleId, Long userId) {
+    public Optional<Reservation> findByConcertScheduleIdAndUserId(Long concertScheduleId, Long userId) {
         return reservationJpaRepository.findByConcertScheduleIdAndUserId(concertScheduleId, userId)
                 .map(ReservationJpaEntity::toDomain);
     }
 
     @Override
-    public List<Reservation> findByConcertScheduleId(String concertScheduleId) {
+    public List<Reservation> findByConcertScheduleId(Long concertScheduleId) {
         return reservationJpaRepository.findByConcertScheduleId(concertScheduleId).stream()
                 .map(ReservationJpaEntity::toDomain)
                 .toList();

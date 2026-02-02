@@ -19,12 +19,12 @@ import java.time.LocalDateTime;
  */
 public record ReservationExpirationRollbackEvent(
         Long reservationId,
-        String concertScheduleId,
+        Long concertScheduleId,
         Long userId,
-        String seatId,
+        Long seatId,
         LocalDateTime failedAt) {
-    public static ReservationExpirationRollbackEvent fromDomain(Long reservationId, String concertScheduleId,
-            Long userId, String seatId) {
+    public static ReservationExpirationRollbackEvent fromDomain(Long reservationId, Long concertScheduleId,
+            Long userId, Long seatId) {
         return new ReservationExpirationRollbackEvent(
                 reservationId,
                 concertScheduleId,

@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 
 public record ReservationConfirmationEvent(
         Long reservationId,
-        String concertScheduleId,
+        Long concertScheduleId,
         Long userId,
-        String seatId,
+        Long seatId,
         int price,
         LocalDateTime updatedAt) {
 

@@ -40,7 +40,7 @@ public class ReservationService {
          * @return
          */
         @Transactional
-        public Reservation createReservation(Long userId, String concertScheduleId, String seatId, Integer price) {
+        public Reservation createReservation(Long userId, Long concertScheduleId, Long seatId, Integer price) {
                 reservationRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId)
                                 .filter(reservation -> reservation.getStatus() != ReservationStatus.EXPIRED &&
                                                 reservation.getStatus() != ReservationStatus.CANCELLED)
@@ -164,13 +164,13 @@ public class ReservationService {
                 return reservationRepository.findAllByExpirationCriteria();
         }
 
-        public Reservation getReservationByConcertScheduleIdAndSeatId(String concertScheduleId, String seatId) {
+        public Reservation getReservationByConcertScheduleIdAndSeatId(Long concertScheduleId, Long seatId) {
                 return reservationRepository.findByConcertScheduleIdAndSeatId(concertScheduleId, seatId)
                                 .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND,
                                                 "해당 공연 일정과 좌석에 대한 예약이 존재하지 않습니다."));
         }
 
-        public Reservation getReservationByConcertScheduleIdAndUserId(String concertScheduleId, Long userId) {
+        public Reservation getReservationByConcertScheduleIdAndUserId(Long concertScheduleId, Long userId) {
                 return reservationRepository.findByConcertScheduleIdAndUserId(concertScheduleId, userId)
                                 .orElseThrow(() -> new UnavailableRequestException(ErrorCode.RESERVATION_NOT_FOUND,
                                                 "해당 사용자의 예약이 존재하지 않습니다."));

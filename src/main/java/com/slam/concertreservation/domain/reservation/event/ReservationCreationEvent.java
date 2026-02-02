@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 
 public record ReservationCreationEvent(
         Long reservationId,
-        String concertScheduleId,
+        Long concertScheduleId,
         Long userId,
-        String seatId,
+        Long seatId,
         LocalDateTime createdAt) {
     public static ReservationCreationEvent fromDomain(Reservation reservation) {
         return new ReservationCreationEvent(

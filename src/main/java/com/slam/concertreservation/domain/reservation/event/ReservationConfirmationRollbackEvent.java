@@ -4,12 +4,12 @@ import java.time.LocalDateTime;
 
 public record ReservationConfirmationRollbackEvent(
         Long reservationId,
-        String concertScheduleId,
+        Long concertScheduleId,
         Long userId,
-        String seatId,
+        Long seatId,
         LocalDateTime failedAt) {
-    public static ReservationConfirmationRollbackEvent fromDomain(Long reservationId, String concertScheduleId,
-            Long userId, String seatId) {
+    public static ReservationConfirmationRollbackEvent fromDomain(Long reservationId, Long concertScheduleId,
+            Long userId, Long seatId) {
         return new ReservationConfirmationRollbackEvent(
                 reservationId,
                 concertScheduleId,
