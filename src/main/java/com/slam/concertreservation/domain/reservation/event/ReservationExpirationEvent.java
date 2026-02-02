@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 /**
  * 예약 만료 이벤트
+ * 
  * @param reservationId
  * @param concertScheduleId
  * @param userId
@@ -12,22 +13,20 @@ import java.time.LocalDateTime;
  * @param expiredAt
  */
 public record ReservationExpirationEvent(
-        String reservationId,
+        Long reservationId,
         String concertScheduleId,
-        String userId,
+        Long userId,
         String seatId,
         Integer price,
-        LocalDateTime expiredAt
-) {
+        LocalDateTime expiredAt) {
 
-    public static ReservationConfirmationEvent fromDomain(Reservation reservation){
-        return new ReservationConfirmationEvent(
+    public static ReservationExpirationEvent fromDomain(Reservation reservation) {
+        return new ReservationExpirationEvent(
                 reservation.getId(),
                 reservation.getConcertScheduleId(),
                 reservation.getUserId(),
                 reservation.getSeatId(),
                 reservation.getPrice(),
-                reservation.getExpiredAt()
-        );
+                reservation.getExpiredAt());
     }
 }

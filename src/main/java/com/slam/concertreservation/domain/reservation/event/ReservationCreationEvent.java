@@ -4,19 +4,17 @@ import com.slam.concertreservation.domain.reservation.model.Reservation;
 import java.time.LocalDateTime;
 
 public record ReservationCreationEvent(
-        String reservationId,
+        Long reservationId,
         String concertScheduleId,
-        String userId,
+        Long userId,
         String seatId,
-        LocalDateTime createdAt
-) {
-    public static ReservationCreationEvent fromDomain(Reservation reservation){
+        LocalDateTime createdAt) {
+    public static ReservationCreationEvent fromDomain(Reservation reservation) {
         return new ReservationCreationEvent(
                 reservation.getId(),
                 reservation.getConcertScheduleId(),
                 reservation.getUserId(),
                 reservation.getSeatId(),
-                reservation.getCreatedAt()
-        );
+                reservation.getCreatedAt());
     }
 }
