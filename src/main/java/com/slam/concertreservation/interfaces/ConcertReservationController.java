@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.CookieValue;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -40,26 +39,26 @@ public class ConcertReservationController {
 
     @GetMapping("/users/{userId}")
     public ResponseEntity<User> getUser(@PathVariable String userId) {
-        return ResponseEntity.ok(userApp.getUser(userId));
+        return ResponseEntity.ok(userApp.getUser(Long.valueOf(userId)));
     }
 
     /* ========== Point ========== */
 
     @GetMapping("/users/{userId}/point")
     public ResponseEntity<UserPointBalance> getUserPointBalance(@PathVariable String userId) {
-        return ResponseEntity.ok(reservationApp.getUserPointBalance(userId));
+        return ResponseEntity.ok(reservationApp.getUserPointBalance(Long.valueOf(userId)));
     }
 
     @PostMapping("/users/{userId}/point/charge")
     public ResponseEntity<UserPointBalance> chargeUserPoint(@PathVariable String userId,
-                                                            @RequestParam int amount) {
-        return ResponseEntity.ok(reservationApp.chargeUserPoint(userId, amount));
+            @RequestParam int amount) {
+        return ResponseEntity.ok(reservationApp.chargeUserPoint(Long.valueOf(userId), amount));
     }
 
     @PostMapping("/users/{userId}/point/use")
     public ResponseEntity<UserPointBalance> useUserPoint(@PathVariable String userId,
-                                                         @RequestParam int amount) {
-        return ResponseEntity.ok(reservationApp.useUserPoint(userId, amount));
+            @RequestParam int amount) {
+        return ResponseEntity.ok(reservationApp.useUserPoint(Long.valueOf(userId), amount));
     }
 
     /* ========== Concert ========== */
@@ -126,9 +125,9 @@ public class ConcertReservationController {
      */
     @PostMapping("/concerts/schedules/{scheduleId}/seats/{seatId}/assign")
     public ResponseEntity<Seat> reserveSeat(@PathVariable String scheduleId,
-                                            @PathVariable String seatId,
-                                            @RequestParam String userId) {
-        return ResponseEntity.ok(reservationApp.assignSeat(scheduleId, userId, seatId));
+            @PathVariable String seatId,
+            @RequestParam String userId) {
+        return ResponseEntity.ok(reservationApp.assignSeat(scheduleId, Long.valueOf(userId), seatId));
     }
 
     /**
@@ -141,7 +140,8 @@ public class ConcertReservationController {
             @RequestParam String scheduleId,
             @RequestParam String seatId,
             @RequestParam Integer price) {
-        return ResponseEntity.ok(reservationApp.createTemporaryReservation(userId, scheduleId, seatId, price));
+        return ResponseEntity
+                .ok(reservationApp.createTemporaryReservation(Long.valueOf(userId), scheduleId, seatId, price));
     }
 
     /**
@@ -152,7 +152,9 @@ public class ConcertReservationController {
             @PathVariable String reservationId,
             @RequestParam String userId,
             @RequestParam Integer price) {
-        return ResponseEntity.ok(reservationApp.paymentRequestForReservation(userId, price, reservationId));
+        return ResponseEntity
+                .ok(reservationApp.paymentRequestForReservation(Long.valueOf(userId), price,
+                        Long.valueOf(reservationId)));
     }
 
     /**
@@ -160,7 +162,7 @@ public class ConcertReservationController {
      */
     @PostMapping("/reservations/{reservationId}/cancel")
     public ResponseEntity<Reservation> cancelReservation(@PathVariable String reservationId) {
-        return ResponseEntity.ok(reservationApp.cancelReservation(reservationId));
+        return ResponseEntity.ok(reservationApp.cancelReservation(Long.valueOf(reservationId)));
     }
 
     /**
@@ -168,7 +170,7 @@ public class ConcertReservationController {
      */
     @GetMapping("/reservations/{reservationId}")
     public ResponseEntity<Reservation> getReservation(@PathVariable String reservationId) {
-        return ResponseEntity.ok(reservationApp.getReservation(reservationId));
+        return ResponseEntity.ok(reservationApp.getReservation(Long.valueOf(reservationId)));
     }
 
     /**
@@ -176,7 +178,7 @@ public class ConcertReservationController {
      */
     @GetMapping("/users/{userId}/reservations")
     public ResponseEntity<List<Reservation>> getUserReservations(@PathVariable String userId) {
-        return ResponseEntity.ok(reservationApp.getUserReservations(userId));
+        return ResponseEntity.ok(reservationApp.getUserReservations(Long.valueOf(userId)));
     }
 
     /* ========== Queue ========== */
@@ -186,9 +188,9 @@ public class ConcertReservationController {
      */
     @PostMapping("/queue/tokens")
     public ResponseEntity<Token> issueToken(@RequestParam String userId,
-                                            @RequestParam String scheduleId,
-                                            HttpServletResponse response) {
-        Token token = reservationApp.issueToken(userId, scheduleId);
+            @RequestParam String scheduleId,
+            HttpServletResponse response) {
+        Token token = reservationApp.issueToken(Long.valueOf(userId), scheduleId);
         Cookie cookie = new Cookie("tokenId", token.getId());
         cookie.setHttpOnly(true);
         cookie.setPath("/");
