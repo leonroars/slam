@@ -31,7 +31,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 public class QueueServiceIntegrationTest {
 
-        private final String CONCERT_SCHEDULE_ID = "concertScheduleId";
+        private final Long CONCERT_SCHEDULE_ID = 1L;
         private final LocalDateTime CONCERT_SCHEDULE_START_TIME = LocalDateTime.now().plusDays(2);
         private final LocalDateTime CONCERT_SCHEDULE_RESERVATION_START_TIME = LocalDateTime.now().plusDays(1)
                         .minusHours(3);

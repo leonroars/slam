@@ -81,7 +81,7 @@ public class ConcertReservationApplication {
     }
 
     // 공연 조회
-    public Concert getConcert(String concertId) {
+    public Concert getConcert(Long concertId) {
         return concertService.getConcert(concertId);
     }
 
@@ -95,7 +95,7 @@ public class ConcertReservationApplication {
      * @param price
      * @return
      */
-    public ConcertSchedule registerConcertSchedule(String concertId, LocalDateTime concertDateTime,
+    public ConcertSchedule registerConcertSchedule(Long concertId, LocalDateTime concertDateTime,
             LocalDateTime reservationStartAt, LocalDateTime reservationEndAt, int price) {
         return concertService.registerConcertSchedule(
                 ConcertSchedule.create(concertId, concertDateTime, reservationStartAt, reservationEndAt), price);
@@ -107,7 +107,7 @@ public class ConcertReservationApplication {
      * @param concertScheduleId
      * @return
      */
-    public ConcertSchedule getConcertSchedule(String concertScheduleId) {
+    public ConcertSchedule getConcertSchedule(Long concertScheduleId) {
         return concertService.getConcertSchedule(concertScheduleId);
     }
 
@@ -126,7 +126,7 @@ public class ConcertReservationApplication {
      * @param concertScheduleId
      * @return
      */
-    public List<Seat> getAvailableSeats(String concertScheduleId) {
+    public List<Seat> getAvailableSeats(Long concertScheduleId) {
         return concertService.getAvailableSeatsOfConcertSchedule(concertScheduleId);
     }
 
@@ -136,7 +136,7 @@ public class ConcertReservationApplication {
      * @param seatId
      * @return
      */
-    public Seat getSeat(String seatId) {
+    public Seat getSeat(Long seatId) {
         return concertService.getSeat(seatId);
     }
 
@@ -151,7 +151,7 @@ public class ConcertReservationApplication {
      * @param userId
      * @param seatId
      */
-    public Seat assignSeat(String concertScheduleId, Long userId, String seatId) {
+    public Seat assignSeat(Long concertScheduleId, Long userId, Long seatId) {
 
         // 해당 좌석 할당 처리(AVAILABLE -> UNAVAILABLE) 및 반환: 만약 해당 좌석 이미 선점 됐을 경우 여기서 실패.
         return concertService.assignSeatOfConcertSchedule(concertScheduleId, seatId, userId);
@@ -166,7 +166,7 @@ public class ConcertReservationApplication {
      * @param price
      * @return
      */
-    public Reservation createTemporaryReservation(Long userId, String concertScheduleId, String seatId, int price) {
+    public Reservation createTemporaryReservation(Long userId, Long concertScheduleId, Long seatId, int price) {
         return reservationService.createReservation(userId, concertScheduleId, seatId, price);
     }
 
@@ -210,14 +210,16 @@ public class ConcertReservationApplication {
         Reservation canceledReservation = reservationService.cancelReservation(reservationId);
 
         // 해당 좌석 할당 해제(AVAILABLE -> UNAVAILABLE) 및 가격 조회.
-        int seatPrice = concertService.assignSeatOfConcertSchedule(canceledReservation.getConcertScheduleId(),
-                canceledReservation.getSeatId(), canceledReservation.getUserId()).getPrice();
+        int seatPrice = concertService
+                .assignSeatOfConcertSchedule(Long.valueOf(canceledReservation.getConcertScheduleId()),
+                        canceledReservation.getSeatId(), canceledReservation.getUserId())
+                .getPrice();
 
         // 사용자 포인트 환불
         pointService.increaseUserPointBalance(canceledReservation.getUserId(), seatPrice);
 
         // 만약 해당 공연 일정이 SOLDOUT 상태였다면 AVAILABLE로 변경.
-        concertService.makeConcertScheduleAvailable(canceledReservation.getConcertScheduleId());
+        concertService.makeConcertScheduleAvailable(Long.valueOf(canceledReservation.getConcertScheduleId()));
 
         return canceledReservation;
     }
@@ -249,7 +251,7 @@ public class ConcertReservationApplication {
      * @param concertScheduleId
      * @return
      */
-    public Token issueToken(Long userId, String concertScheduleId) {
+    public Token issueToken(Long userId, Long concertScheduleId) {
         return queueService.issueToken(userId, concertScheduleId);
     }
 
@@ -261,7 +263,7 @@ public class ConcertReservationApplication {
      * @return
      */
     @Transactional
-    public int getRemaining(String concertScheduleId, String tokenId) {
+    public int getRemaining(Long concertScheduleId, String tokenId) {
         return queueService.getRemainingTokenCount(concertScheduleId, tokenId);
     }
 }

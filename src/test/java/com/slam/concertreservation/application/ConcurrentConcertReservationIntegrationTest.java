@@ -29,7 +29,6 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 @SpringBootTest
 public class ConcurrentConcertReservationIntegrationTest {
 
@@ -48,7 +47,6 @@ public class ConcurrentConcertReservationIntegrationTest {
 
     @Autowired
     private ReservationRepository reservationRepository;
-
 
     private static final int SEAT_PRICE = 1000;
     private static List<User> users = new ArrayList<>(); // 사용자 Pool
@@ -78,13 +76,11 @@ public class ConcurrentConcertReservationIntegrationTest {
             // 2) 공연 일정 등록
             long startTime = System.currentTimeMillis();
             ConcertSchedule registeredConcertSchedule = concertReservationApplication.registerConcertSchedule(
-                    "concert1", dateTime, reservationStartAt, reservationEndAt, SEAT_PRICE
-            );
+                    1L, dateTime, reservationStartAt, reservationEndAt, SEAT_PRICE);
             long endTime = System.currentTimeMillis();
 
             // 3) 공연 일정의 좌석 목록 조회
             List<Seat> localSeats = concertReservationApplication.getAvailableSeats(registeredConcertSchedule.getId());
-
 
             // when : 50명의 사용자가 50개의 좌석에 대한 예약을 동시에 시도.
             ExecutorService executor = Executors.newFixedThreadPool(50);
@@ -99,8 +95,7 @@ public class ConcurrentConcertReservationIntegrationTest {
                         Seat assignedSeat = concertReservationApplication.assignSeat(
                                 registeredConcertSchedule.getId(),
                                 localUsers.get(idx - 1).getId(),
-                                localSeats.get(idx - 1).getId()
-                        );
+                                localSeats.get(idx - 1).getId());
                         // 각 스레드 별 작업 결과가 !null && "UNAVAILABLE"인 경우 성공으로 간주
                         return assignedSeat != null && (assignedSeat.getStatus() == SeatStatus.UNAVAILABLE);
                     } catch (UnavailableRequestException e) {
@@ -116,15 +111,20 @@ public class ConcurrentConcertReservationIntegrationTest {
 
             AtomicInteger successCount = new AtomicInteger(0);
             for (Future<Boolean> f : futures) {
-                if (f.get()) {successCount.incrementAndGet();}
+                if (f.get()) {
+                    successCount.incrementAndGet();
+                }
             }
 
-            ConcertSchedule updatedConcertSchedule = concertReservationApplication.getConcertSchedule(registeredConcertSchedule.getId());
+            ConcertSchedule updatedConcertSchedule = concertReservationApplication
+                    .getConcertSchedule(registeredConcertSchedule.getId());
 
             // then : 스레드 별 실행 결과를 Future<> 를 통해 확인
             assertThat(successCount.get()).isEqualTo(50); // 모든 예약이 성공했는지 확인
-            // assertThat(updatedConcertSchedule.getAvailability()).isEqualTo(ConcertScheduleAvailability.SOLDOUT); // 매진 상태인지 확인.
-            assertThat(concertService.getRemainingSeatsCount(updatedConcertSchedule.getId())).isEqualTo(0); // 예약 가능 좌석이 0인지 확인.
+            // assertThat(updatedConcertSchedule.getAvailability()).isEqualTo(ConcertScheduleAvailability.SOLDOUT);
+            // // 매진 상태인지 확인.
+            assertThat(concertService.getRemainingSeatsCount(updatedConcertSchedule.getId())).isEqualTo(0); // 예약 가능 좌석이
+                                                                                                            // 0인지 확인.
         }
 
         @Test
@@ -141,8 +141,7 @@ public class ConcurrentConcertReservationIntegrationTest {
 
             // 2) 공연 일정 등록
             ConcertSchedule registeredConcertSchedule = concertReservationApplication.registerConcertSchedule(
-                    "concert1", dateTime, reservationStartAt, reservationEndAt, SEAT_PRICE
-            );
+                    1L, dateTime, reservationStartAt, reservationEndAt, SEAT_PRICE);
 
             // 3) 공연 일정의 좌석 목록 조회
             List<Seat> localSeats = concertReservationApplication.getAvailableSeats(registeredConcertSchedule.getId());
@@ -151,19 +150,19 @@ public class ConcurrentConcertReservationIntegrationTest {
             List<Callable<Boolean>> tasks = new ArrayList<>();
 
             // 5명 사용자, 동일 좌석 동시 예약
-            for(int i = 1; i <= 5; i++){
+            for (int i = 1; i <= 5; i++) {
                 int idx = i;
                 tasks.add(() -> {
                     try {
                         // 가예약 생성
-                        Seat assignedSeat
-                                = concertReservationApplication.assignSeat(
-                                        registeredConcertSchedule.getId(),
-                                localUsers.get(idx-1).getId(),
+                        Seat assignedSeat = concertReservationApplication.assignSeat(
+                                registeredConcertSchedule.getId(),
+                                localUsers.get(idx - 1).getId(),
                                 localSeats.get(0).getId());
-                        // 각 스레드 별로 할당된 task(각각 동일 좌석에 대한 예약 수행) 결과가 !null && BOOKED 인 경우 성공으로 간주 -> true.
+                        // 각 스레드 별로 할당된 task(각각 동일 좌석에 대한 예약 수행) 결과가 !null && BOOKED 인 경우 성공으로 간주 ->
+                        // true.
                         return assignedSeat != null && (assignedSeat.getStatus() == SeatStatus.UNAVAILABLE);
-                    } catch(UnavailableRequestException | BusinessRuleViolationException | ConcurrencyException e){
+                    } catch (UnavailableRequestException | BusinessRuleViolationException | ConcurrencyException e) {
                         return false; // 실패 처리
                     }
                 });
@@ -175,12 +174,16 @@ public class ConcurrentConcertReservationIntegrationTest {
 
             AtomicInteger successCount = new AtomicInteger(0);
             AtomicInteger failCount = new AtomicInteger(0);
-            for(Future<Boolean> f : futures){
-                if(f.get()) {successCount.incrementAndGet();}
-                else{failCount.incrementAndGet();}
+            for (Future<Boolean> f : futures) {
+                if (f.get()) {
+                    successCount.incrementAndGet();
+                } else {
+                    failCount.incrementAndGet();
+                }
             }
 
-            ConcertSchedule updatedConcertSchedule = concertReservationApplication.getConcertSchedule(registeredConcertSchedule.getId());
+            ConcertSchedule updatedConcertSchedule = concertReservationApplication
+                    .getConcertSchedule(registeredConcertSchedule.getId());
 
             // then
             assertThat(successCount.get()).isEqualTo(1); // 1명만 성공해야 함.
@@ -188,7 +191,7 @@ public class ConcurrentConcertReservationIntegrationTest {
     }
 
     @Nested
-    class ConcurrentUserPointTest{
+    class ConcurrentUserPointTest {
         @Test
         @DisplayName("성공 : 동시 사용 요청 2건 중 한 건만 성공한다.")
         void onlyOneUsageRequestShouldSuccess_WhenThereAreNUsageRequestForSingleUser()
@@ -201,10 +204,10 @@ public class ConcurrentConcertReservationIntegrationTest {
             ExecutorService executor = Executors.newFixedThreadPool(2);
             List<Callable<Boolean>> tasks = new ArrayList<>();
             tasks.add(() -> {
-                try{
+                try {
                     concertReservationApplication.chargeUserPoint(user.getId(), 1000);
                     return true;
-                } catch(UnavailableRequestException e){
+                } catch (UnavailableRequestException e) {
                     return false;
                 }
             });
@@ -213,8 +216,9 @@ public class ConcurrentConcertReservationIntegrationTest {
             List<Future<Boolean>> futures = executor.invokeAll(tasks);
             AtomicInteger successCount = new AtomicInteger(0);
 
-            for(Future<Boolean> f : futures){
-                if(f.get()) successCount.incrementAndGet();
+            for (Future<Boolean> f : futures) {
+                if (f.get())
+                    successCount.incrementAndGet();
             }
 
             UserPointBalance updatedUserPointBalance = concertReservationApplication.getUserPointBalance(user.getId());
@@ -222,7 +226,6 @@ public class ConcurrentConcertReservationIntegrationTest {
             // then : 1건만 성공하고 1건은 실패한다. 이에 따라 해당 사용자의 잔액은 1,000이다.
             assertThat(successCount.get()).isEqualTo(1);
             assertThat(updatedUserPointBalance.balance().getAmount()).isEqualTo(1000);
-
 
         }
 
@@ -236,12 +239,12 @@ public class ConcurrentConcertReservationIntegrationTest {
             // when : 해당 사용자에 대한 2건의 충전 요청이 동시에 발생한다.
             ExecutorService executor = Executors.newFixedThreadPool(2);
             List<Callable<Boolean>> tasks = new ArrayList<>();
-            for(int i = 0; i < 2; i++){
+            for (int i = 0; i < 2; i++) {
                 tasks.add(() -> {
-                    try{
+                    try {
                         concertReservationApplication.chargeUserPoint(user.getId(), 1000);
                         return true;
-                    } catch(UnavailableRequestException | ObjectOptimisticLockingFailureException e){
+                    } catch (UnavailableRequestException | ObjectOptimisticLockingFailureException e) {
                         return false;
                     }
                 });
@@ -251,8 +254,9 @@ public class ConcurrentConcertReservationIntegrationTest {
             List<Future<Boolean>> futures = executor.invokeAll(tasks);
             AtomicInteger successCount = new AtomicInteger(0);
 
-            for(Future<Boolean> f : futures){
-                if(f.get()) successCount.incrementAndGet();
+            for (Future<Boolean> f : futures) {
+                if (f.get())
+                    successCount.incrementAndGet();
             }
 
             UserPointBalance updatedUserPointBalance = concertReservationApplication.getUserPointBalance(user.getId());
@@ -264,10 +268,10 @@ public class ConcurrentConcertReservationIntegrationTest {
 
         @Test
         @DisplayName("성공 : 동시 다발적 복수 사용자의 포인트 충전 요청은 모두 성공한다.")
-        void allChargeRequestShouldSuccess_WhenThereAreMultipleUserChargeRequest(){
+        void allChargeRequestShouldSuccess_WhenThereAreMultipleUserChargeRequest() {
             // given : 10명의 사용자가 존재한다. 각 사용자의 잔액은 모두 0이다.
             List<User> localUsers = new ArrayList<>();
-            for(int i = 1; i <= 10; i++){
+            for (int i = 1; i <= 10; i++) {
                 User createdUser = userApplication.registerUser("userName" + i);
                 localUsers.add(createdUser);
             }
@@ -275,13 +279,13 @@ public class ConcurrentConcertReservationIntegrationTest {
             // when : 10명의 사용자에 대한 동시 충전 요청이 발생한다.
             ExecutorService executor = Executors.newFixedThreadPool(10);
             List<Callable<Boolean>> tasks = new ArrayList<>();
-            for(int i = 0; i < 10; i++){
+            for (int i = 0; i < 10; i++) {
                 final int idx = i;
                 tasks.add(() -> {
-                    try{
+                    try {
                         concertReservationApplication.chargeUserPoint(localUsers.get(idx).getId(), 1000);
                         return true;
-                    } catch(UnavailableRequestException e){
+                    } catch (UnavailableRequestException e) {
                         return false;
                     }
                 });
@@ -289,10 +293,11 @@ public class ConcurrentConcertReservationIntegrationTest {
 
             // then : 모든 사용자의 충전 요청이 성공한다.
             AtomicInteger successCount = new AtomicInteger(0);
-            for(Callable<Boolean> task : tasks){
-                try{
-                    if(task.call()) successCount.incrementAndGet();
-                } catch(Exception e){
+            for (Callable<Boolean> task : tasks) {
+                try {
+                    if (task.call())
+                        successCount.incrementAndGet();
+                } catch (Exception e) {
                     log.error("Error occurred while executing task.", e);
                 }
             }

@@ -77,7 +77,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
     LocalDateTime concertDateTime = LocalDateTime.now().plusDays(15); // Concert in 15 days
     LocalDateTime reservationStartAt = LocalDateTime.now(); // Reservation starts now
     LocalDateTime reservationEndAt = LocalDateTime.now().plusDays(14); // Reservation ends 1 day before concert
-    ConcertSchedule concertSchedule = ConcertSchedule.create("1", concertDateTime, reservationStartAt,
+    ConcertSchedule concertSchedule = ConcertSchedule.create(1L, concertDateTime, reservationStartAt,
             reservationEndAt);
 
     @Autowired
@@ -172,7 +172,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
         void shouldSuccessfullyGetAvailableConcertSchedule() {
             // given
             // Create an available schedule (start time <= now)
-            ConcertSchedule expected = concertReservationApplication.registerConcertSchedule("1",
+            ConcertSchedule expected = concertReservationApplication.registerConcertSchedule(1L,
                     concertDateTime.plusDays(1), LocalDateTime.now().minusMinutes(1), reservationEndAt.plusDays(1),
                     1000);
 
@@ -190,7 +190,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
         @DisplayName("성공 : 특정 공연 일정의 예약 가능 좌석 목록을 조회한다.")
         void shouldSuccessfullyGetAvailableSeats() {
             // given
-            ConcertSchedule concertSchedule = concertReservationApplication.registerConcertSchedule("1",
+            ConcertSchedule concertSchedule = concertReservationApplication.registerConcertSchedule(1L,
                     concertDateTime, reservationStartAt, reservationEndAt, 1000);
 
             // when
@@ -208,7 +208,7 @@ public class NonConcurrentConcertReservationIntegrationTest {
             User user = userApplication.registerUser(userName);
             concertReservationApplication.chargeUserPoint(user.getId(), 2000);
 
-            ConcertSchedule concertSchedule = concertReservationApplication.registerConcertSchedule("1",
+            ConcertSchedule concertSchedule = concertReservationApplication.registerConcertSchedule(1L,
                     concertDateTime, reservationStartAt, reservationEndAt, 1000);
             Seat seat = concertReservationApplication.getAvailableSeats(concertSchedule.getId()).get(0);
 
