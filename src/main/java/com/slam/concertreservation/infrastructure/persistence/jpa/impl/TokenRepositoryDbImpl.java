@@ -5,6 +5,7 @@ import com.slam.concertreservation.domain.queue.model.TokenStatus;
 import com.slam.concertreservation.domain.queue.repository.TokenRepository;
 import com.slam.concertreservation.infrastructure.persistence.jpa.TokenJpaRepository;
 import com.slam.concertreservation.infrastructure.persistence.jpa.entities.TokenJpaEntity;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -60,12 +61,13 @@ public class TokenRepositoryDbImpl implements TokenRepository {
 
     @Override
     public int countRemaining(String concertScheduleId, String tokenId) {
-        return tokenJpaRepository.countRemainingByConcertScheduleIdAndTokenId(concertScheduleId, Long.parseLong(tokenId));
+        return tokenJpaRepository.countRemainingByConcertScheduleIdAndTokenId(concertScheduleId,
+                Long.parseLong(tokenId));
     }
 
     @Override
     public List<Token> findActivatedTokensToBeExpired(String concertScheduleId) {
-        return tokenJpaRepository.findActivatedTokensToBeExpired()
+        return tokenJpaRepository.findActivatedTokensToBeExpired(LocalDateTime.now())
                 .stream()
                 .map(TokenJpaEntity::toDomain)
                 .toList();
@@ -73,7 +75,7 @@ public class TokenRepositoryDbImpl implements TokenRepository {
 
     @Override
     public List<Token> findWaitingTokensToBeExpired() {
-        return tokenJpaRepository.findWaitingTokensToBeExpired()
+        return tokenJpaRepository.findWaitingTokensToBeExpired(LocalDateTime.now())
                 .stream()
                 .map(TokenJpaEntity::toDomain)
                 .toList();
@@ -85,5 +87,6 @@ public class TokenRepositoryDbImpl implements TokenRepository {
     }
 
     @Override
-    public void setQueueExpiration(String concertScheduleId, long ttlSeconds) {}
+    public void setQueueExpiration(String concertScheduleId, long ttlSeconds) {
+    }
 }

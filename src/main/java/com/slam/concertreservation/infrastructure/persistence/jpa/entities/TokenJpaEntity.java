@@ -21,10 +21,11 @@ import lombok.Setter;
 @Getter
 public class TokenJpaEntity extends BaseJpaEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String concertScheduleId;
-    private String userId;
+    private Long userId;
     private String status; // WAIT, ACTIVE, EXPIRED
     private LocalDateTime expiredAt;
 
@@ -51,8 +52,11 @@ public class TokenJpaEntity extends BaseJpaEntity {
 
     /**
      * Domain Model 의 변경사항을 Entity 에 반영.
-     * <br></br>
-     *  - 수정이라는 상황의 특성 상, '이미 한 번 저장되었음'을 의미. 따라서, ID필드에 대한 Update 는 제외하는 것이 안전하고 타당함.
+     * <br>
+     * </br>
+     * - 수정이라는 상황의 특성 상, '이미 한 번 저장되었음'을 의미. 따라서, ID필드에 대한 Update 는 제외하는 것이 안전하고
+     * 타당함.
+     * 
      * @param domainModel
      * @return
      */
