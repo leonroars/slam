@@ -1,0 +1,35 @@
+spring:
+  config:
+    activate:
+      on-profile: ci
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/mydatabase?characterEncoding=UTF-8&serverTimezone=UTC
+    username: myuser
+    password: secret
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+logging:
+  level:
+    org.springframework: INFO
+
+server:
+  port: 8080
+
+app:
+  queue:
+    provider: "REDIS"
+    policy:
+      max-concurrent-user-threshold: 1.0
+      max-concurrent-user: 2
+      waiting-token-duration: 6
+      active-token-duration: 3

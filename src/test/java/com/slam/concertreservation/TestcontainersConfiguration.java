@@ -2,11 +2,13 @@ package com.slam.concertreservation;
 
 import jakarta.annotation.PreDestroy;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @Configuration
+@Profile("!ci")
 class TestcontainersConfiguration {
 
     public static final MySQLContainer<?> MYSQL_CONTAINER;
