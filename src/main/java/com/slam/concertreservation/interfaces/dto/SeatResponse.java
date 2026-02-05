@@ -13,6 +13,12 @@ public class SeatResponse {
     private int price;
     private String status;
 
+    /**
+     * Create a SeatResponse DTO from a Seat domain model.
+     *
+     * @param seat the Seat domain object to convert
+     * @return a SeatResponse populated with the seat's identifiers, number, price, and status (identifiers and status converted to strings)
+     */
     public static SeatResponse from(Seat seat) {
         return SeatResponse.builder()
                 .id(String.valueOf(seat.getId()))

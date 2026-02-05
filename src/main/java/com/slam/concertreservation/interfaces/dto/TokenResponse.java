@@ -14,6 +14,12 @@ public class TokenResponse {
     private String status;
     private LocalDateTime expiredAt;
 
+    /**
+     * Creates a TokenResponse DTO that represents the given domain Token.
+     *
+     * @param token the domain Token to convert into a TokenResponse
+     * @return a TokenResponse containing id, userId, concertScheduleId, status, and expiredAt mapped from the provided token
+     */
     public static TokenResponse from(Token token) {
         return TokenResponse.builder()
                 .id(token.getId()) // Token ID is already String

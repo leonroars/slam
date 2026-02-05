@@ -36,7 +36,12 @@ public class ConcertReservationController {
     private final ConcertReservationApplication reservationApp;
     private final UserApplication userApp;
 
-    /* ========== User ========== */
+    /**
+     * Register a new user with the given name.
+     *
+     * @param name the name of the user to register
+     * @return a ResponseEntity containing a UserResponse for the newly created user
+     */
 
     @PostMapping("/users")
     public ResponseEntity<UserResponse> createUser(@RequestParam String name) {
@@ -44,12 +49,23 @@ public class ConcertReservationController {
         return ResponseEntity.ok(UserResponse.from(user));
     }
 
+    /**
+     * Retrieve user information for the specified user ID.
+     *
+     * @param userId the user's numeric ID provided as a path variable
+     * @return the user's details wrapped in a UserResponse
+     */
     @GetMapping("/users/{userId}")
     public ResponseEntity<UserResponse> getUser(@PathVariable String userId) {
         return ResponseEntity.ok(UserResponse.from(userApp.getUser(Long.valueOf(userId))));
     }
 
-    /* ========== Point ========== */
+    /**
+     * Retrieve a user's point balance.
+     *
+     * @param userId the user identifier as a decimal string
+     * @return a {@link UserPointBalanceResponse} containing the user's current point balance
+     */
 
     @GetMapping("/users/{userId}/point")
     public ResponseEntity<UserPointBalanceResponse> getUserPointBalance(@PathVariable String userId) {
@@ -57,6 +73,13 @@ public class ConcertReservationController {
         return ResponseEntity.ok(UserPointBalanceResponse.from(balance));
     }
 
+    /**
+     * Add points to a user's account and return the updated point balance.
+     *
+     * @param userId the user's identifier as a string (will be parsed to a numeric ID)
+     * @param amount the number of points to charge to the user's account
+     * @return the user's updated point balance wrapped in a UserPointBalanceResponse
+     */
     @PostMapping("/users/{userId}/point/charge")
     public ResponseEntity<UserPointBalanceResponse> chargeUserPoint(@PathVariable String userId,
             @RequestParam int amount) {
@@ -64,6 +87,11 @@ public class ConcertReservationController {
         return ResponseEntity.ok(UserPointBalanceResponse.from(balance));
     }
 
+    /**
+     * Deducts the specified amount of points from the user's account.
+     *
+     * @return the user's updated point balance as a UserPointBalanceResponse
+     */
     @PostMapping("/users/{userId}/point/use")
     public ResponseEntity<UserPointBalanceResponse> useUserPoint(@PathVariable String userId,
             @RequestParam int amount) {
@@ -74,7 +102,11 @@ public class ConcertReservationController {
     /* ========== Concert ========== */
 
     /**
-     * 공연 등록
+     * Register a new concert with the given name and artist.
+     *
+     * @param name   the concert's name
+     * @param artist the performing artist's name
+     * @return a ConcertResponse representing the newly registered concert
      */
     @PostMapping("/concerts")
     public ResponseEntity<ConcertResponse> registerConcert(
@@ -85,7 +117,10 @@ public class ConcertReservationController {
     }
 
     /**
-     * 공연 조회
+     * Retrieve details for a concert by its identifier.
+     *
+     * @param concertId the identifier of the concert to retrieve
+     * @return the concert information as a ConcertResponse
      */
     @GetMapping("/concerts/{concertId}")
     public ResponseEntity<ConcertResponse> getConcert(@PathVariable Long concertId) {
@@ -94,7 +129,14 @@ public class ConcertReservationController {
     }
 
     /**
-     * 공연 일정 등록
+     * Registers a schedule for the specified concert.
+     *
+     * @param concertId         the ID of the concert to associate the schedule with
+     * @param concertDateTime   the date and time of the concert performance
+     * @param reservationStartAt the start date and time when reservations open
+     * @param reservationEndAt   the end date and time when reservations close
+     * @param price             the ticket price for the schedule
+     * @return                  a ConcertScheduleResponse representing the created schedule and its associated concert
      */
     @PostMapping("/concerts/{concertId}/schedules")
     public ResponseEntity<ConcertScheduleResponse> registerConcertSchedule(
@@ -114,7 +156,9 @@ public class ConcertReservationController {
     }
 
     /**
-     * 예약 가능한 공연 일정 목록 조회
+     * List available concert schedules.
+     *
+     * @return a list of ConcertScheduleResponse DTOs representing schedules available for reservation
      */
     @GetMapping("/concerts/schedules/available")
     public ResponseEntity<List<ConcertScheduleResponse>> getAvailableConcertSchedules() {
@@ -129,7 +173,10 @@ public class ConcertReservationController {
     }
 
     /**
-     * 특정 공연 일정의 예약 가능 좌석 조회
+     * Retrieve available seats for a given concert schedule.
+     *
+     * @param scheduleId the concert schedule ID to query available seats for
+     * @return a list of SeatResponse objects representing seats that are currently available for reservation
      */
     @GetMapping("/concerts/schedules/{scheduleId}/seats")
     public ResponseEntity<List<SeatResponse>> getAvailableSeats(@PathVariable Long scheduleId) {
@@ -140,7 +187,12 @@ public class ConcertReservationController {
     /* ========== Reservation ========== */
 
     /**
-     * 좌석 선점
+     * Pre-reserves a specific seat for a user on a concert schedule.
+     *
+     * @param scheduleId the ID of the concert schedule
+     * @param seatId     the ID of the seat to reserve
+     * @param userId     the ID of the user who will hold the seat
+     * @return           the `SeatResponse` representing the reserved seat
      */
     @PostMapping("/concerts/schedules/{scheduleId}/seats/{seatId}/assign")
     public ResponseEntity<SeatResponse> reserveSeat(@PathVariable Long scheduleId,
@@ -151,8 +203,10 @@ public class ConcertReservationController {
     }
 
     /**
-     * 가예약 생성
-     */
+         * Create a temporary (preliminary) reservation for a user.
+         *
+         * @return the created reservation wrapped in a ReservationResponse, including the associated Seat information
+         */
     @PostMapping("/reservations")
     @Idempotent(operationKey = "reservation.create")
     public ResponseEntity<ReservationResponse> createTemporaryReservation(
@@ -167,7 +221,15 @@ public class ConcertReservationController {
     }
 
     /**
-     * 예약 확정 (결제 처리)
+     * Confirm a reservation and process its payment.
+     *
+     * Confirms the reservation identified by `reservationId` by charging the specified `userId` the provided `price`
+     * and returns the updated reservation along with its associated seat.
+     *
+     * @param reservationId the identifier of the reservation to confirm
+     * @param userId        the identifier of the user who will be charged
+     * @param price         the payment amount to process
+     * @return              a `ReservationResponse` containing the confirmed reservation and its associated seat
      */
     @PostMapping("/reservations/{reservationId}/confirm")
     public ResponseEntity<ReservationResponse> confirmReservation(
@@ -182,7 +244,10 @@ public class ConcertReservationController {
     }
 
     /**
-     * 예약 취소
+     * Cancel a reservation identified by the given reservationId.
+     *
+     * @param reservationId the reservation identifier as a numeric string
+     * @return the cancelled reservation wrapped as a ReservationResponse including its associated seat
      */
     @PostMapping("/reservations/{reservationId}/cancel")
     public ResponseEntity<ReservationResponse> cancelReservation(@PathVariable String reservationId) {
@@ -192,7 +257,10 @@ public class ConcertReservationController {
     }
 
     /**
-     * 예약 조회
+     * Retrieve a reservation by its identifier and return its DTO including the associated seat.
+     *
+     * @param reservationId the reservation identifier as a string
+     * @return a ReservationResponse containing the reservation details and its associated seat
      */
     @GetMapping("/reservations/{reservationId}")
     public ResponseEntity<ReservationResponse> getReservation(@PathVariable String reservationId) {
@@ -202,7 +270,10 @@ public class ConcertReservationController {
     }
 
     /**
-     * 사용자의 모든 예약 조회
+     * Retrieves all reservations for the specified user.
+     *
+     * @param userId the user's identifier as a string (will be converted to a long)
+     * @return a list of ReservationResponse DTOs representing the user's reservations
      */
     @GetMapping("/users/{userId}/reservations")
     public ResponseEntity<List<ReservationResponse>> getUserReservations(@PathVariable String userId) {
@@ -221,7 +292,13 @@ public class ConcertReservationController {
     /* ========== Queue ========== */
 
     /**
-     * 대기열 토큰 발급 후 Cookie(httpOnly)에 저장
+     * Issue a queue token for a user and store the token ID in an HttpOnly cookie.
+     *
+     * The issued token's ID is added to an HttpOnly cookie named "tokenId" with path "/".
+     *
+     * @param userId     the user identifier as a string
+     * @param scheduleId the identifier of the schedule for which the token is issued
+     * @return           a TokenResponse containing the issued token
      */
     @PostMapping("/queue/tokens")
     public ResponseEntity<TokenResponse> issueToken(@RequestParam String userId,

@@ -14,6 +14,12 @@ public class PointHistoryResponse {
     private int amount;
     private LocalDateTime transactionDate;
 
+    /**
+     * Create a PointHistoryResponse DTO from a PointHistory domain object.
+     *
+     * @param history the domain object whose fields will be mapped into the DTO
+     * @return a PointHistoryResponse populated with the corresponding values from {@code history}
+     */
     public static PointHistoryResponse from(PointHistory history) {
         return PointHistoryResponse.builder()
                 .id(String.valueOf(history.pointHistoryId()))
