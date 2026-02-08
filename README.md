@@ -1,6 +1,6 @@
 # SLAM! : 콘서트 좌석 예약 서비스
 
-[![KOR](https://img.shields.io/badge/Language-KOR-gray?style=for-the-badge)](#) [![ENG](https://img.shields.io/badge/Language-ENG-blue?style=for-the-badge)](./README.en.md)
+[![KOR](https://img.shields.io/badge/Language-KOR-gray?style=for-the-badge)](#) [![ENG](https://img.shields.io/badge/Language-ENG-blue?style=for-the-badge)](./docs/README.en.md)
 
 콘서트 티켓 오픈 시 발생하는 트래픽 집중과 동시 예약 충돌 상황을 다루는 백엔드 프로젝트입니다.
 
