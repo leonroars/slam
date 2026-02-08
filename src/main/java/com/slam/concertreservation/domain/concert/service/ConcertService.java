@@ -3,6 +3,7 @@ package com.slam.concertreservation.domain.concert.service;
 import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.concert.model.Concert;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
+import com.slam.concertreservation.domain.concert.model.ConcertScheduleWithConcert;
 import com.slam.concertreservation.domain.concert.model.Seat;
 import com.slam.concertreservation.domain.concert.repository.ConcertRepository;
 import com.slam.concertreservation.domain.concert.repository.ConcertScheduleRepository;
@@ -11,6 +12,7 @@ import com.slam.concertreservation.common.exceptions.UnavailableRequestException
 import com.slam.concertreservation.infrastructure.persistence.redis.locking.RedissonDistributedLock;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -265,14 +267,31 @@ public class ConcertService {
         return availableSeats;
     }
 
-    /**
-     * 예약 가능 공연 일정 목록 조회.
-     * 
-     * @param presentDateTime
-     * @return
-     */
-    public List<ConcertSchedule> getAvailableConcertSchedule(LocalDateTime presentDateTime) {
-        return concertScheduleRepository.findAllAvailable(presentDateTime);
+    @Transactional(readOnly = true)
+    public List<ConcertScheduleWithConcert> getAvailableConcertScheduleWithConcert(LocalDateTime presentDateTime) {
+
+        // 예약 가능한 공연 일정 조회
+        List<ConcertSchedule> schedules = concertScheduleRepository.findAllAvailable(presentDateTime);
+
+        // 예약 가능한 공연 ID 목록 추출
+        List<Long> concertIds = schedules.stream()
+                .map(ConcertSchedule::getConcertId)
+                .distinct()
+                .toList();
+
+        // 공연 ID 목록으로 공연 조회
+        Map<Long, Concert> concerts = concertRepository.findAllById(concertIds)
+                .stream()
+                .collect(
+                        java.util.stream.Collectors.toMap(Concert::getId, concert -> concert));
+
+        // ConcertSchedule과 Concert를 결합하여 ConcertScheduleWithConcert 생성
+        return schedules.stream()
+                .filter(schedule -> concerts.get(schedule.getConcertId()) != null)
+                .map(schedule -> new ConcertScheduleWithConcert(
+                        schedule,
+                        concerts.get(schedule.getConcertId())))
+                .toList();
     }
 
     /**

@@ -5,6 +5,7 @@ import com.slam.concertreservation.application.facade.UserApplication;
 import com.slam.concertreservation.component.idempotency.Idempotent;
 import com.slam.concertreservation.domain.concert.model.Concert;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
+import com.slam.concertreservation.domain.concert.model.ConcertScheduleWithConcert;
 import com.slam.concertreservation.domain.concert.model.Seat;
 import com.slam.concertreservation.domain.point.model.UserPointBalance;
 import com.slam.concertreservation.domain.queue.model.Token;
@@ -118,14 +119,11 @@ public class ConcertReservationController {
      */
     @GetMapping("/concerts/schedules/available")
     public ResponseEntity<List<ConcertScheduleResponse>> getAvailableConcertSchedules() {
-        List<ConcertSchedule> schedules = reservationApp.getAvailableConcertSchedules();
-        List<ConcertScheduleResponse> responses = schedules.stream()
-                .map(schedule -> {
-                    Concert concert = reservationApp.getConcert(schedule.getConcertId());
-                    return ConcertScheduleResponse.from(schedule, concert);
-                })
-                .toList();
-        return ResponseEntity.ok(responses);
+        List<ConcertScheduleWithConcert> schedules = reservationApp.getAvailableConcertSchedulesWithConcert();
+
+        return ResponseEntity.ok(schedules.stream()
+                .map(r -> ConcertScheduleResponse.from(r.concertSchedule(), r.concert()))
+                .toList());
     }
 
     /**

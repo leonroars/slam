@@ -1,6 +1,7 @@
 package com.slam.concertreservation.domain.concert.repository;
 
 import com.slam.concertreservation.domain.concert.model.Concert;
+import java.util.List;
 import java.util.Optional;
 
 public interface ConcertRepository {
@@ -8,4 +9,6 @@ public interface ConcertRepository {
     Concert save(Concert concert);
 
     Optional<Concert> findById(Long id);
+
+    List<Concert> findAllById(List<Long> ids);
 }
