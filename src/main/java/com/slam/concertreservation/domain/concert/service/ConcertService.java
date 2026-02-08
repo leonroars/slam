@@ -267,7 +267,6 @@ public class ConcertService {
         return availableSeats;
     }
 
-
     @Transactional(readOnly = true)
     public List<ConcertScheduleWithConcert> getAvailableConcertScheduleWithConcert(LocalDateTime presentDateTime) {
 
@@ -288,10 +287,10 @@ public class ConcertService {
 
         // ConcertSchedule과 Concert를 결합하여 ConcertScheduleWithConcert 생성
         return schedules.stream()
+                .filter(schedule -> concerts.get(schedule.getConcertId()) != null)
                 .map(schedule -> new ConcertScheduleWithConcert(
                         schedule,
-                        concerts.get(schedule.getConcertId())
-                ))
+                        concerts.get(schedule.getConcertId())))
                 .toList();
     }
 

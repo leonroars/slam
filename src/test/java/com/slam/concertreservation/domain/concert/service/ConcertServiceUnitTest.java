@@ -349,5 +349,33 @@ class ConcertServiceUnitTest {
                         assertEquals(schedule, actual.get(0).concertSchedule());
                         assertEquals(concert, actual.get(0).concert());
                 }
+
+                @Test
+                @DisplayName("성공 : 공연 정보가 없는 공연 일정은 조회 결과에서 제외된다.")
+                void shouldFilterOutSchedules_WhenConcertNotFound() {
+                        // given
+                        LocalDateTime now = LocalDateTime.now();
+                        Concert concert = Concert.create("OASIS REUNION", "oasis");
+                        ConcertSchedule schedule1 = ConcertSchedule.create(concert.getId(), now.plusDays(1), now,
+                                        now.plusDays(1));
+                        ConcertSchedule schedule2 = ConcertSchedule.create(2L, now.plusDays(1), now, now.plusDays(1)); // Concert
+                                                                                                                       // not
+                                                                                                                       // found
+
+                        when(concertScheduleRepository.findAllAvailable(any(LocalDateTime.class)))
+                                        .thenReturn(List.of(schedule1, schedule2));
+                        when(concertRepository.findAllById(anyList()))
+                                        .thenReturn(List.of(concert));
+
+                        // when
+                        List<ConcertScheduleWithConcert> actual = concertService
+                                        .getAvailableConcertScheduleWithConcert(now);
+
+                        // then
+                        assertEquals(1, actual.size());
+                        assertEquals(schedule1, actual.get(0).concertSchedule());
+                        assertEquals(concert, actual.get(0).concert());
+                }
         }
+
 }
