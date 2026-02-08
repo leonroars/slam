@@ -1,6 +1,6 @@
 # SLAM - Concert Seat Reservation System
 
-> 🇰🇷 [한국어 문서 링크](README.md)
+> 🇰🇷 [한국어 문서 링크](../README.md)
 
  #### **_A concert seat reservation system that handles traffic spikes and concurrent booking conflicts with data consistency guarantees._**
 
