@@ -4,6 +4,7 @@ import com.slam.concertreservation.application.event.listener.PaymentEventListen
 import com.slam.concertreservation.application.facade.ConcertReservationApplication;
 import com.slam.concertreservation.application.facade.UserApplication;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
+import com.slam.concertreservation.domain.concert.model.ConcertScheduleWithConcert;
 import com.slam.concertreservation.domain.concert.model.Seat;
 import com.slam.concertreservation.domain.concert.model.SeatStatus;
 import com.slam.concertreservation.domain.concert.repository.ConcertRepository;
@@ -177,12 +178,14 @@ public class NonConcurrentConcertReservationIntegrationTest {
                     1000);
 
             // when
-            List<ConcertSchedule> actual = concertReservationApplication.getAvailableConcertSchedules();
+            List<ConcertScheduleWithConcert> actual = concertReservationApplication
+                    .getAvailableConcertSchedulesWithConcert();
 
             // then
             Assertions.assertNotNull(actual);
             // Verify that the schedule we just created is present in the results
-            boolean isPresent = actual.stream().anyMatch(cs -> cs.getId().equals(expected.getId()));
+            boolean isPresent = actual.stream()
+                    .anyMatch(cs -> cs.concertSchedule().getId().equals(expected.getId()));
             Assertions.assertTrue(isPresent, "Expected schedule should be available");
         }
 

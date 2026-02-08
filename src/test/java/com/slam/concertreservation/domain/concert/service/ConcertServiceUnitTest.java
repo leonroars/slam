@@ -3,6 +3,7 @@ package com.slam.concertreservation.domain.concert.service;
 import com.slam.concertreservation.common.error.ErrorCode;
 import com.slam.concertreservation.domain.concert.model.Concert;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
+import com.slam.concertreservation.domain.concert.model.ConcertScheduleWithConcert;
 import com.slam.concertreservation.domain.concert.model.Seat;
 import com.slam.concertreservation.domain.concert.model.SeatStatus;
 import com.slam.concertreservation.domain.concert.repository.ConcertRepository;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import java.util.List;
 import java.util.Optional;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.ApplicationEventPublisher;
@@ -319,6 +321,33 @@ class ConcertServiceUnitTest {
                                         () -> concertService.unassignSeatOfConcertSchedule(concertSchedule.getId(),
                                                         seat.getId()))
                                         .isInstanceOf(BusinessRuleViolationException.class);
+                }
+        }
+
+        @Nested
+        class GetAvailableConcertScheduleWithConcertUnitTest {
+                @Test
+                @DisplayName("성공 : 예약 가능한 공연 일정과 공연 정보를 함께 조회한다.")
+                void shouldReturnConcertSchedulesWithConcert_WhenAvailableSchedulesExist() {
+                        // given
+                        LocalDateTime now = LocalDateTime.now();
+                        Concert concert = Concert.create("OASIS REUNION", "oasis");
+                        ConcertSchedule schedule = ConcertSchedule.create(concert.getId(), now.plusDays(1), now,
+                                        now.plusDays(1));
+
+                        when(concertScheduleRepository.findAllAvailable(any(LocalDateTime.class)))
+                                        .thenReturn(List.of(schedule));
+                        when(concertRepository.findAllById(anyList()))
+                                        .thenReturn(List.of(concert));
+
+                        // when
+                        List<ConcertScheduleWithConcert> actual = concertService
+                                        .getAvailableConcertScheduleWithConcert(now);
+
+                        // then
+                        assertEquals(1, actual.size());
+                        assertEquals(schedule, actual.get(0).concertSchedule());
+                        assertEquals(concert, actual.get(0).concert());
                 }
         }
 }
