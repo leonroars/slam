@@ -2,6 +2,7 @@ package com.slam.concertreservation.application.facade;
 
 import com.slam.concertreservation.domain.concert.model.Concert;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
+import com.slam.concertreservation.domain.concert.model.ConcertScheduleWithConcert;
 import com.slam.concertreservation.domain.concert.model.Seat;
 import com.slam.concertreservation.domain.concert.service.ConcertService;
 import com.slam.concertreservation.domain.point.model.PointHistory;
@@ -116,8 +117,8 @@ public class ConcertReservationApplication {
      * 
      * @return
      */
-    public List<ConcertSchedule> getAvailableConcertSchedules() {
-        return concertService.getAvailableConcertSchedule(LocalDateTime.now());
+    public List<ConcertScheduleWithConcert> getAvailableConcertSchedulesWithConcert() {
+        return concertService.getAvailableConcertScheduleWithConcert(LocalDateTime.now());
     }
 
     /**
