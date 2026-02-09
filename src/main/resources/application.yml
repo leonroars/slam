@@ -34,8 +34,6 @@ management:
 #### 대기열 구현체 설정 : Default - DB
 app:
   queue:
-    provider: "REDIS"
-
     policy:
       max-concurrent-user: 50
       max-concurrent-user-threshold: 1.2
