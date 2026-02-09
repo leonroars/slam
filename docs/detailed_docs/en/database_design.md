@@ -2,7 +2,7 @@
 
 ## Overview
 
-The system uses **9 tables** across 4 logical domains to support a concert seat reservation platform. The schema is designed around two constraints: **data integrity under concurrent access** and **loose coupling between domains** to keep each domain independently evolvable.
+The system uses **7 tables** across 4 logical domains to support a concert seat reservation platform. The schema is designed around two constraints: **data integrity under concurrent access** and **loose coupling between domains** to keep each domain independently evolvable.
 
 ![Schema Diagram](../../images/slam_schema_JPA.png)
 
@@ -44,7 +44,7 @@ Domain enums (`SeatStatus`, `ReservationStatus`, `TokenStatus`, etc.) are stored
 
 | Table | Index | Columns | Purpose |
 |-------|-------|---------|---------|
-| `CONCERTSCHEDULE` | `IDX_RESERVATION_START_AT` | `reservationStartAt` | Narrows scan range for reservation window queries. Given domain characteristics (concurrent reservable schedules realistically limited to hundreds), single-column index on `start_at` provides sufficient selectivity without composite index overhead. |
+| `CONCERTSCHEDULE` | `IDX_RESERVATION_START_AT` | `reservationStartAt` | Range scan for reservation window queries. Single-column index sufficient — `start_at <= now` reduces scan to hundreds of rows at most, making additional column filtering negligible. |
 | `SEAT` | `IDX_SEAT_CONCERT_SCHEDULE_ID` | `concertScheduleId` | Lookup of all seats for a given schedule |
 
 ---
@@ -94,7 +94,7 @@ Domain enums (`SeatStatus`, `ReservationStatus`, `TokenStatus`, etc.) are stored
 | `created_at` | DATETIME(6) | NOT NULL, auto | JPA auditing |
 | `updated_at` | DATETIME(6) | auto | JPA auditing |
 
-- **Index `IDX_RESERVATION_AVAILABLE_PERIOD`** on `(reservationStartAt, reservationEndAt)` — supports range queries that filter schedules within an available reservation window.
+- **Index `IDX_RESERVATION_START_AT`** : Supports range queries that filter schedules within an available reservation window.
 
 #### `SEAT`
 | Column | Type | Constraint | Description |
@@ -139,23 +139,4 @@ PREEMPTED ──→ PAYMENT_PENDING ──→ CONFIRMED ──→ CANCELLED
 - `CONFIRMED`: Payment succeeded.
 - `EXPIRED`: The 5-minute hold elapsed without payment. A scheduler reclaims the seat.
 - `CANCELLED`: A confirmed reservation was cancelled.
-- Rollback transitions (`CONFIRMED → PREEMPTED`, `EXPIRED → PREEMPTED`, `CANCELLED → CONFIRMED`) exist in the domain model to support compensating actions on failure.
-
----
-
-### Queue Domain
-
-#### `QUEUE`
-| Column | Type | Constraint | Description |
-|--------|------|------------|-------------|
-| `id` | BIGINT | PK, AUTO_INCREMENT | |
-| `concert_schedule_id` | BIGINT | | Scoped to a specific schedule |
-| `user_id` | BIGINT | | Logical reference to `USER.user_id` |
-| `status` | VARCHAR(255) | | `WAIT`, `ACTIVE`, `EXPIRED` |
-| `expired_at` | DATETIME(6) | | Token expiration time |
-| `created_at` | DATETIME(6) | NOT NULL, auto | JPA auditing |
-| `updated_at` | DATETIME(6) | auto | JPA auditing |
-
-- Manages token-based admission control per concert schedule.
-- Token durations and max concurrent user counts are externalized via `QueuePolicy` configuration properties.
-
+- Transitions are enforced at the code-level inside POJO domain models for strong consistency. 
