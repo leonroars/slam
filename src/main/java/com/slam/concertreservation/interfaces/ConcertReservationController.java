@@ -7,12 +7,16 @@ import com.slam.concertreservation.domain.concert.model.Concert;
 import com.slam.concertreservation.domain.concert.model.ConcertSchedule;
 import com.slam.concertreservation.domain.concert.model.ConcertScheduleWithConcert;
 import com.slam.concertreservation.domain.concert.model.Seat;
+import com.slam.concertreservation.domain.payment.application.PaymentOrchestrator;
+import com.slam.concertreservation.domain.payment.service.PaymentService;
 import com.slam.concertreservation.domain.point.model.UserPointBalance;
 import com.slam.concertreservation.domain.queue.model.Token;
 import com.slam.concertreservation.domain.reservation.model.Reservation;
 import com.slam.concertreservation.domain.user.model.User;
 import com.slam.concertreservation.interfaces.dto.ConcertResponse;
 import com.slam.concertreservation.interfaces.dto.ConcertScheduleResponse;
+import com.slam.concertreservation.interfaces.dto.PaymentProcessResponse;
+import com.slam.concertreservation.interfaces.dto.ReservationConfirmResponse;
 import com.slam.concertreservation.interfaces.dto.ReservationResponse;
 import com.slam.concertreservation.interfaces.dto.SeatResponse;
 import com.slam.concertreservation.interfaces.dto.TokenResponse;
@@ -21,6 +25,8 @@ import com.slam.concertreservation.interfaces.dto.UserResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +42,8 @@ public class ConcertReservationController {
 
     private final ConcertReservationApplication reservationApp;
     private final UserApplication userApp;
+    private final PaymentOrchestrator paymentOrchestrator;
+    private final PaymentService paymentService;
 
     /* ========== User ========== */
 
@@ -214,6 +222,36 @@ public class ConcertReservationController {
                 .toList();
 
         return ResponseEntity.ok(responses);
+    }
+
+    @PostMapping("/payments")
+    public ResponseEntity<PaymentProcessResponse> processPayment(
+            @RequestParam Long userId,
+            @RequestParam Integer price,
+            @RequestParam Long reservationId) {
+        PaymentProcessResponse response = paymentOrchestrator.processPayment(userId, price, reservationId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/payments/{paymentId}/refund")
+    public ResponseEntity<PaymentProcessResponse> processRefund(
+            @PathVariable Long paymentId,
+            @RequestParam Long userId,
+            @RequestParam Integer price,
+            @RequestParam Long reservationId) {
+        PaymentProcessResponse response = paymentOrchestrator.processRefund(userId, price, reservationId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/payments/{paymentId}")
+    public ResponseEntity<PaymentProcessResponse> getPayment(@PathVariable Long paymentId) {
+        return ResponseEntity.ok(PaymentProcessResponse.from(paymentService.getPaymentById(paymentId)));
+    }
+
+    @GetMapping("/payments")
+    public Page<PaymentProcessResponse> getPayments(@RequestParam Long userId, Pageable pageable) {
+        return paymentService.getPaymentHistoryOfUser(userId, pageable)
+                .map(PaymentProcessResponse::from);
     }
 
     /* ========== Queue ========== */
