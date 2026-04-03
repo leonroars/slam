@@ -36,27 +36,10 @@
 
 ## Technical Highlights
 
-### 1. JFR 기반 성능 병목 진단 및 최적화
-
-- **문제:** 부하 테스트(K6) 중 P99 Latency 급증 (48ms → 1,040ms) 및 간헐적 타임아웃 발생
-- **분석:** JFR 프로파일링 및 Grafana 메트릭을 통해 원인 식별
-  - **Memory Pressure:** Free Ratio 21% < G1GC MinHeapFreeRatio 40% → JVM의 힙 확장 시도 관측
-  - **GC 빈도 과다:** 고부하 시 Allocation Rate 대비 Eden 부족으로 GC 빈도 +164% 증가
-  - **Cascade 효과:** GC Pause 중 커넥션 반환 지연 → HikariCP 대기 스레드 90개 적체 확인 (Thread Dump)
-- **해결:** Allocation Rate 기반 JVM Heap Resize (512MB → 2GB)
-  - Heap 확장 vs 코드 레벨 객체 최적화 중 ROI 및 가용 리소스 고려 Heap 확장 결정.
-  - 가설로 지목했던 Memory Pressure 변인 제거 효과를 뚜렷하게 보기위해 큰 폭 증설 -> 이분탐색으로 최적 Heap Size로 반복 실험하며 최적화.
-- **결과:** P99 Latency 66% 개선 (1,040ms → 355ms), Throughput 54% 향상 (813 → 1,250 RPS)
-
-| Metric | Before | After | 개선폭 |
-| :--- | :---: | :---: | :---: |
-| P99 Latency | 1,040 ms | 355 ms | 65% ▼ |
-| Throughput | 813 RPS | 1,250 RPS | 53% ▲ |
-
-### 2. 데이터 정합성 보장을 위한 설계
-- **Idempotency Key 기반 3-Layer API 멱등성 보장 설계 (Cache → Redis Lock → DB Unique)** : [관련 PR 링크](https://github.com/leonroars/slam/pull/34)
-  - 서버 장애와 동시 요청에도 중복 없이 동작하는 결제 & 예약 생성 API 멱등성 설계
-- **Transactional Outbox Pattern:** 비즈니스 로직과 이벤트 발행의 원자성 보장 (Spring Scheduler 기반 Polling Publisher 방식 구현)
+| 과제                          | 성과                                                                                         | 상세 문서                                                                                               |
+|-------------------------------|--------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| 애플리케이션 병목 원인 분석 및 해결 | **P99 Latency 66% 개선** (1.04s → 355ms) / **처리량 53.3% 향상(성능 포화점 기준)** (813 RPS → 1.25K RPS) | [JDK Flight Recorder를 활용한 JVM 성능 병목 분석](./docs/detailed_docs/en/performance-bottleneck-analysis.md) |
+| 데이터 정합성을 위한 동시성 제어    | 단위·통합 테스트 및 Grafana K6 부하 테스트를 통해 중복 **0건** 검증                                             | [예약 & 결제 3중 API 멱등성 설계](./docs/detailed_docs/en/idempotency-design.md)                              |
 
 ---
 
