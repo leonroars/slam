@@ -111,39 +111,14 @@ Requests arriving between pauses were processed normally, keeping P50 low.
 
 ## 4. Resolution
 
-With memory pressure confirmed as the root cause, two paths were available:
-
-**Option A — Reduce allocation rate** to lower GC frequency at the same heap size.
-**Option B — Increase heap capacity** so the existing allocation rate produces less GC pressure.
-
-### Allocation Profile Assessment
-
-JFR recorded ~138 MB/s allocation during the spike window (8.28 GiB / 60s).
-At ~800 RPS, this translates to **~172 KB per request** — within the normal range for a Spring Boot read API including framework overhead.
-
-The top allocator by class was `byte[]`. `ObjectAllocationOutsideTLAB` stack traces for `byte[]` showed the following size distribution and origins:
-
-<!-- JFR OutsideTLAB byte[] size distribution screenshot here -->
-
-| Size | Allocator | Stack Trace Root |
-|------|-----------|-----------------|
-| 8 KB | Tomcat NIO socket buffer | `SocketBufferHandler.<init>` → `NioEndpoint.setSocketOptions` |
-| 16 KB | Prometheus cgroup reader, Lettuce NIO, HikariPool, JFR tasks | `BufferedReader.<init>` → `CgroupV2Subsystem`, Netty I/O, pool management |
-| 115 KB | Prometheus metrics serialization | `ByteArrayOutputStream.<init>` → `PrometheusScrapeEndpoint.scrape` |
-
-Every identified allocator was an infrastructure or monitoring component. No application-level code appeared in the top allocation paths.
-
-> Note: `ObjectAllocationInNewTLAB` was not enabled in the recording profile (`default.jfc`), so this analysis covers only allocations that exceeded TLAB capacity. The full allocation profile — including normal-sized objects allocated within TLABs — was not captured.
-
-### Decision: Option B
-
-The per-request allocation rate was not abnormal, and the largest allocators were infrastructure components outside application control. Code-level optimization would not have materially reduced GC pressure.
+With memory pressure confirmed as the root cause, the immediate goal was to verify whether this pressure was indeed the primary bottleneck driving the connection delays. By intentionally over-provisioning the JVM heap capacity, we could isolate the variable and observe the impact on GC frequency and throughput.
 
 Initial configuration: `-Xms256m -Xmx512m`.
 Changed to: `-Xms2g -Xmx2g`.
 
-- Large increase to clearly confirm memory pressure as root cause
-- Xms pinned to Xmx to eliminate runtime heap resizing overhead
+- **Rationale**: Reducing memory pressure would lower GC frequency, resolving the connection return delays causing throughput degradation.
+- **Intent of Over-provisioning**: A large capacity increase was deliberately applied to amplify metric changes, clearly confirming the causal link between memory pressure and performance.
+- **Pinning Xms to Xmx**: Eliminating runtime heap resizing overhead.
 
 ### Result
 
