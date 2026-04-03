@@ -1,27 +1,10 @@
-# SLAM! : 콘서트 좌석 예약 서비스
+# SLAM - 콘서트 좌석 예약 시스템
 
-[![KOR](https://img.shields.io/badge/Language-KOR-gray?style=for-the-badge)](#) [![ENG](https://img.shields.io/badge/Language-ENG-blue?style=for-the-badge)](./README.en.md)
+> 🇺🇸 [English Documentation](./docs/README.en.md)
 
-콘서트 티켓 오픈 시 발생하는 트래픽 집중과 동시 예약 충돌 상황을 다루는 백엔드 프로젝트입니다.
+#### **_트래픽 급증과 동시 예약 충돌 상황에서도 데이터 정합성을 보장하는 콘서트 좌석 예약 시스템_**
 
-트래픽 집중 상황에서의 **데이터 정합성 보장**과 **시스템 안정성**에 주안점을 두었습니다.
-
-<br/>
-
-<img width="1250" height="703" alt="프론트_메인" src="https://github.com/user-attachments/assets/d8403a34-e3ef-4fbb-bcc8-fc5d39b26a16" />
-
-## 목차
-1. [주요 기능](#주요-기능)
-2. [Technical Highlights](#technical-highlights)
-    - [JFR 기반 성능 병목 진단 및 최적화](#1-jfr-기반-성능-병목-진단-및-최적화)
-    - [데이터 정합성 보장을 위한 설계](#2-데이터-정합성-보장을-위한-설계)
-    - [모듈러 모놀리식 아키텍처](#3-모듈러-모놀리식-아키텍처)
-3. [시스템 아키텍처](#시스템-아키텍처)
-4. [ERD 및 데이터베이스 설계 전략](#erd)
-5. [핵심 비즈니스 로직 (Sequence Diagram)](#핵심-비즈니스-로직-시퀀스-다이어그램---좌석-선점--예약-생성-여정)
-6. [Frontend Development with AI](#ai-native-frontend-development)
-
-<br/>
+![Demo](./docs/images/slam-core-journey-comp.gif)
 
 ---
 
@@ -42,170 +25,24 @@
 | 데이터 정합성을 위한 동시성 제어    | 단위·통합 테스트 및 Grafana K6 부하 테스트를 통해 중복 **0건** 검증                                             | [예약 & 결제 3중 API 멱등성 설계](./docs/detailed_docs/en/idempotency-design.md)                              |
 
 ---
-
-### 3. 모듈러 모놀리식 아키텍처
-- **도메인 격리:** `Booking`, `Payment`, `Concert` 간 결합도를 낮추고 Spring Event로 비동기 통신
-- **아키텍처 제약:** MSA 전환을 고려해 패키지 레벨에서 도메인 간 직접 참조 제한
-
-<br/>
-
-## 시스템 아키텍처
-
-<img width="804" height="562" alt="System Architecture" src="https://github.com/user-attachments/assets/003260fa-a354-4d91-96ed-458ee3e59790" />
-
-<details>
-<summary>기술 스택 상세 보기</summary>
-<br/>
-
-| Category | Technology |
-| :--- | :--- |
-| Language | Java 17 |
-| Framework | Spring Boot 3.2, Spring Data JPA |
-| Database | MySQL 8.0, Redis 7.0 |
-| Infrastructure | AWS (EC2, RDS, ECR), Docker |
-| CI/CD | GitHub Actions |
-| Monitoring | Prometheus, Grafana, Loki, Promtail |
-| Testing | JUnit 5, Testcontainers, K6 |
-
-</details>
-
-<br/>
+## 아키텍처
+![Architecture](./docs/images/slam_architecture.png)
 
 ---
+## 기술 스택
 
-## ERD
-```mermaid
-erDiagram
-    %% ---------------------------------------------------------
-    %% Domain: USER (Blue)
-    %% ---------------------------------------------------------
-    USER {
-        BIGINT user_id PK "TSID"
-        VARCHAR name
-        DATETIME created_at
-    }
-    
-    USERPOINTBALANCE {
-        BIGINT id PK "TSID"
-        BIGINT user_id "TSID Ref, UK"
-        INT balance
-    }
+> **Backend**: Java 17, Spring Boot 3, Spring Data JPA
+>
+> **Frontend**: React 기반 SPA (Vite, TypeScript, Tailwind CSS). Claude Code, Antigravity(Gemini 3 Pro)를 활용한 AI 네이티브 개발
+>
+> **Data**: MySQL 8.0, Redis 7.0 (Redisson)
+>
+> **Infra**: AWS (EC2, RDS, ECR), Docker, GitHub Actions
+>
+> **Observability**: Prometheus, Grafana, Grafana Loki & Promtail
+>
+> **AI Stacks**: 프론트엔드 개발에 Claude Code & Antigravity 활용, CodeRabbit을 통한 AI 기반 PR 리뷰
 
-    POINTHISTORY {
-        BIGINT point_history_id PK "TSID"
-        BIGINT userId "TSID Ref, COMP_IDX"
-        INT point
-        ENUM transactionType
-        DATETIME transactionDate "COMP_IDX"
-    }
-
-    %% ---------------------------------------------------------
-    %% Domain: CONCERT (Green)
-    %% ---------------------------------------------------------
-    CONCERT {
-        BIGINT concertId PK "TSID"
-        VARCHAR name
-        VARCHAR artist
-    }
-
-    CONCERTSCHEDULE {
-        BIGINT concert_schedule_id PK "TSID"
-        BIGINT concertId "TSID Ref, IDX"
-        DATETIME datetime
-        DATETIME reservationStartAt "IDX"
-        DATETIME reservationEndAt "IDX"
-        ENUM availability
-    }
-
-    SEAT {
-        BIGINT seatId PK "TSID"
-        BIGINT concertScheduleId "TSID Ref, COMP_UK"
-        INT number "COMP_UK"
-        INT price
-        ENUM status
-    }
-
-    %% ---------------------------------------------------------
-    %% Domain: RESERVATION (Orange)
-    %% ---------------------------------------------------------
-    RESERVATION {
-        BIGINT reservation_id PK "TSID"
-        BIGINT userId "TSID Ref, IDX"
-        BIGINT concertScheduleId "TSID Ref, IDX"
-        BIGINT seatId "TSID Ref, IDX"
-        INT price
-        ENUM status
-        DATETIME expiredAt
-    }
-
-    %% ---------------------------------------------------------
-    %% Domain: SYSTEM (Grey)
-    %% ---------------------------------------------------------
-    OUTBOX {
-        BIGINT id PK "TSID"
-        JSON payload
-        ENUM status "COMP_IDX"
-        VARCHAR topicIdentifier
-        INT retryCount
-        DATETIME created_at "COMP_IDX"
-    }
-
-    %% ---------------------------------------------------------
-    %% Relationships
-    %% ---------------------------------------------------------
-    
-    %% User Domain (Solid)
-    USER ||--|| USERPOINTBALANCE : "1:1"
-    USER ||--o{ POINTHISTORY : "1:N"
-
-    %% Concert Domain (Solid)
-    CONCERT ||--o{ CONCERTSCHEDULE : "1:N"
-    CONCERTSCHEDULE ||--o{ SEAT : "1:N"
-
-    %% Cross-Domain Logical References (Dashed)
-    USER ||..o{ RESERVATION : "Makes"
-    CONCERTSCHEDULE ||..o{ RESERVATION : "Target"
-    SEAT ||..o{ RESERVATION : "Occupies"
-```
-### 💡 Key Design Decisions
-
-**1. TSID 참조 기반의 느슨한 결합을 위한 스키마 설계**
- - 도메인 간의 강한 결합을 끊기 위해 물리적 Foreign Key 제약조건을 제거하고, **TSID를 통한 간접 참조 방식**을 채택
- - 이를 통해 각 도메인의 응집도를 높였으며, 향후 **데이터베이스의 물리적 분리나 구조 변경에도 유연하게 대처할 수 있는 확장성**을 확보.
-
-**2. TSID 를 선택한 근거**
-- **Performance:** 시간순으로 정렬되는 TSID 특성을 활용하여, 랜덤 UUID 사용 시 발생하는 MySQL(InnoDB)의 **Page Splitting 및 인덱스 파편화 문제** 회피.
-- **Efficiency:** 인덱스 스토리지 효율 고려했을 때, 64-bit `BIGINT` 타입에 저장 가능한 TSID 가 유리하다고 판단.
-
-**3. Indexing Strategy (인덱싱 전략)**
-- **`CONCERT_SCHEDULE`**: `start <= ? AND end >= ?`와 같은 독립적인 양방향 범위 검색 시, 옵티마이저가 더 효율적인 인덱스를 선택하거나 **Index Merge**를 수행할 수 있도록 `reservationStartAt`, `reservationEndAt`에 각각 **단일 인덱스**를 적용.
-- **`SEAT`**: 데이터 무결성 보장을 위해 `(concertScheduleId, number)` 복합 Unique Key 적용
-- **`OUTBOX`**: 이벤트 발행 배치의 조회 성능을 위해 카디널리티(Cardinality)를 고려한 `(status, created_at)` 복합 인덱스 적용
----
-
-## 핵심 비즈니스 로직 시퀀스 다이어그램 - 좌석 선점 ~ 예약 생성 여정
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/13cdf8d5-1720-446a-93c6-6493019eecbc" width="800">
-</div>
-
-<br/>
-
----
-## Frontend Development with AI
-
-- **접근 방식:** Antigravity, Claude Code 를 활용한 빠른 프로토타이핑 및 구현
-  - API 명세 및 페이지 단위 사용자 여정을 사전 문서화
-  - 문서 기반 프롬프트 엔지니어링으로 컴포넌트 설계 및 코드 생성
-  - AI 생성 코드의 검토 및 최적화를 통한 품질 확보
-
-- **구현:**
-  - React 기반 SPA 구조
-  - 좌석 선택 UI 및 실시간 예약 상태 반영
-  - 반응형 디자인 적용
-
-- **스크린샷:**
-
-| 좌석 선택 화면 | 예약 확인 화면 |
-|:-------------:|:-------------:|
-| <img width="806" height="724" alt="Screenshot 2026-01-30 at 2 53 39 PM" src="https://github.com/user-attachments/assets/4db2c7d0-9bef-494e-be81-5c358df20bb0" /> | <img width="1261" height="505" alt="프론트_예약내역" src="https://github.com/user-attachments/assets/45c4ee38-c95c-48c5-ae78-4ab6d0823d15" /> |
- 
+## 설계 및 구현 상세
+- [API 설계](./docs/detailed_docs/kor/api_design.kor.md)
+- [데이터베이스 스키마](./docs/detailed_docs/kor/database_design.md)

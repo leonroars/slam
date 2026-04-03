@@ -30,7 +30,6 @@ server:
 #### 대기열 구현체 설정 : Default - DB
 app:
   queue:
-    provider: "REDIS"
     policy:
       max-concurrent-user-threshold: 1.0
       max-concurrent-user: 2
