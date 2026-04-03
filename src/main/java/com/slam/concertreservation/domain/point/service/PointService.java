@@ -1,6 +1,7 @@
 package com.slam.concertreservation.domain.point.service;
 
 import com.slam.concertreservation.common.error.ErrorCode;
+import com.slam.concertreservation.common.exceptions.BusinessRuleViolationException;
 import com.slam.concertreservation.domain.point.event.PaymentEvent;
 import com.slam.concertreservation.domain.point.model.Point;
 import com.slam.concertreservation.domain.point.model.PointHistory;
@@ -13,6 +14,9 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,7 +100,6 @@ public class PointService {
                 userId, increaseAmount, updated.balance().getAmount());
 
         return updated;
-
     }
 
     /**

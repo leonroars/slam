@@ -5,6 +5,7 @@ import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfigu
 import org.springframework.boot.actuate.autoconfigure.metrics.export.prometheus.PrometheusMetricsExportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.retry.annotation.EnableRetry;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(classes = {
